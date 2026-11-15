@@ -1,9 +1,12 @@
 // OURS: builds a business profile from a website. The build runs in the
 // background: crawl → extract (AI or demo) → keep only sourced claims → save.
 // The screen polls the profile to show progress.
-import { Injectable, Logger } from '@nestjs/common';
-import { OursProfileStatus } from '@prisma/client';
-import { BusinessProfileRepository } from '@gitroom/nestjs-libraries/ours/profile/business.profile.repository';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
+import { OursProfileStatus, Prisma } from '@prisma/client';
+import {
+  BusinessProfileRepository,
+  StoredBusinessProfile,
+} from '@gitroom/nestjs-libraries/ours/profile/business.profile.repository';
 import { AiUsageService } from '@gitroom/nestjs-libraries/ours/ai/ai.usage.service';
 import {
   CrawlError,
@@ -37,8 +40,6 @@ import { DemoProfileExtractor } from '@gitroom/nestjs-libraries/ours/profile/ext
 
 export const PROFILE_FEATURE = 'business_profile';
 const STALE_AFTER_MS = 10 * 60 * 1000;
-
-export class ProfileInputError extends Error {}
 
 export const createProfileExtractor = (): ProfileExtractor =>
   process.env.ANTHROPIC_API_KEY
@@ -85,7 +86,7 @@ export class BusinessProfileService {
       await assertPublicUrl(url);
     } catch (e) {
       if (e instanceof UnsafeUrlError) {
-        throw new ProfileInputError(e.message);
+        throw new HttpException(e.message, 400);
       }
       throw e;
     }
@@ -154,7 +155,7 @@ export class BusinessProfileService {
       }
 
       await this._businessProfileRepository.finishBuild(orgId, {
-        fields: fields as any,
+        fields: fields as unknown as Prisma.InputJsonValue,
         pages: crawl.pages.map((p) => ({ url: p.url, title: p.title })),
         extractor: extractor.name,
       });
@@ -178,7 +179,7 @@ export class BusinessProfileService {
   async updateField(orgId: string, key: ProfileFieldKey, values: string[]) {
     const current = await this._businessProfileRepository.getProfile(orgId);
     if (!current || current.status !== OursProfileStatus.READY) {
-      throw new ProfileInputError('There is no finished profile to edit yet.');
+      throw new HttpException('There is no finished profile to edit yet.', 400);
     }
     const def = PROFILE_FIELDS.find((f) => f.key === key)!;
     const fields = this.asFields(current.fields);
@@ -203,7 +204,7 @@ export class BusinessProfileService {
 
     const saved = await this._businessProfileRepository.saveFields(
       orgId,
-      fields as any
+      fields as unknown as Prisma.InputJsonValue
     );
     return { profile: this.present(saved) };
   }
@@ -228,7 +229,7 @@ export class BusinessProfileService {
     return fields;
   }
 
-  private present(profile: NonNullable<Awaited<ReturnType<BusinessProfileRepository['getProfile']>>>) {
+  private present(profile: StoredBusinessProfile) {
     return {
       websiteUrl: profile.websiteUrl,
       status: profile.status,

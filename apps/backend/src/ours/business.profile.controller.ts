@@ -12,10 +12,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { Organization } from '@prisma/client';
 import { GetOrgFromRequest } from '@gitroom/nestjs-libraries/user/org.from.request';
-import {
-  BusinessProfileService,
-  ProfileInputError,
-} from '@gitroom/nestjs-libraries/ours/profile/business.profile.service';
+import { BusinessProfileService } from '@gitroom/nestjs-libraries/ours/profile/business.profile.service';
 import {
   BuildBusinessProfileDto,
   UpdateProfileFieldDto,
@@ -33,18 +30,11 @@ export class BusinessProfileController {
   }
 
   @Post('/build')
-  async build(
+  build(
     @GetOrgFromRequest() org: Organization,
     @Body() body: BuildBusinessProfileDto
   ) {
-    try {
-      return await this._businessProfileService.startBuild(org.id, body.url);
-    } catch (e) {
-      if (e instanceof ProfileInputError) {
-        throw new HttpException(e.message, 400);
-      }
-      throw e;
-    }
+    return this._businessProfileService.startBuild(org.id, body.url);
   }
 
   @Put('/fields/:key')
@@ -56,17 +46,6 @@ export class BusinessProfileController {
     if (!isProfileFieldKey(key)) {
       throw new HttpException('Unknown field', 400);
     }
-    try {
-      return await this._businessProfileService.updateField(
-        org.id,
-        key,
-        body.values
-      );
-    } catch (e) {
-      if (e instanceof ProfileInputError) {
-        throw new HttpException(e.message, 400);
-      }
-      throw e;
-    }
+    return this._businessProfileService.updateField(org.id, key, body.values);
   }
 }

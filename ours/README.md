@@ -99,3 +99,39 @@ A pretend channel for testing and demos without platform approvals.
   records the post (log line `[SANDBOX - NOT PUBLISHED]`) and returns a release
   link to `/sandbox/<postId>`, our own page that says plainly nothing was
   published. No network call is made.
+
+## Business profile
+
+An owner enters their website and gets a profile they can check and edit.
+Screen: `/business-profile` (menu: "Business profile"). Code:
+`libraries/nestjs-libraries/src/ours/{crawler,profile,ai}/`,
+`apps/backend/src/ours/`, `apps/frontend/src/ours/profile/`.
+
+How it works:
+
+1. **Crawl** (`WebsiteCrawler`): the homepage plus up to 10 same-site pages,
+   about/services/contact first. Follows robots.txt, refuses private and local
+   addresses (checked on every redirect), 10 s and 2 MB per page.
+2. **Clean** (`cleanHtml`): visible text only. Scripts, styles, comments,
+   menus, hidden and screen-reader-only text are removed, and lines that read
+   like instructions to an AI are replaced with a marker.
+3. **Extract**: Claude reads the pages, marked as untrusted, and returns claims
+   with a source URL and an exact quote for each. Without `ANTHROPIC_API_KEY` a
+   rule-based demo extractor runs instead, and the screen says "Demo mode".
+4. **Ground** (`groundExtraction`): a claim is kept only if its quote really is
+   on a page we read (and, for phone, email, name and social links, the value
+   is in the quote). Everything else is dropped, and the field shows "Not found
+   on your website".
+5. Every AI call's tokens and cost are logged per organisation in `ours_ai_usage`.
+
+Owner edits are saved as "Added by you" and survive "Read my website again".
+The build runs in the background in the backend process and the screen polls
+it. A build stuck for more than 10 minutes (for example after a restart) is
+marked as failed so the owner can try again.
+
+| Variable | Used by | Default |
+|----------|---------|---------|
+| `ANTHROPIC_API_KEY` | backend: AI extraction | empty (demo extractor) |
+| `OURS_AI_MODEL` | backend | `claude-opus-5-5` |
+| `OURS_CRAWLER_ALLOW_PRIVATE` | backend: lets the crawler read localhost (dev and browser tests only, never in production) | off |
+

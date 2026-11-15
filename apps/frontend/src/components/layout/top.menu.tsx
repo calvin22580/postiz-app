@@ -44,7 +44,7 @@ export const useMenuItem = () => {
       ),
       path: '/launches',
     },
-    ...oursFirstMenu(), // OURS (2026-11-15): our menu entries
+    ...oursFirstMenu(t), // OURS (2026-11-15): our menu entries
     {
       name: 'Agent',
       icon: (

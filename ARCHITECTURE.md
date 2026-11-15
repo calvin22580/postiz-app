@@ -71,10 +71,10 @@ Milestone 1a set the convention: our code lives in folders named **`ours/`**. Se
 | Server logic (services, repositories, providers) | `libraries/nestjs-libraries/src/ours/<feature>/` (e.g. `ours/sandbox/`, `ours/brand/`) | None |
 | Extra social providers | Add to `oursSocialProviders()` in `libs/ours/ours.social.providers.ts` | None. 1a already spreads it into `socialIntegrationList` |
 | Post-editor provider components | `apps/frontend/src/ours/sandbox/ours.providers.ts` | None. 1a already spreads it into `show.all.providers.tsx` |
-| Our API routes | A new NestJS module, e.g. `apps/backend/src/ours/ours.module.ts`, with controllers under an `/ours/*` or feature prefix | **One line** in `apps/backend/src/app.module.ts` `imports` (not yet made) |
+| Our API routes | A new NestJS module, e.g. `apps/backend/src/ours/ours.module.ts`, with controllers under an `/ours/*` or feature prefix | **One line** in `apps/backend/src/app.module.ts` `imports` (made in Milestone 2: `OursModule`) |
 | Background jobs | Our own workflow and activity files, e.g. `apps/orchestrator/src/ours/` | One export line in `workflows/index.ts`, and activity registration in the orchestrator module (not yet made) |
-| Screens | New routes in `apps/frontend/src/app/(app)/(site)/<feature>/` (1a added `sandbox/[id]`), with components in `apps/frontend/src/ours/` | Menu entries are hard-coded in `components/layout/top.menu.tsx`. Make **one edit** that spreads in a menu array from our own file |
-| Database | One delimited `// ==== OURS ====` block at the **end** of `schema.prisma`. Prisma 6.5 multi-file schemas need a preview flag and new `--schema` paths in upstream scripts, so a separate file costs more edits than it saves | Appending is the edit. See the relations caveat below |
+| Screens | New routes in `apps/frontend/src/app/(app)/(site)/<feature>/` (1a added `sandbox/[id]`), with components in `apps/frontend/src/ours/` | Menu entries are hard-coded in `components/layout/top.menu.tsx`. Make **one edit** that spreads in a menu array from our own file (made in Milestone 2: `oursFirstMenu()` from `apps/frontend/src/ours/menu/ours.menu.tsx`) |
+| Database | One delimited `// ==== OURS ====` block at the **end** of `schema.prisma`. Prisma 6.5 multi-file schemas need a preview flag and new `--schema` paths in upstream scripts, so a separate file costs more edits than it saves | Appending is the edit. Decided in Milestone 2, see "Our database decisions" |
 | Branding | `apps/frontend/src/ours/brand/` (`brand.defaults.json`, `BrandStyle`, a build-time rebrand loader via `with-ours.mjs`), and `libs/ours/brand/` for emails | Done in 1a, listed in `UPSTREAM_PATCHES.md` |
 | Tests | `ours/vitest.config.mts` (unit), `ours/e2e/` (Playwright) | None |
 
@@ -88,3 +88,22 @@ Milestone 1a set the convention: our code lives in folders named **`ours/`**. Se
 6. **Billing is hard-coded** (`pricing.ts` tiers, USD, enum tiers). Milestone 7 will need a careful plan. Note that removing Stripe keys silently lifts all limits.
 7. **Menu and providers are arrays in upstream files**, so each needs one logged edit (1a has already made the provider ones).
 8. **Upstream moves fast** (v1.0.1 to v1.1.2 post workflows already). Avoid depending on internal method signatures where a public service method exists.
+
+## Our database decisions (Milestone 2, 15/11/2026)
+
+These apply to every model we add from now on.
+
+1. **Where our models live: one block at the end of upstream's `schema.prisma`.** Upstream runs `prisma db push` against that single file on start, with no migrations, so a model kept anywhere else could be dropped by a push. The block starts with an `OURS (2026-11-15)` banner and must stay last in the file. Model names start with `Ours`, and tables are mapped to `ours_*` with `@@map`, so our tables are easy to tell apart in the database. When merging upstream, keep our block after whatever upstream adds.
+2. **How our tables link to upstream's: plain id columns, no Prisma `@relation`.** A relation would need a back-reference field on the upstream model (`Organization`, `Post` and so on), which is an upstream edit on every model we touch. Instead our tables hold `organizationId String` (and later `postId String` and similar) with an index, and no foreign key. The rules that come with this:
+   - every repository query filters by `organizationId` (FORK_RULES: every query is scoped to the organisation);
+   - deleting an upstream row does not cascade to ours. Upstream soft-deletes organisations and posts (`deletedAt`), so this rarely matters, but any clean-up we need is our job, in our own code;
+   - joins to upstream data are done in our services with a second query, not with Prisma `include`.
+
+Milestone 2 added `OursBusinessProfile` (one per organisation, `organizationId` unique) and `OursAiUsage` (one row per AI generation call, for cost logging).
+
+## AI calls (Milestone 2)
+
+- Our AI calls use the official Anthropic SDK (`@anthropic-ai/sdk`, added as a root dependency). They do not go through upstream's `OpenaiService`.
+- Every call logs its tokens and cost (USD list prices in `libs/ours/ai/ai.pricing.ts`) to `OursAiUsage` through `AiUsageService.logCall(orgId, feature, usage)`. Use it for every future generation call.
+- Model: `OURS_AI_MODEL`, default `claude-opus-5-5`. Without `ANTHROPIC_API_KEY`, the business profile uses a deterministic demo extractor and the screen says so.
+

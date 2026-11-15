@@ -1,8 +1,10 @@
 // OURS: our entries in the left menu. Spread into upstream's menu with one
 // logged line in components/layout/top.menu.tsx.
-export const oursFirstMenu = () => [
+export const oursFirstMenu = (
+  t: (key: string, fallback: string) => string
+) => [
   {
-    name: 'Business profile',
+    name: t('ours_business_profile', 'Business profile'),
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"

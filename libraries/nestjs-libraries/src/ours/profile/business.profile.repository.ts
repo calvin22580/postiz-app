@@ -17,6 +17,10 @@ const PROFILE_SELECT = {
   updatedAt: true,
 } satisfies Prisma.OursBusinessProfileSelect;
 
+export type StoredBusinessProfile = Prisma.OursBusinessProfileGetPayload<{
+  select: typeof PROFILE_SELECT;
+}>;
+
 @Injectable()
 export class BusinessProfileRepository {
   constructor(private _profile: PrismaRepository<'oursBusinessProfile'>) {}
