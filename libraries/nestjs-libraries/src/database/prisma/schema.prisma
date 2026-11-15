@@ -1844,3 +1844,56 @@ model Announcement {
   color       AnnouncementColor @default(INFO)
   createdAt   DateTime          @default(now())
 }
+
+// =============================================================================
+// OURS (2026-11-15): models added by our fork. Keep this block LAST in the file.
+// Decisions recorded in ARCHITECTURE.md ("Our database decisions"):
+//  - Our models live here, in upstream's schema file, because upstream runs
+//    `prisma db push` against this one file on start (no migrations).
+//  - Never edit upstream models above. No @relation to upstream models (that
+//    would need a back-reference field on them). Link with plain id columns
+//    such as `organizationId String` plus an index; our repositories enforce
+//    the organisation scope on every query.
+//  - Model names start with `Ours`, tables are mapped to `ours_*`.
+// =============================================================================
+
+enum OursProfileStatus {
+  CRAWLING
+  EXTRACTING
+  READY
+  FAILED
+}
+
+model OursBusinessProfile {
+  id             String            @id @default(uuid())
+  organizationId String            @unique
+  websiteUrl     String
+  status         OursProfileStatus
+  progress       Json?
+  errorMessage   String?
+  fields         Json              @default("{}")
+  pages          Json              @default("[]")
+  extractor      String?
+  buildStartedAt DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@map("ours_business_profile")
+}
+
+model OursAiUsage {
+  id               String   @id @default(uuid())
+  organizationId   String
+  feature          String
+  provider         String
+  model            String
+  inputTokens      Int
+  outputTokens     Int
+  cacheReadTokens  Int      @default(0)
+  cacheWriteTokens Int      @default(0)
+  costUsd          Decimal? @db.Decimal(12, 6)
+  createdAt        DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@map("ours_ai_usage")
+}
