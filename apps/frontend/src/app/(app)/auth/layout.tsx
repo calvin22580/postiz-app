@@ -7,6 +7,7 @@ import { TestimonialComponent } from '@gitroom/frontend/components/auth/testimon
 import { AttributionComponent } from '@gitroom/frontend/components/auth/attribution.component';
 import { LogoTextComponent } from '@gitroom/frontend/components/ui/logo-text.component';
 import { MantineWrapper } from '@gitroom/react/helpers/mantine.wrapper';
+import { OursAuthPanel } from '@gitroom/frontend/ours/brand/auth.panel'; // OURS (2026-11-15)
 import { Toaster } from '@gitroom/react/toaster/toaster';
 const ReturnUrlComponent = loadDynamic(() => import('./return.url.component'));
 export default async function AuthLayout({
@@ -30,13 +31,7 @@ export default async function AuthLayout({
           </div>
         </div>
         <div className="text-[36px] flex-1 pt-[88px] hidden lg:flex flex-col items-center">
-          <div className="text-center">
-            Over <span className="text-[42px] text-[#FC69FF]">20,000+</span>{' '}
-            Entrepreneurs use
-            <br />
-            Postiz To Grow Their Social Presence
-          </div>
-          <TestimonialComponent />
+          <OursAuthPanel /> {/* OURS (2026-11-15): replaces upstream's user-count claim and testimonials */}
         </div>
       </div>
     </MantineWrapper>
