@@ -17,16 +17,31 @@ const EXCLUDE = [/[\\/]helpers[\\/]testomonials\.tsx$/];
 
 const isExcluded = (file) => EXCLUDE.some((re) => re.test(file || ''));
 
-const rebrand = (source, file, name) => {
-  if (!name || isExcluded(file) || source.indexOf('Postiz') === -1) {
+// Upstream links that would send customers to upstream's own legal pages.
+const LINK_DEFAULTS = {
+  'https://postiz.com/terms': '/auth/legal/terms.html',
+  'https://postiz.com/privacy': '/auth/legal/privacy.html',
+};
+
+const rebrand = (source, file, name, links = {}) => {
+  if (isExcluded(file)) {
     return source;
   }
-  return source.replace(NAME_PATTERN, name);
+  let out = source;
+  for (const [from, fallback] of Object.entries(LINK_DEFAULTS)) {
+    if (out.indexOf(from) !== -1) {
+      out = out.split(from).join(links[from] || fallback);
+    }
+  }
+  if (name && out.indexOf('Postiz') !== -1) {
+    out = out.replace(NAME_PATTERN, name);
+  }
+  return out;
 };
 
 module.exports = function rebrandLoader(source) {
   const options = (this.getOptions && this.getOptions()) || {};
-  return rebrand(source, this.resourcePath, options.name);
+  return rebrand(source, this.resourcePath, options.name, options.links);
 };
 
 module.exports.rebrand = rebrand;

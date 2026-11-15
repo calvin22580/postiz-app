@@ -43,6 +43,12 @@ How it works, without editing upstream screens one by one:
   `apps/frontend/public` are replaced with the placeholder mark (asset swaps,
   listed in `UPSTREAM_PATCHES.md`). Regenerate them if the brand changes.
 
+- **Legal links.** Upstream's sign-up page links to upstream's own terms and
+  privacy pages. The loader points them at `NEXT_PUBLIC_TERMS_URL` and
+  `NEXT_PUBLIC_PRIVACY_URL`, or at placeholder pages in
+  `apps/frontend/public/auth/legal/` that say they are not published yet.
+  Real legal pages are needed before launch.
+
 Changing `NEXT_PUBLIC_BRAND_*` needs a frontend restart (it is applied at build
 time).
 

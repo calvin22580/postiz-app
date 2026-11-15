@@ -7,8 +7,11 @@
 //    generated classes here, so no upstream component has to change.
 import { brand, shade } from '@gitroom/frontend/ours/brand/brand';
 
-const PURPLES = ['612BD3', '612bd3'];
-const PINKS = ['FC69FF', 'fc69ff', 'D82D7E', 'd82d7e'];
+const PURPLES = ['612BD3', '612bd3', '7B3FF2'];
+const DARK_PURPLES = ['5520CB'];
+const PINKS = ['FC69FF', 'fc69ff', 'D82D7E', 'd82d7e', 'AA0FA4', 'B69DEC'];
+// gradient stops of upstream's primary call-to-action buttons
+const GRADIENT_STOPS = ['622aff', '8b5cf6', '7c3aff', '9d6eff'];
 
 // Tailwind escapes "[#612BD3]" as "\[\#612BD3\]" in the class selector.
 const cls = (prefix: string, hex: string) => `.${prefix}-\\[\\#${hex}\\]`;
@@ -39,6 +42,18 @@ export const brandCss = (c: string) => {
     rules.push(`${variant('hover', 'bg', hex)} { background-color: ${c} !important; }`);
     rules.push(`${variant('hover', 'border', hex)} { border-color: ${c} !important; }`);
     rules.push(`${variant('focus', 'border', hex)} { border-color: ${c} !important; }`);
+  }
+  const dark = shade(c, -0.2);
+  for (const hex of DARK_PURPLES) {
+    rules.push(`${cls('bg', hex)} { background-color: ${dark} !important; }`);
+    rules.push(`${variant('hover', 'bg', hex)} { background-color: ${dark} !important; }`);
+  }
+  for (const hex of GRADIENT_STOPS) {
+    for (const p of ['from', 'to']) {
+      rules.push(
+        `${cls(p, hex)}, ${variant('hover', p, hex)} { --tw-gradient-from: ${c} !important; --tw-gradient-to: ${c} !important; --tw-gradient-stops: ${c}, ${c} !important; }`
+      );
+    }
   }
   for (const hex of PINKS) {
     rules.push(`${cls('bg', hex)} { background-color: ${accent} !important; }`);

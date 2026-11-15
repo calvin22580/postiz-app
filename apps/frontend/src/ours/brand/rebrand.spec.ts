@@ -25,4 +25,16 @@ describe('frontend build-time rebrand', () => {
       rebrand(src, '/r/libraries/react-shared-libraries/src/helpers/testomonials.tsx', 'Tidepost')
     ).toBe(src);
   });
+
+  it('points upstream legal links at ours', () => {
+    const src = "href={`https://postiz.com/terms`} href={`https://postiz.com/privacy`}";
+    expect(rebrand(src, '/x/register.tsx', 'Tidepost')).toBe(
+      'href={`/auth/legal/terms.html`} href={`/auth/legal/privacy.html`}'
+    );
+    expect(
+      rebrand('https://postiz.com/terms', '/x/a.tsx', 'Tidepost', {
+        'https://postiz.com/terms': 'https://example.co.uk/terms',
+      })
+    ).toBe('https://example.co.uk/terms');
+  });
 });

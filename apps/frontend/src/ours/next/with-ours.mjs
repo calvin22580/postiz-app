@@ -24,7 +24,14 @@ const aliases = {
 export const withOurs = (config) => {
   const loader = {
     loader: require.resolve('../brand/rebrand.cjs'),
-    options: { name: brandName() },
+    options: {
+      name: brandName(),
+      // our legal pages; placeholders in public/auth/legal (public paths for signed-out visitors) until they are written
+      links: {
+        'https://postiz.com/terms': process.env.NEXT_PUBLIC_TERMS_URL || '',
+        'https://postiz.com/privacy': process.env.NEXT_PUBLIC_PRIVACY_URL || '',
+      },
+    },
   };
 
   // Source files that may hold customer-facing text: the frontend itself, the
