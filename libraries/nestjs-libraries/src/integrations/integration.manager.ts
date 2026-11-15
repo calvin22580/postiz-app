@@ -38,6 +38,7 @@ import { SkoolProvider } from '@gitroom/nestjs-libraries/integrations/social/sko
 import { WhopProvider } from '@gitroom/nestjs-libraries/integrations/social/whop.provider';
 import { MeweProvider } from '@gitroom/nestjs-libraries/integrations/social/mewe.provider';
 import { TumblrProvider } from '@gitroom/nestjs-libraries/integrations/social/tumblr.provider';
+import { oursSocialProviders } from '@gitroom/nestjs-libraries/ours/ours.social.providers'; // OURS (2026-11-15): our extra providers (Sandbox)
 
 export const socialIntegrationList: Array<SocialAbstract & SocialProvider> = [
   new XProvider(),
@@ -75,6 +76,7 @@ export const socialIntegrationList: Array<SocialAbstract & SocialProvider> = [
   new SkoolProvider(),
   new MeweProvider(),
   new TumblrProvider(),
+  ...oursSocialProviders(), // OURS (2026-11-15): our extra providers (Sandbox), env-gated
   // new MastodonCustomProvider(),
 ];
 

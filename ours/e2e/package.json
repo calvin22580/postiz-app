@@ -1,0 +1,11 @@
+{
+  "name": "ours-e2e",
+  "private": true,
+  "description": "OURS: browser tests for our fork. Kept outside the pnpm workspace so upstream's package.json and lockfile stay untouched.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0"
+  }
+}

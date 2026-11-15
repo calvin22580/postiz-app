@@ -23,6 +23,7 @@ import {
 import { HtmlComponent } from '@gitroom/frontend/components/layout/html.component';
 import Script from 'next/script';
 import { ChangeDirClient } from '@gitroom/frontend/components/new-layout/change.dir.client';
+import { BrandStyle } from '@gitroom/frontend/ours/brand/brand.style'; // OURS (2026-11-15): brand colour tokens
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const cookieStore = await cookies();
@@ -34,6 +35,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <html>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
+        <BrandStyle /> {/* OURS (2026-11-15): brand colour tokens */}
         {!!process.env.DATAFAST_WEBSITE_ID && (
           <Script
             data-website-id={process.env.DATAFAST_WEBSITE_ID}

@@ -2,6 +2,7 @@
 
 import React, { ReactNode, useCallback, useEffect, useState } from 'react';
 import { Logo } from '@gitroom/frontend/components/new-layout/logo';
+import { OursFooter } from '@gitroom/frontend/ours/brand/footer'; // OURS (2026-11-15): Source code link
 import { jakartaSans } from '@gitroom/frontend/fonts/plus-jakarta-sans/plus.jakarta.sans.font';
 const ModeComponent = dynamic(
   () => import('@gitroom/frontend/components/layout/mode.component'),
@@ -192,6 +193,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                       </div>
                     </div>
                   </div>
+                  <OursFooter /> {/* OURS (2026-11-15): Source code link */}
                 </>
               )}
             </div>

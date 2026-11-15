@@ -7,6 +7,7 @@ import { SesProvider } from '@gitroom/nestjs-libraries/emails/ses.provider';
 import { TemporalService } from 'nestjs-temporal-core';
 import { timer } from '@gitroom/helpers/utils/timer';
 import { randomUUID } from 'crypto';
+import { rebrandText } from '@gitroom/nestjs-libraries/ours/brand/brand'; // OURS (2026-11-15)
 
 @Injectable()
 export class EmailService {
@@ -64,6 +65,7 @@ export class EmailService {
     html: string,
     replyTo?: string
   ) {
+    [subject, html] = [rebrandText(subject), rebrandText(html)]; // OURS (2026-11-15): our brand name in every email
     if (to.indexOf('@') === -1) {
       return;
     }

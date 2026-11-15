@@ -83,3 +83,13 @@ British English, DD/MM/YYYY, Europe/London, GBP. Do not hard-code these where a 
 ## Our commands
 
 Upstream's `CLAUDE.md` and `README.md` cover install, run and test. List here only the commands that are specific to our fork, once they exist.
+
+Run from the repo root unless stated. Details in `ours/README.md`.
+
+- Start the services (upstream's file): `docker compose -f docker-compose.dev.yaml up -d`. If `temporal` exits on first start because its database was still starting, run `docker start temporal`.
+- Create the database tables: `pnpm run prisma-db-push`
+- Run the app without the browser extension: `pnpm run --filter ./apps/orchestrator --filter ./apps/backend --filter ./apps/frontend --parallel dev` (upstream's `pnpm run dev` also works, and builds the extension too).
+- Our unit tests: `pnpm exec vitest run --config ours/vitest.config.mts`
+- Our browser tests (stack running, `SANDBOX_CHANNEL_ENABLED=true`): `cd ours/e2e && pnpm install --ignore-workspace && pnpm exec playwright test`
+- Sandbox-off browser test: start the stack with `SANDBOX_CHANNEL_ENABLED=false` in front of the run command, then `cd ours/e2e && E2E_SANDBOX_EXPECTED=off pnpm exec playwright test sandbox-disabled`
+- Upstream's `pnpm test` currently fails before running anything (its jest config needs `@nx/jest`, which upstream does not install) and upstream ships no test files.
