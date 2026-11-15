@@ -16,3 +16,4 @@ Based on upstream release: **v2.26.0** (commit 132859f3, 13/11/2026).
 | 15/11/2026 | `apps/frontend/src/app/(app)/auth/layout.tsx` | Import plus replacing upstream's "20,000+ entrepreneurs" claim and third-party testimonials with `<OursAuthPanel />`. |
 | 15/11/2026 | `libraries/nestjs-libraries/src/services/email.service.ts` | Import plus one line in `sendEmailSync` passing subject and body through `rebrandText()` (our brand name in every email). |
 | 15/11/2026 | `apps/frontend/public/favicon.ico`, `favicon.png`, `postiz.svg` | Asset swaps: placeholder brand mark in place of upstream's logo. |
+| 15/11/2026 | `libraries/nestjs-libraries/src/dtos/posts/providers-settings/all.providers.settings.ts` | Import plus one spread line in `allProviders()` so post validation accepts `__type: 'sandbox'` (no settings, like telegram). |
