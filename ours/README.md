@@ -45,9 +45,37 @@ How it works, without editing upstream screens one by one:
 
 - **Legal links.** Upstream's sign-up page links to upstream's own terms and
   privacy pages. The loader points them at `NEXT_PUBLIC_TERMS_URL` and
-  `NEXT_PUBLIC_PRIVACY_URL`, or at placeholder pages in
-  `apps/frontend/public/auth/legal/` that say they are not published yet.
-  Real legal pages are needed before launch.
+  `NEXT_PUBLIC_PRIVACY_URL`, or at our own pages (below).
+
+## Legal pages
+
+Public pages, no sign-in needed: `/privacy.html`, `/terms.html` and
+`/data-deletion.html` (the URL to give Meta as "Data deletion instructions").
+Top-level paths ending in `.html` are skipped by upstream's proxy, so every
+visitor and crawler reaches them without an upstream change.
+
+- Routes: `apps/frontend/src/app/(legal)/` (own root layout, light theme, no app
+  scripts or trackers).
+- Content: `apps/frontend/src/ours/legal/` (`privacy.policy.tsx`,
+  `terms.of.service.tsx`, `data.deletion.tsx`). Sources and open points:
+  `apps/frontend/src/ours/legal/SOURCES.md`.
+- Company facts: `legal.defaults.json`, each overridable by an environment
+  variable (frontend build time). Empty values show as `[FILL IN: ...]`, and a
+  "Draft" notice shows until all are set and the pages are marked reviewed.
+
+| Variable | Default |
+|----------|---------|
+| `NEXT_PUBLIC_LEGAL_COMPANY_NAME` | `Steady Lamp Ltd` |
+| `NEXT_PUBLIC_LEGAL_COMPANY_NUMBER` | empty |
+| `NEXT_PUBLIC_LEGAL_REGISTERED_ADDRESS` | empty |
+| `NEXT_PUBLIC_LEGAL_ICO_NUMBER` | empty |
+| `NEXT_PUBLIC_LEGAL_CONTACT_EMAIL` | `support@steadylamp.com` |
+| `NEXT_PUBLIC_LEGAL_JURISDICTION` | `England and Wales` |
+| `NEXT_PUBLIC_LEGAL_LAST_UPDATED` | empty (DD/MM/YYYY) |
+| `NEXT_PUBLIC_LEGAL_REVIEWED` | `false`; set `true` after a solicitor's review |
+
+Provider names and regions in the privacy policy (hosting, email, R2
+location, backups) are text in `privacy.policy.tsx`, not settings.
 
 Changing `NEXT_PUBLIC_BRAND_*` needs a frontend restart (it is applied at build
 time).

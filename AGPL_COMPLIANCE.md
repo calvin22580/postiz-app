@@ -38,7 +38,7 @@ AGPL section 5(a) requires modified files to "carry prominent notices stating th
 
 ### Trademarks and third parties
 - ✅ (1a) No Postiz name, logo or trademark where customers can see it (AGPL grants no trademark rights).
-- ✅ (1a) Upstream's links to **postiz.com/terms** and **postiz.com/privacy** in `register.tsx` are rewritten at build time to our own pages (`apps/frontend/public/auth/legal/`). ⬜ Those pages are placeholders: real terms and privacy policy are needed before launch. ⬜ Other `postiz.com` links (affiliate in `top.menu.tsx`, `docs.postiz.com`, `api.postiz.com` in `apps/sdk`) should also be removed or replaced.
+- ✅ (1a) Upstream's links to **postiz.com/terms** and **postiz.com/privacy** in `register.tsx` are rewritten at build time to our own pages (`/terms.html`, `/privacy.html`, see `ours/README.md` "Legal pages"). ⬜ They are drafts with `[FILL IN]` company details, awaiting a solicitor's review. ⬜ Other `postiz.com` links (affiliate in `top.menu.tsx`, `docs.postiz.com`, `api.postiz.com` in `apps/sdk`) should also be removed or replaced.
 - ✅ Never use Postiz's API keys, developer apps or paid services (`FORK_RULES.md`). That includes the `ghcr.io/gitroomhq/postiz-app` Docker image: we build our own (see `DEPLOYMENT.md`).
 - ⬜ Check the licences of optional third-party services before enabling them. In particular, **Polotno** (`NEXT_PUBLIC_POLOTNO`, the design editor) is a commercial SDK that needs our own licence key. Leave it unset until we have one.
 

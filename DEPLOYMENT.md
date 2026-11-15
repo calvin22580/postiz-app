@@ -78,6 +78,7 @@ How to get these: `PLATFORM_APPROVALS.md`.
 ### Ours
 - `SANDBOX_CHANNEL_ENABLED`: turns on the Sandbox channel (off by default, `libs/ours/sandbox/sandbox.config.ts`). Keep it off in production unless the environment is deliberately a demo. Sandbox posts are always labelled.
 - `NEXT_PUBLIC_DEFAULT_LOCALE` (default `en-GB`) and `NEXT_PUBLIC_DEFAULT_TIMEZONE` (default `Europe/London`): date format and calendar time zone for users who haven't chosen their own. Leave them unset for UK defaults; an empty string switches back to the browser. Frontend build time. See `ours/README.md`.
+- `NEXT_PUBLIC_LEGAL_*`: company facts printed on the privacy, terms and data deletion pages (company number, registered address, ICO number, last-updated date, reviewed). Frontend build time. List and defaults in `ours/README.md` ("Legal pages").
 - `NEXT_PUBLIC_SHOW_DEVELOPER_TOOLS`: leave unset in production. `true` shows upstream's developer screens (Agents / Dev, OAuth apps, Connect Agents onboarding step), which point at upstream's docs and tools. Hiding them does not turn off the public API.
 
 ### Leave unset in production
