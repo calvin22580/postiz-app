@@ -11,7 +11,7 @@ Everything in this fork that is ours rather than upstream Postiz. Read
 | Fork tooling, dev stack, tests config | `ours/` |
 | Backend and orchestrator code | `libraries/nestjs-libraries/src/ours/` |
 | Frontend code | `apps/frontend/src/ours/` (brand, locale, developer-tools, sandbox) |
-| Frontend routes | `apps/frontend/src/app/(app)/(site)/sandbox/` (new files only) |
+| Frontend routes | `apps/frontend/src/app/(app)/(site)/{sandbox,business-profile,captions}/` (new files only) |
 | Browser tests | `ours/e2e/` (standalone package, outside the pnpm workspace) |
 
 ## Brand
@@ -163,3 +163,40 @@ marked as failed so the owner can try again.
 | `OURS_AI_MODEL` | backend | `claude-opus-5-5` |
 | `OURS_CRAWLER_ALLOW_PRIVATE` | backend: lets the crawler read localhost (dev and browser tests only, never in production) | off |
 
+
+## Weekly posts (captions)
+
+The owner gets a week of posts written from their business profile, and
+approves each one. Screen: `/captions` (menu: "Weekly posts"). Code:
+`libraries/nestjs-libraries/src/ours/captions/`,
+`apps/backend/src/ours/captions.controller.ts`, `apps/frontend/src/ours/captions/`.
+
+How it works:
+
+1. **Plan** (`caption.plan.ts`): the week starting next Monday, one post a
+   weekday, each written for Facebook (12:30), Instagram (18:30) and LinkedIn
+   (08:30), in the organisation's time zone (`OURS_DEFAULT_TIMEZONE`, default
+   `Europe/London`). The facts are the profile's claims (website or owner),
+   each with an id. Tone of voice comes from the profile, or "friendly, clear
+   and professional" when it was not found.
+2. **Write**: Claude gets the facts inside `<untrusted_business_profile>` and
+   must cite the fact ids each caption uses. Without `ANTHROPIC_API_KEY` a
+   template-based demo writer runs, and the screen says "Demo mode". A thin
+   profile gives fewer days rather than padded posts.
+3. **Check** (`groundCaptions`): a caption is kept only if it cites real facts
+   and every number, price or percentage, email, web address, @handle and
+   offer, award or quality word ("free", "best", "award-winning" and so on) is
+   in the profile. Anything else is dropped, and the screen says how many.
+4. **Approve**: each caption shows "Waiting for your approval". "Approve and
+   schedule" creates one upstream post (`PostsService.createPost`, type
+   `schedule`) at the planned time. For now only Sandbox channels are
+   accepted, so nothing reaches a real platform. Captions that are not
+   approved are never scheduled.
+
+Writing runs in the background in the backend process (like the profile
+build) and the screen polls it; a week stuck for 10 minutes is marked as
+failed. Each AI call's cost is logged under the feature `captions`.
+
+| Variable | Used by | Default |
+|----------|---------|---------|
+| `OURS_DEFAULT_TIMEZONE` | backend: caption posting times | `Europe/London` |

@@ -101,9 +101,16 @@ These apply to every model we add from now on.
 
 Milestone 2 added `OursBusinessProfile` (one per organisation, `organizationId` unique) and `OursAiUsage` (one row per AI generation call, for cost logging).
 
+Milestone 3 added `OursCaptionWeek` (one row per "write next week's posts") and `OursCaptionDraft` (one row per caption, waiting for approval). A draft becomes an upstream `Post` only when the owner approves it; `postId` then links the two (plain column, as above).
+
 ## AI calls (Milestone 2)
 
 - Our AI calls use the official Anthropic SDK (`@anthropic-ai/sdk`, added as a root dependency). They do not go through upstream's `OpenaiService`.
 - Every call logs its tokens and cost (USD list prices in `libs/ours/ai/ai.pricing.ts`) to `OursAiUsage` through `AiUsageService.logCall(orgId, feature, usage)`. Use it for every future generation call.
 - Model: `OURS_AI_MODEL`, default `claude-opus-5-5`. Without `ANTHROPIC_API_KEY`, the business profile uses a deterministic demo extractor and the screen says so.
+- Milestone 3 (captions) follows the same pattern: `CaptionWriter` adapter, Claude or a labelled demo writer, cost logged under the feature `captions`, and a check after the AI (`groundCaptions`) that drops any caption with a detail not in the profile.
+
+## Approval before scheduling (Milestone 3)
+
+Captions live in our own tables until the owner approves one. Approval calls upstream's `PostsService.createPost` (type `schedule`) for that single caption, so the normal scheduler and workflows take over from there. Until the review screen (Milestone 5), approval only accepts a Sandbox channel, and nothing else in our code creates posts.
 
