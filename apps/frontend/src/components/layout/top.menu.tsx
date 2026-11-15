@@ -5,6 +5,8 @@ import { useUser } from '@gitroom/frontend/components/layout/user.context';
 import { useVariables } from '@gitroom/react/helpers/variable.context';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { MenuItem } from '@gitroom/frontend/components/new-layout/menu-item';
+// OURS (2026-11-15): our menu entries (business profile)
+import { oursFirstMenu } from '@gitroom/frontend/ours/menu/ours.menu';
 
 interface MenuItemInterface {
   name: string;
@@ -42,6 +44,7 @@ export const useMenuItem = () => {
       ),
       path: '/launches',
     },
+    ...oursFirstMenu(t), // OURS (2026-11-15): our menu entries
     {
       name: 'Agent',
       icon: (
