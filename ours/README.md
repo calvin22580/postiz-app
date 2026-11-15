@@ -142,7 +142,8 @@ How it works:
    addresses (checked on every redirect), 10 s and 2 MB per page.
 2. **Clean** (`cleanHtml`): visible text only. Scripts, styles, comments,
    menus, hidden and screen-reader-only text are removed, and lines that read
-   like instructions to an AI are replaced with a marker.
+   like instructions to an AI are replaced with a marker. Email addresses
+   hidden by Cloudflare's email obfuscation are decoded.
 3. **Extract**: Claude reads the pages, marked as untrusted, and returns claims
    with a source URL and an exact quote for each. Without `ANTHROPIC_API_KEY` a
    rule-based demo extractor runs instead, and the screen says "Demo mode".
