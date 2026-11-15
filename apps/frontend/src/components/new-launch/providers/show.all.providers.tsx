@@ -40,6 +40,7 @@ import SkoolProvider from '@gitroom/frontend/components/new-launch/providers/sko
 import WhopProvider from '@gitroom/frontend/components/new-launch/providers/whop/whop.provider';
 import MeweProvider from '@gitroom/frontend/components/new-launch/providers/mewe/mewe.provider';
 import TumblrProvider from '@gitroom/frontend/components/new-launch/providers/tumblr/tumblr.provider';
+import { OursProviders } from '@gitroom/frontend/ours/sandbox/ours.providers'; // OURS (2026-11-15): our extra providers (Sandbox)
 
 export const Providers = [
   {
@@ -182,6 +183,7 @@ export const Providers = [
     identifier: 'tumblr',
     component: TumblrProvider,
   },
+  ...OursProviders, // OURS (2026-11-15): our extra providers (Sandbox)
 ];
 export const ShowAllProviders = forwardRef((props, ref) => {
   const { date, current, global, selectedIntegrations, allIntegrations } =
