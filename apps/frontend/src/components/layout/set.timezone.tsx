@@ -2,6 +2,7 @@
 import dayjs, { ConfigType, Dayjs, PluginFunc } from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { defaultTimezone } from '@gitroom/frontend/ours/locale/locale'; // OURS (2026-11-15): UK date locale and default time zone
 // the plugin below wraps methods of these, so they are registered first
 dayjs.extend(utc);
 dayjs.extend(relativeTime);
@@ -282,6 +283,7 @@ export const isTimezone = (timezone: string) => {
 // null is the browser's timezone, where plain dayjs is already right
 let userTimezone: string | null = null;
 const applyTimezone = (timezone?: string | null) => {
+  timezone = timezone || defaultTimezone(); // OURS (2026-11-15): default time zone when the user has not picked one
   userTimezone =
     timezone && timezone !== browserTimezone() && isTimezone(timezone)
       ? timezone

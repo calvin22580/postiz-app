@@ -28,6 +28,7 @@ import {
   mcpConnectorUrls,
 } from '@gitroom/frontend/components/public-api/public.component';
 import { McpClientIcon } from '@gitroom/frontend/components/public-api/mcp.client.icons';
+import { showDeveloperTools } from '@gitroom/frontend/ours/developer-tools/developer.tools'; // OURS (2026-11-15): hide the Connect Agents step
 
 interface OnboardingModalProps {
   onClose: () => void;
@@ -41,7 +42,7 @@ export const OnboardingModal: FC<OnboardingModalProps> = ({ onClose }) => {
   const steps = useMemo(
     () => [
       t('connect_channels', 'Connect Channels'),
-      t('connect_agents', 'Connect Agents'),
+      ...(showDeveloperTools() ? [t('connect_agents', 'Connect Agents')] : []), // OURS (2026-11-15): hide the Connect Agents step
       t('watch_tutorial', 'Watch Tutorial'),
     ],
     [t]
@@ -111,14 +112,14 @@ export const OnboardingModal: FC<OnboardingModalProps> = ({ onClose }) => {
                 onSkip={() => setStep(2)}
               />
             )}
-            {step === 2 && (
+            {step === 2 && showDeveloperTools() && ( // OURS (2026-11-15): hide the Connect Agents step
               <OnboardingStep2
                 onBack={() => setStep(1)}
                 onNext={() => setStep(3)}
               />
             )}
-            {step === 3 && (
-              <OnboardingStep3 onBack={() => setStep(2)} onFinish={onClose} />
+            {step === (showDeveloperTools() ? 3 : 2) && ( // OURS (2026-11-15): tutorial becomes step 2
+              <OnboardingStep3 onBack={() => setStep(showDeveloperTools() ? 2 : 1)} onFinish={onClose} />
             )}
           </div>
         </div>
