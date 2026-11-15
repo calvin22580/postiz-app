@@ -24,4 +24,25 @@ export const oursFirstMenu = (
     ),
     path: '/business-profile',
   },
+  {
+    name: t('ours_weekly_posts', 'Weekly posts'),
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="21"
+        height="21"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <path
+          d="M8 3v3M16 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1ZM8 13h8M8 16.5h5"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+    path: '/captions',
+  },
 ];

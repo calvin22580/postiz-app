@@ -1897,3 +1897,54 @@ model OursAiUsage {
   @@index([organizationId, createdAt])
   @@map("ours_ai_usage")
 }
+
+// Milestone 3: a week of captions written from the business profile. Each
+// caption waits for the owner's approval; nothing is scheduled until then.
+enum OursCaptionWeekStatus {
+  WRITING
+  READY
+  FAILED
+}
+
+enum OursCaptionStatus {
+  PENDING_APPROVAL
+  APPROVED
+}
+
+model OursCaptionWeek {
+  id             String                @id @default(uuid())
+  organizationId String
+  weekStart      String
+  timezone       String
+  status         OursCaptionWeekStatus
+  errorMessage   String?
+  writer         String?
+  droppedCount   Int                   @default(0)
+  startedAt      DateTime              @default(now())
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  @@unique([organizationId, weekStart])
+  @@index([organizationId, startedAt])
+  @@map("ours_caption_week")
+}
+
+model OursCaptionDraft {
+  id             String            @id @default(uuid())
+  organizationId String
+  weekId         String
+  platform       String
+  scheduledFor   DateTime
+  theme          String
+  text           String
+  facts          Json              @default("[]")
+  status         OursCaptionStatus @default(PENDING_APPROVAL)
+  integrationId  String?
+  postId         String?
+  approvedAt     DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([organizationId, weekId])
+  @@map("ours_caption_draft")
+}
