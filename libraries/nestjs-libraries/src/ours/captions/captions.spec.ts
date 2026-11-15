@@ -151,14 +151,17 @@ describe('groundCaptions', () => {
         { day: 2, theme: 'Long', captions: [caption('facebook', `${good} `.repeat(40), [id('services')])] },
       ],
     };
-    const { captions, dropped } = groundCaptions(raw, FACTS, POSTING_DAYS.length);
+    const { captions, dropped, reasons } = groundCaptions(raw, FACTS, POSTING_DAYS.length);
     expect(captions.map((c) => `${c.day}:${c.platform}`)).toEqual(['0:linkedin', '1:facebook', '1:linkedin']);
     expect(dropped).toBe(7);
+    expect(reasons).toHaveLength(7);
+    expect(reasons).toContain('day 0 instagram: not in profile: 50, price or percentage');
+    expect(reasons).toContain('day 1 instagram: no profile facts');
     expect(captions[2].facts.map((f) => f.field)).toEqual(['services', 'businessName']);
   });
 
   it('survives a malformed answer', () => {
-    expect(groundCaptions({} as never, FACTS, 5)).toEqual({ captions: [], dropped: 0 });
+    expect(groundCaptions({} as never, FACTS, 5)).toEqual({ captions: [], dropped: 0, reasons: [] });
     expect(groundCaptions({ posts: [{ captions: [{}] }] } as never, FACTS, 5).dropped).toBe(1);
   });
 });

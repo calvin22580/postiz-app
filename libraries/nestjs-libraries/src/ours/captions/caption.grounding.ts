@@ -109,6 +109,7 @@ export const groundCaptions = (
   const kept: CheckedCaption[] = [];
   const seen = new Set<string>();
   let dropped = 0;
+  const reasons: string[] = [];
 
   for (const post of raw?.posts || []) {
     for (const c of post?.captions || []) {
@@ -122,19 +123,25 @@ export const groundCaptions = (
       const maxLength =
         CAPTION_PLATFORMS.find((p) => p.key === platform)?.maxLength || 0;
 
-      const ok =
-        Number.isInteger(day) &&
-        day >= 0 &&
-        day < dayCount &&
-        isCaptionPlatform(platform) &&
-        !seen.has(key) &&
-        text.length >= 20 &&
-        text.length <= maxLength &&
-        used.length > 0 &&
-        unsupportedDetails(text, facts).length === 0;
+      const problems = unsupportedDetails(text, facts);
+      const reason = !(Number.isInteger(day) && day >= 0 && day < dayCount)
+        ? 'bad day'
+        : !isCaptionPlatform(platform)
+        ? 'bad platform'
+        : seen.has(key)
+        ? 'duplicate'
+        : text.length < 20 || text.length > maxLength
+        ? 'length'
+        : !used.length
+        ? 'no profile facts'
+        : problems.length
+        ? `not in profile: ${problems.join(', ')}`
+        : '';
 
-      if (!ok) {
+      if (reason) {
         dropped++;
+        // why, not the caption itself, so the filter can be tuned from logs
+        reasons.push(`day ${post?.day} ${platform || '?'}: ${reason}`);
         continue;
       }
       seen.add(key);
@@ -154,5 +161,5 @@ export const groundCaptions = (
       CAPTION_PLATFORMS.findIndex((p) => p.key === a.platform) -
         CAPTION_PLATFORMS.findIndex((p) => p.key === b.platform)
   );
-  return { captions: kept, dropped };
+  return { captions: kept, dropped, reasons };
 };
