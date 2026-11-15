@@ -18,7 +18,7 @@ Backend layering is DTO → Controller → (Manager) → Service → Repository,
 ## Social providers and OAuth
 
 - **One class per platform** in `libs/integrations/social/*.provider.ts`. Each extends `SocialAbstract` (`libs/integrations/social.abstract.ts`) and implements `SocialProvider` (`social.integrations.interface.ts`): `identifier`, `scopes`, `generateAuthUrl`, `authenticate`, `refreshToken`, `post`, and optional analytics and comments.
-- **Registration is a hard-coded array**, `socialIntegrationList`, in `libs/integrations/integration.manager.ts`. Adding a provider, such as our Sandbox, needs one line there. `HIDDEN_PROVIDERS` (env, comma-separated identifiers) hides providers from the add-channel screen **without code edits**, which is how we can show only our chosen platforms.
+- **Registration is a hard-coded array**, `socialIntegrationList`, in `libs/integrations/integration.manager.ts`. Milestone 1a added one spread line there for `oursSocialProviders()`, so our providers (Sandbox) need no further upstream edits. `HIDDEN_PROVIDERS` (env, comma-separated identifiers) hides providers from the add-channel screen **without code edits**, which is how we can show only our chosen platforms.
 - **OAuth flow:** the frontend asks `GET /integrations/social/:integration` (`apps/backend/src/api/routes/integrations.controller.ts`) for the auth URL. The platform redirects to the frontend route `apps/frontend/src/app/(app)/integrations/social/[provider]/page.tsx` (`components/launches/continue.integration.tsx`), which posts the code to `POST /integrations/social-connect/:integration` (`no.auth.integrations.controller.ts`). Page-picking providers then finish with `POST /integrations/provider/:id/connect`. Tokens are stored on the `Integration` row, encrypted if `ENCRYPTION_PROVIDER` is set. Some providers (Facebook, Instagram, LinkedIn Page) are `isBetweenSteps`, meaning the user picks a Page after OAuth.
 - `SocialAbstract.checkScopes` rejects a connection unless **every** requested scope was granted.
 - **Per-provider frontend pieces:** settings and preview components in `apps/frontend/src/components/new-launch/providers/<identifier>/`, and an icon in `apps/frontend/public/icons/platforms/<identifier>.png`.
@@ -64,17 +64,19 @@ Other entry points that create posts: the public API, the MCP / AI agent tools (
 
 ## Where our code goes (without editing upstream)
 
-The `tidepost` folder names are proposals. If Milestone 1a chose different names for the sandbox, follow those and update this table.
+Milestone 1a set the convention: our code lives in folders named **`ours/`**. See `ours/README.md` and `UPSTREAM_PATCHES.md`.
 
 | What | Where | Upstream edit needed |
 |---|---|---|
-| Our server logic (services, repositories, providers) | New folder **`libraries/nestjs-libraries/src/tidepost/`**, one subfolder per feature (`profile/`, `captions/`, `campaigns/`, `sandbox/`) | None |
-| Our API routes | New NestJS module **`apps/backend/src/tidepost/tidepost.module.ts`** with its own controllers under a `/tidepost/*` prefix | **One line** in `apps/backend/src/app.module.ts` `imports` |
-| Sandbox provider | `libs/tidepost/sandbox/sandbox.provider.ts` | **One line** in `socialIntegrationList`, plus a frontend provider folder and icon (new files) |
-| Background jobs | Our own workflow and activity files in `apps/orchestrator/src/tidepost/` | One export line in `workflows/index.ts`, and activity registration in the orchestrator module |
-| Screens | New routes **`apps/frontend/src/app/(app)/(site)/tidepost/...`** and components in `apps/frontend/src/components/tidepost/` | Menu entries are hard-coded in `components/layout/top.menu.tsx`. Make **one edit** that spreads in a menu array from our own file |
-| Database | One delimited `// ==== TIDEPOST MODELS ====` block at the **end** of `schema.prisma`. Prisma 6.5 multi-file schemas need a preview flag and new `--schema` paths in upstream scripts, so a separate file costs more edits than it saves | Appending is the edit. See the relations caveat below |
-| Branding | Env vars, theme tokens in `apps/frontend/src/app/colors.scss`, assets in `apps/frontend/public/`, translation strings | Milestone 1a decides and logs |
+| Server logic (services, repositories, providers) | `libraries/nestjs-libraries/src/ours/<feature>/` (e.g. `ours/sandbox/`, `ours/brand/`) | None |
+| Extra social providers | Add to `oursSocialProviders()` in `libs/ours/ours.social.providers.ts` | None. 1a already spreads it into `socialIntegrationList` |
+| Post-editor provider components | `apps/frontend/src/ours/sandbox/ours.providers.ts` | None. 1a already spreads it into `show.all.providers.tsx` |
+| Our API routes | A new NestJS module, e.g. `apps/backend/src/ours/ours.module.ts`, with controllers under an `/ours/*` or feature prefix | **One line** in `apps/backend/src/app.module.ts` `imports` (not yet made) |
+| Background jobs | Our own workflow and activity files, e.g. `apps/orchestrator/src/ours/` | One export line in `workflows/index.ts`, and activity registration in the orchestrator module (not yet made) |
+| Screens | New routes in `apps/frontend/src/app/(app)/(site)/<feature>/` (1a added `sandbox/[id]`), with components in `apps/frontend/src/ours/` | Menu entries are hard-coded in `components/layout/top.menu.tsx`. Make **one edit** that spreads in a menu array from our own file |
+| Database | One delimited `// ==== OURS ====` block at the **end** of `schema.prisma`. Prisma 6.5 multi-file schemas need a preview flag and new `--schema` paths in upstream scripts, so a separate file costs more edits than it saves | Appending is the edit. See the relations caveat below |
+| Branding | `apps/frontend/src/ours/brand/` (`brand.defaults.json`, `BrandStyle`, a build-time rebrand loader via `with-ours.mjs`), and `libs/ours/brand/` for emails | Done in 1a, listed in `UPSTREAM_PATCHES.md` |
+| Tests | `ours/vitest.config.mts` (unit), `ours/e2e/` (Playwright) | None |
 
 ## Things in upstream that will make milestones 2 to 5 harder
 
@@ -84,5 +86,5 @@ The `tidepost` folder names are proposals. If Milestone 1a chose different names
 4. **AI is hard-wired to OpenAI `gpt-4.1` with no cost logging.** Milestones 2 and 3 should use our own AI client wrapper with per-org cost logging, and should not extend `OpenaiService`. `extractWebsiteText` exists, but it has no sources or citations, so it does not fit milestone 2's "source for every claim".
 5. **The UI is calendar-centric.** The editor modal (`components/new-launch/`) is large and provider-driven. The milestone 5 review screen should be our own page that calls `PostsService` after approval, not a modification of the editor. The existing preview and comments page (`(app)/(preview)`) may help with sharing a post for feedback.
 6. **Billing is hard-coded** (`pricing.ts` tiers, USD, enum tiers). Milestone 7 will need a careful plan. Note that removing Stripe keys silently lifts all limits.
-7. **Menu and providers are arrays in upstream files**, so each needs one logged edit (see the table above).
+7. **Menu and providers are arrays in upstream files**, so each needs one logged edit (1a has already made the provider ones).
 8. **Upstream moves fast** (v1.0.1 to v1.1.2 post workflows already). Avoid depending on internal method signatures where a public service method exists.

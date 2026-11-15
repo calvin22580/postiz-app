@@ -76,7 +76,7 @@ Setting `EMAIL_PROVIDER` turns on account activation by email.
 How to get these: `PLATFORM_APPROVALS.md`.
 
 ### Ours
-- The Sandbox channel's enable flag. **Milestone 1a defines the name.** It must stay off in production unless we deliberately enable it for demos, and sandbox posts are always labelled.
+- `SANDBOX_CHANNEL_ENABLED`: turns on the Sandbox channel (off by default, `libs/ours/sandbox/sandbox.config.ts`). Keep it off in production unless the environment is deliberately a demo. Sandbox posts are always labelled.
 
 ### Leave unset in production
 These are upstream or third-party extras we haven't chosen to use. Leaving them unset disables the feature.
@@ -109,4 +109,4 @@ These are upstream or third-party extras we haven't chosen to use. Leaving them 
 - [ ] `ENCRYPTION_KEY` generated and stored in a password manager
 - [ ] `DISABLE_REGISTRATION=true` until launch
 - [ ] Platform credentials added as each approval lands
-- [ ] Sandbox flag set deliberately (off unless it's a demo environment)
+- [ ] `SANDBOX_CHANNEL_ENABLED` set deliberately (off unless it's a demo environment)

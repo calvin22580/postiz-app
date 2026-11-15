@@ -12,18 +12,18 @@ Section 13 of the AGPL says that if we run a modified version and users interact
 
 ## What we do
 
-Status key: ✅ in place · 🔜 delivered by Milestone 1a (the rebrand thread running now) · ⬜ to do before launch.
+Status key: ✅ in place · ⬜ to do before launch. Items marked "(1a)" were delivered by Milestone 1a.
 
 ### Licence and notices
 - ✅ Keep the upstream `LICENSE` file unchanged at the repo root.
 - ✅ Keep `"license": "AGPL-3.0"` in `package.json` and `apps/sdk/package.json`.
 - ✅ Keep upstream's copyright and licence notices. Upstream source files carry no per-file headers (checked 15/11/2026), so the notices to keep are `LICENSE`, the README licence section and any notice shown in the app.
-- 🔜 The rebrand keeps any legal, copyright or licence notice the app already displays, even where it names Postiz (`FORK_RULES.md`, "Licence and branding").
+- ✅ (1a) The rebrand keeps any legal, copyright or licence notice the app already displays, even where it names Postiz (`FORK_RULES.md`, "Licence and branding").
 - ⬜ Add a short "Based on Postiz, © Gitroom, AGPL-3.0" credit and a link to `LICENSE` in our repo `README.md` and on an About or Legal page in the app. Not strictly required beyond the kept notices, but it is the clearest way to give "appropriate legal notices".
 
 ### Offering the source (section 13)
 - ✅ The fork is a public GitHub repository.
-- 🔜 A **"Source code" link in the app footer** pointing at https://github.com/calvin22580/postiz-app (Milestone 1a, task 3). It must be visible to every logged-in user, not only on the marketing site.
+- ✅ (1a) A **"Source code" link in the app footer** (`apps/frontend/src/ours/brand/footer.tsx`), pointing at `sourceCodeUrl` in `brand.defaults.json` (https://github.com/calvin22580/postiz-app). It is visible on every logged-in page.
 - ⬜ Make the link point at the **exact version running**: a tag or commit for each deployed release (for example `.../tree/<git-sha>`, or a `NEXT_PUBLIC_VERSION`-style variable filled in at build time). A link to `main` is weaker if production lags behind.
 - ⬜ Deploy only from commits that are pushed to the public repo. Never run production from unpushed local changes or a private branch.
 - ⬜ Nothing needed to build and run our version may be kept private, except secrets and config values (API keys, `.env`). Our own modules, Docker files and build scripts all go in the public repo.
@@ -32,13 +32,13 @@ Status key: ✅ in place · 🔜 delivered by Milestone 1a (the rebrand thread r
 AGPL section 5(a) requires modified files to "carry prominent notices stating that you modified it, and giving a relevant date".
 - ✅ Rule in place: every upstream file we touch carries an `OURS (YYYY-MM-DD): <reason>` comment (`FORK_RULES.md`, additive-only rule 2).
 - ✅ `UPSTREAM_PATCHES.md` lists every modified upstream file, with the date and reason. Current entry: `CLAUDE.md`.
-- 🔜 Milestone 1a adds its rebrand and sandbox edits to `UPSTREAM_PATCHES.md`, each with an `OURS` marker.
+- ✅ (1a) The rebrand and sandbox edits are listed in `UPSTREAM_PATCHES.md`, each with an `OURS` marker.
 - ✅ Our new files are clearly ours by location (our own directories), and are released under AGPL-3.0 with the rest of the work.
 - ⬜ Add a line to our `README.md` stating that this is a modified version of Postiz and pointing at `UPSTREAM_PATCHES.md`.
 
 ### Trademarks and third parties
-- 🔜 No Postiz name, logo or trademark where customers can see it (AGPL grants no trademark rights). Milestone 1a.
-- 🔜 Replace upstream's links to **postiz.com/terms** and **postiz.com/privacy** in `apps/frontend/src/components/auth/register.tsx` with our own legal pages. Customers must not be pointed at another company's terms. Other `postiz.com` links (affiliate in `top.menu.tsx`, `docs.postiz.com`, `api.postiz.com` in `apps/sdk`) should also be removed or replaced.
+- ✅ (1a) No Postiz name, logo or trademark where customers can see it (AGPL grants no trademark rights).
+- ✅ (1a) Upstream's links to **postiz.com/terms** and **postiz.com/privacy** in `register.tsx` are rewritten at build time to our own pages (`apps/frontend/public/auth/legal/`). ⬜ Those pages are placeholders: real terms and privacy policy are needed before launch. ⬜ Other `postiz.com` links (affiliate in `top.menu.tsx`, `docs.postiz.com`, `api.postiz.com` in `apps/sdk`) should also be removed or replaced.
 - ✅ Never use Postiz's API keys, developer apps or paid services (`FORK_RULES.md`). That includes the `ghcr.io/gitroomhq/postiz-app` Docker image: we build our own (see `DEPLOYMENT.md`).
 - ⬜ Check the licences of optional third-party services before enabling them. In particular, **Polotno** (`NEXT_PUBLIC_POLOTNO`, the design editor) is a commercial SDK that needs our own licence key. Leave it unset until we have one.
 
