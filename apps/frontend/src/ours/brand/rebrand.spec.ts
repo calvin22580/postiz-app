@@ -29,7 +29,7 @@ describe('frontend build-time rebrand', () => {
   it('points upstream legal links at ours', () => {
     const src = "href={`https://postiz.com/terms`} href={`https://postiz.com/privacy`}";
     expect(rebrand(src, '/x/register.tsx', 'Tidepost')).toBe(
-      'href={`/auth/legal/terms.html`} href={`/auth/legal/privacy.html`}'
+      'href={`/terms.html`} href={`/privacy.html`}'
     );
     expect(
       rebrand('https://postiz.com/terms', '/x/a.tsx', 'Tidepost', {

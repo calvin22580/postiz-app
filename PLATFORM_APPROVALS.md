@@ -19,9 +19,9 @@ Both Meta and LinkedIn vet the **business**, not just the app. These are the slo
 | A registered legal entity (for example a UK Ltd company) | Needed for Business Verification | **Required.** "Only available to registered legal organizations for commercial use cases only" | If you trade as a sole trader, confirm whether that is accepted before applying. **UNVERIFIED for sole traders.** |
 | Business email on your own domain | Strongly advised | **Required.** Personal addresses "won't pass the vetting process" | e.g. `you@tidepost.example`, not Gmail |
 | Public website on that domain | Needed | Needed: website and domain are verified | Can be a one-page site |
-| Privacy policy URL | Required in App Settings | Required for Standard tier | Must say how users can ask for their data to be deleted |
-| Terms of service URL | Asked for in App Settings | Asked for | |
-| Data deletion URL (instructions page or callback) | Required for apps that access user data | n/a | **Upstream has no deletion callback.** Use an instructions page for now. See "Gaps in the code" |
+| Privacy policy URL | Required in App Settings | Required for Standard tier | Must say how users can ask for their data to be deleted. **Draft ready:** `https://<app domain>/privacy.html` (fill in company details first) |
+| Terms of service URL | Asked for in App Settings | Asked for | **Draft ready:** `https://<app domain>/terms.html` |
+| Data deletion URL (instructions page or callback) | Required for apps that access user data | n/a | **Upstream has no deletion callback.** Use an instructions page for now: `https://<app domain>/data-deletion.html`. See "Gaps in the code" |
 | A LinkedIn Company Page for the business | n/a | **Required.** A super admin of the Page must verify the app | |
 | A Meta Business Portfolio (Business Manager) | Required | n/a | Business Verification happens here |
 | A running, publicly reachable instance | Reviewers must be able to test it | Needed for the Standard tier screencast | Not needed to *start* applications. Needed before you submit for review |

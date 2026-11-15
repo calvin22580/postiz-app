@@ -26,7 +26,7 @@ export const withOurs = (config) => {
     loader: require.resolve('../brand/rebrand.cjs'),
     options: {
       name: brandName(),
-      // our legal pages; placeholders in public/auth/legal (public paths for signed-out visitors) until they are written
+      // our legal pages: apps/frontend/src/app/(legal) by default, or these URLs if set
       links: {
         'https://postiz.com/terms': process.env.NEXT_PUBLIC_TERMS_URL || '',
         'https://postiz.com/privacy': process.env.NEXT_PUBLIC_PRIVACY_URL || '',

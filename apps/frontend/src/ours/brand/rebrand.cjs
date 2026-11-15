@@ -19,8 +19,8 @@ const isExcluded = (file) => EXCLUDE.some((re) => re.test(file || ''));
 
 // Upstream links that would send customers to upstream's own legal pages.
 const LINK_DEFAULTS = {
-  'https://postiz.com/terms': '/auth/legal/terms.html',
-  'https://postiz.com/privacy': '/auth/legal/privacy.html',
+  'https://postiz.com/terms': '/terms.html',
+  'https://postiz.com/privacy': '/privacy.html',
 };
 
 const rebrand = (source, file, name, links = {}) => {

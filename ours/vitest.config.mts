@@ -9,6 +9,8 @@ const root = path.resolve(import.meta.dirname, '..');
 
 export default defineConfig({
   root,
+  // the frontend's tsconfig preserves JSX for Next.js; compile it for tests
+  oxc: { jsx: { runtime: 'automatic' } },
   resolve: {
     alias: [
       { find: /^@gitroom\/nestjs-libraries\/(.*)$/, replacement: `${root}/libraries/nestjs-libraries/src/$1` },
