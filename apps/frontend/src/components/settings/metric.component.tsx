@@ -12,6 +12,7 @@ import {
   browserTimezone,
   isTimezone,
 } from '@gitroom/frontend/components/layout/set.timezone';
+import { defaultTimezone } from '@gitroom/frontend/ours/locale/locale'; // OURS (2026-11-15): show our default time zone
 const dateMetrics = [
   { label: 'AM:PM', value: 'US' },
   { label: '24 hours', value: 'GLOBAL' },
@@ -80,7 +81,7 @@ const MetricComponent = () => {
       >
         <option value="">
           {t('automatic_timezone', 'Automatic ({{timezone}})', {
-            timezone: browserTimezone(),
+            timezone: defaultTimezone() || browserTimezone(), // OURS (2026-11-15): our default time zone
             interpolation: { escapeValue: false },
           })}
         </option>

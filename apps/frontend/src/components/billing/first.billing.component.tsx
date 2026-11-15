@@ -28,6 +28,7 @@ import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import useCookie from 'react-use-cookie';
 import { LogoutComponent } from '@gitroom/frontend/components/layout/logout.component';
 import { DeveloperIconComponent } from '@gitroom/frontend/components/developer/developer.icon.component';
+import { showDeveloperTools } from '@gitroom/frontend/ours/developer-tools/developer.tools'; // OURS (2026-11-15): hide the Developers link
 import { InvoicesComponent } from '@gitroom/frontend/components/layout/invoices.component';
 
 const ModeComponent = dynamic(
@@ -198,7 +199,7 @@ export const FirstBillingComponent = () => {
             <LanguageComponent />
             <div className="w-[1px] h-[20px] bg-blockSeparator" />
             <AttachToFeedbackIcon />
-            <DeveloperIconComponent />
+            {showDeveloperTools() && <DeveloperIconComponent />} {/* OURS (2026-11-15): hide the Developers link */}
             {/*<NotificationComponent />*/}
             <div className="hover:text-newTextColor">
               {user?.tier.current === 'FREE' && (

@@ -10,7 +10,7 @@ Everything in this fork that is ours rather than upstream Postiz. Read
 |------|------|
 | Fork tooling, dev stack, tests config | `ours/` |
 | Backend and orchestrator code | `libraries/nestjs-libraries/src/ours/` |
-| Frontend code | `apps/frontend/src/ours/` |
+| Frontend code | `apps/frontend/src/ours/` (brand, locale, developer-tools, sandbox) |
 | Frontend routes | `apps/frontend/src/app/(app)/(site)/sandbox/` (new files only) |
 | Browser tests | `ours/e2e/` (standalone package, outside the pnpm workspace) |
 
@@ -51,6 +51,42 @@ How it works, without editing upstream screens one by one:
 
 Changing `NEXT_PUBLIC_BRAND_*` needs a frontend restart (it is applied at build
 time).
+
+## Dates and time zone
+
+Customers who have not chosen their own settings see UK dates: DD/MM/YYYY, a
+24-hour clock, weeks starting on Monday, and the calendar in Europe/London.
+
+| Variable | Default | Empty string means |
+|----------|---------|--------------------|
+| `NEXT_PUBLIC_DEFAULT_LOCALE` | `en-GB` | the browser decides (upstream behaviour) |
+| `NEXT_PUBLIC_DEFAULT_TIMEZONE` | `Europe/London` | the browser's time zone (upstream behaviour) |
+
+Defaults live in `apps/frontend/src/ours/locale/locale.defaults.json`. A
+user's own choices under Settings (time zone, AM:PM or 24 hours) still win.
+
+How it works: upstream formats dates with dayjs in its built-in `en` locale,
+whose short date is US style. `apps/frontend/src/ours/locale/locale.ts`
+redefines `en` with dayjs's `en-gb` data, so the calendar, filters and date
+pickers change without editing them. To add another region, add its dayjs
+locale to `englishVariants` in that file. The interface text itself is still
+upstream's English.
+
+## Developer tools (hidden)
+
+Upstream's developer screens point at upstream's own docs, CLI, MCP server and
+connectors, so customers do not see them:
+
+- Settings: the "Agents / Dev" tab (a `?tab=agents` link falls back to Global Settings)
+- Settings > Apps: the developer "Apps" sub-tab for creating OAuth apps. The tab
+  itself stays and shows only "Approved Apps", so customers can still see and
+  revoke apps they have authorised.
+- Onboarding: the "Connect Agents" step (onboarding goes Connect Channels, then Watch Tutorial)
+- Billing page header: the "Developers" link
+
+Set `NEXT_PUBLIC_SHOW_DEVELOPER_TOOLS=true` to show them again. Nothing is
+deleted, and the backend public API, MCP server and OAuth apps are unchanged
+(hiding the screens does not switch those off).
 
 ## Sandbox channel
 

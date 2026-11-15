@@ -34,6 +34,7 @@ import { GlobalSettings } from '@gitroom/frontend/components/settings/global.set
 import { AppsComponent } from '@gitroom/frontend/components/settings/apps.component';
 import { ThirdPartyComponent } from '@gitroom/frontend/components/third-parties/third-party.component';
 import { Plugs } from '@gitroom/frontend/components/plugs/plugs';
+import { customerSettingsTabs, showDeveloperTools } from '@gitroom/frontend/ours/developer-tools/developer.tools'; // OURS (2026-11-15): hide developer screens
 export const SettingsPopup: FC<{
   getRef?: Ref<any>;
 }> = (props) => {
@@ -110,7 +111,7 @@ export const SettingsPopup: FC<{
     arr.push({ tab: 'plugs', label: t('plugs', 'Plugs') });
     arr.push({ tab: 'apps', label: t('apps', 'Apps') });
 
-    return arr;
+    return customerSettingsTabs(arr); // OURS (2026-11-15): hide the Agents / Dev tab
   }, [user, isGeneral, showLogout, t]);
 
   const [tab, setTab] = useState(() => {
@@ -232,6 +233,7 @@ export const SettingsPopup: FC<{
                 <div>
                   <AppsComponent
                     canManageApps={
+                      showDeveloperTools() && // OURS (2026-11-15): Apps shows only Approved Apps
                       !!user?.tier?.public_api &&
                       isGeneral &&
                       showLogout &&
