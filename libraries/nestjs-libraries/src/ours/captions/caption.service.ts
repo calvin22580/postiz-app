@@ -8,6 +8,7 @@ import {
   CreationMethod,
   OursCaptionStatus,
   OursCaptionWeekStatus,
+  Prisma,
 } from '@prisma/client';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -55,15 +56,17 @@ import {
 } from '@gitroom/nestjs-libraries/ours/sandbox/sandbox.config';
 import { GraphicService } from '@gitroom/nestjs-libraries/ours/graphics/graphic.service';
 import {
-  automaticLayout,
   GRAPHIC_SIZES,
   graphicContent,
   GraphicLayout,
   isGraphicLayout,
+  layoutForDay,
   NO_GRAPHIC,
 } from '@gitroom/nestjs-libraries/ours/graphics/graphic.content';
 import { SeasonalService } from '@gitroom/nestjs-libraries/ours/seasonal/seasonal.service';
 import { PlanService, UsageTicket } from '@gitroom/nestjs-libraries/ours/plans/plan.service';
+import { PerformanceService } from '@gitroom/nestjs-libraries/ours/performance/performance.service';
+import { WriterPreferences } from '@gitroom/nestjs-libraries/ours/performance/performance.insights';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -122,7 +125,8 @@ export class CaptionService {
     private _postsService: PostsService,
     private _graphicService: GraphicService,
     private _seasonalService: SeasonalService,
-    private _planService: PlanService
+    private _planService: PlanService,
+    private _performanceService: PerformanceService
   ) {}
 
   async getWeek(orgId: string) {
@@ -183,10 +187,13 @@ export class CaptionService {
     const ticket = await this._planService.claim(orgId, 'captionWeeks');
     let week;
     let seasonal: CaptionFact[];
+    let preferences: WriterPreferences | null = null;
     try {
       week = await this._captionRepository.claimWeek(orgId, weekStart, tz);
       // Milestone 6: UK dates that fit this week, if the owner wants them
       seasonal = week ? await this.seasonalFacts(orgId, weekStart) : [];
+      // Milestone 8: kinds of post that clearly did better or worse before
+      preferences = week ? await this._performanceService.writerPreferences(orgId) : null;
     } catch (e) {
       await this._planService.giveBack(orgId, ticket);
       throw e;
@@ -197,7 +204,7 @@ export class CaptionService {
       return this.getWeek(orgId);
     }
     // background: the request returns now, the screen polls for progress
-    this.runWriting(orgId, week, [...facts, ...seasonal], toneFromProfile(profile.fields), undefined, ticket).catch(
+    this.runWriting(orgId, week, [...facts, ...seasonal], toneFromProfile(profile.fields), undefined, ticket, preferences).catch(
       (e) =>
         this._logger.error(`Caption writing crashed for org=${orgId}: ${e?.message}`)
     );
@@ -210,7 +217,8 @@ export class CaptionService {
     facts: CaptionFact[],
     tone: string,
     writer: CaptionWriter = createCaptionWriter(),
-    ticket?: UsageTicket
+    ticket?: UsageTicket,
+    preferences?: WriterPreferences | null
   ) {
     try {
       let output;
@@ -220,6 +228,7 @@ export class CaptionService {
           tone,
           days: [...POSTING_DAYS],
           dates: postingDates(week.weekStart),
+          ...(preferences ? { preferences } : {}),
         });
       } catch (e) {
         if (e instanceof CaptionWriterWithUsageError) {
@@ -246,6 +255,7 @@ export class CaptionService {
       const saved = await this._captionRepository.finishWeek(orgId, week.id, {
         writer: writer.name,
         droppedCount: dropped,
+        ...(preferences ? { preferences: preferences as unknown as Prisma.InputJsonValue } : {}),
         drafts: captions.map((c) => ({
           platform: c.platform,
           scheduledFor: scheduledFor(week.weekStart, c.day, c.platform, week.timezone),
@@ -542,14 +552,8 @@ export class CaptionService {
   // The layout a caption's graphic uses: the owner's choice, or one a day,
   // rotating through the layouts. Null means no graphic.
   graphicLayoutFor(draft: Pick<StoredCaptionDraft, 'graphicLayout' | 'scheduledFor'>): GraphicLayout | null {
-    if (draft.graphicLayout === NO_GRAPHIC) {
-      return null;
-    }
-    if (draft.graphicLayout && isGraphicLayout(draft.graphicLayout)) {
-      return draft.graphicLayout;
-    }
     const weekday = dayjs(draft.scheduledFor).tz(captionTimezone()).day();
-    return automaticLayout((weekday + 6) % 7);
+    return layoutForDay(draft.graphicLayout, (weekday + 6) % 7);
   }
 
   private renderDraftGraphic(orgId: string, draft: StoredCaptionDraft) {
@@ -633,6 +637,8 @@ export class CaptionService {
       errorMessage: week.errorMessage,
       demo: week.writer === 'demo',
       droppedCount: week.droppedCount,
+      // Milestone 8: what past results steered this week towards
+      preferences: (week.preferences || null) as Pick<WriterPreferences, 'favour' | 'avoid' | 'simulated' | 'basedOn'> | null,
       // rewrites come from the demo writer when no AI service is connected
       demoRewrites: captionWriterName() === 'demo',
       maxRewrites: MAX_REWRITES,

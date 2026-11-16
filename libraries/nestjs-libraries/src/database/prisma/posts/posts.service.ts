@@ -46,6 +46,7 @@ import {
   postId as postIdSearchParam,
 } from '@gitroom/nestjs-libraries/temporal/temporal.search.attribute';
 import { AnalyticsData } from '@gitroom/nestjs-libraries/integrations/social/social.integrations.interface';
+import { assertDirectPostingAllowed } from '@gitroom/nestjs-libraries/ours/approval/direct.posting'; // OURS (2026-11-16): approval gate, see UPSTREAM_PATCHES.md
 import { timer } from '@gitroom/helpers/utils/timer';
 import { ioRedis } from '@gitroom/nestjs-libraries/redis/redis.service';
 import { RefreshToken } from '@gitroom/nestjs-libraries/integrations/social.abstract';
@@ -1155,6 +1156,7 @@ export class PostsService {
     creationMethod: CreationMethod,
     keepGroup = false
   ): Promise<any[]> {
+    assertDirectPostingAllowed(creationMethod, body.type); // OURS (2026-11-16): posts from the API, CLI and MCP need the owner's approval (drafts only)
     const postList = [];
     const batchId = uuidv4();
     for (const post of body.posts) {

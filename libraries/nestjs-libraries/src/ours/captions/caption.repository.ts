@@ -19,6 +19,7 @@ const WEEK_SELECT = {
   errorMessage: true,
   writer: true,
   droppedCount: true,
+  preferences: true,
   startedAt: true,
 } satisfies Prisma.OursCaptionWeekSelect;
 
@@ -137,6 +138,8 @@ export class CaptionRepository {
     body: {
       writer: string;
       droppedCount: number;
+      // Milestone 8: what past results steered this week towards, if anything
+      preferences?: Prisma.InputJsonValue;
       drafts: {
         platform: string;
         scheduledFor: Date;
@@ -160,6 +163,7 @@ export class CaptionRepository {
           errorMessage: null,
           writer: body.writer,
           droppedCount: body.droppedCount,
+          preferences: body.preferences ?? Prisma.DbNull,
         },
       });
       if (count !== 1) {

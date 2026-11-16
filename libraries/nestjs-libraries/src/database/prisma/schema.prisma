@@ -1922,6 +1922,9 @@ model OursCaptionWeek {
   errorMessage   String?
   writer         String?
   droppedCount   Int                   @default(0)
+  // Milestone 8: the kinds of post this week leaned towards (or away from)
+  // because of past results, and whether those results were simulated
+  preferences    Json?
   startedAt      DateTime              @default(now())
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt
@@ -2022,4 +2025,29 @@ model OursUsageCounter {
 
   @@unique([organizationId, period, metric])
   @@map("ours_usage_counter")
+}
+
+// Milestone 8: how each approved post did. One row per caption draft, filled
+// from upstream's own post analytics (PostsService.checkPostAnalytics). The
+// Sandbox channel returns simulated numbers, stored with simulated = true and
+// never mixed with real results.
+model OursPostPerformance {
+  id             String    @id @default(uuid())
+  organizationId String
+  draftId        String    @unique
+  postId         String
+  simulated      Boolean   @default(false)
+  // reach (people who saw it), interactions (reactions, comments, shares,
+  // saves, clicks): null until the platform has reported anything
+  reach          Int?
+  interactions   Int?
+  // every metric the platform reported, by its label
+  metrics        Json      @default("{}")
+  checkedAt      DateTime
+  measuredAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([organizationId])
+  @@map("ours_post_performance")
 }

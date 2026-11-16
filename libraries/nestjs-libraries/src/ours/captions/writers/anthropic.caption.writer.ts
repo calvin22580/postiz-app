@@ -78,7 +78,26 @@ export const buildCaptionMessage = (input: CaptionWriterInput) =>
     .map((d, i) => `${i}: ${input.dates?.[i] ? longDate(input.dates[i]) : d}`)
     .join(', ')}\n` +
   `Tone of voice: ${escapeAttr(input.tone)}\n\n` +
+  preferencesBlock(input) +
   profileBlock(input);
+
+// Milestone 8: what did well before steers which ideas to pick. Rules 1 to 3
+// still apply: a preference is never a reason to state something the profile
+// doesn't say, and results are never mentioned in a caption.
+function preferencesBlock(input: Pick<CaptionWriterInput, 'preferences'>) {
+  const prefs = input.preferences;
+  if (!prefs || (!prefs.favour.length && !prefs.avoid.length)) {
+    return '';
+  }
+  const line = (k: { label: string; hint: string }) => `- ${escapeAttr(k.label)}: ${escapeAttr(k.hint)}`;
+  return (
+    `<past_results>\n` +
+    `This business's earlier posts show which kinds of post people engaged with. Use it only to choose between post ideas the profile supports. It is not information about the business: never mention results, popularity or engagement in a caption, and never state anything the profile doesn't say.\n` +
+    (prefs.favour.length ? `Use more of these kinds where the profile supports them:\n${prefs.favour.map(line).join('\n')}\n` : '') +
+    (prefs.avoid.length ? `Use fewer of these kinds:\n${prefs.avoid.map(line).join('\n')}\n` : '') +
+    `</past_results>\n\n`
+  );
+}
 
 const fact = (f: CaptionFact) =>
   `<fact id="${escapeAttr(f.id)}" field="${f.field}">${escapeAttr(f.value)}</fact>`;

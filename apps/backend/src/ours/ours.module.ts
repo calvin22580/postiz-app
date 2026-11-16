@@ -22,6 +22,10 @@ import { PlanController } from '@gitroom/backend/ours/plan.controller';
 import { PlanService } from '@gitroom/nestjs-libraries/ours/plans/plan.service';
 import { PlanRepository } from '@gitroom/nestjs-libraries/ours/plans/plan.repository';
 import { ChannelLimitGuard } from '@gitroom/backend/ours/channel.limit.guard';
+import { PerformanceController } from '@gitroom/backend/ours/performance.controller';
+import { PerformanceService } from '@gitroom/nestjs-libraries/ours/performance/performance.service';
+import { PerformanceRepository } from '@gitroom/nestjs-libraries/ours/performance/performance.repository';
+import { DirectPostingGuard } from '@gitroom/backend/ours/direct.posting.guard';
 
 const authenticatedController = [
   BusinessProfileController,
@@ -29,6 +33,7 @@ const authenticatedController = [
   BrandKitController,
   SeasonalController,
   PlanController,
+  PerformanceController,
 ];
 
 @Module({
@@ -48,11 +53,19 @@ const authenticatedController = [
     SeasonalRepository,
     PlanService,
     PlanRepository,
+    PerformanceService,
+    PerformanceRepository,
     // Milestone 7: our plan's channel limit on upstream's "add a channel"
     // routes (global, so upstream's modules need no change)
     {
       provide: APP_GUARD,
       useClass: ChannelLimitGuard,
+    },
+    // Milestone 8: posts reach a platform only through the owner's approval
+    // (public API routes that schedule an existing post)
+    {
+      provide: APP_GUARD,
+      useClass: DirectPostingGuard,
     },
   ],
 })

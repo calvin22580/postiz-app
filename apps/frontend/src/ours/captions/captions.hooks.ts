@@ -47,6 +47,13 @@ export interface CaptionWeek {
   errorMessage: string | null;
   demo: boolean;
   droppedCount: number;
+  // Milestone 8: what past results steered this week towards
+  preferences: {
+    favour: { key: string; label: string }[];
+    avoid: { key: string; label: string }[];
+    simulated: boolean;
+    basedOn: number;
+  } | null;
   // rewrites use prepared versions, not AI, when no AI service is connected
   demoRewrites: boolean;
   maxRewrites: number;

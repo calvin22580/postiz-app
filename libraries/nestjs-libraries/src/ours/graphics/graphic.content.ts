@@ -114,6 +114,21 @@ const ROTATION: GraphicLayout[] = ['statement', 'card', 'details', 'name', 'card
 export const automaticLayout = (dayIndex: number): GraphicLayout =>
   ROTATION[((dayIndex % ROTATION.length) + ROTATION.length) % ROTATION.length];
 
+// The layout a caption's graphic uses: the owner's choice, or the day's
+// automatic one. Null when the owner chose no graphic.
+export const layoutForDay = (
+  choice: string | null,
+  weekdayIndex: number
+): GraphicLayout | null => {
+  if (choice === NO_GRAPHIC) {
+    return null;
+  }
+  if (choice && isGraphicLayout(choice)) {
+    return choice;
+  }
+  return automaticLayout(weekdayIndex);
+};
+
 // What the graphic says, or null when the profile has too little for it (no
 // business name). A layout without what it needs falls back to one that has
 // it, rather than showing empty boxes.

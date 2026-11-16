@@ -343,3 +343,28 @@ To move a customer to a plan by hand while `OURS_BILLING_MODE=off`, set
 `growth` or `pro`.
 
 API: `GET /ours/plan`, `PUT /ours/plan` (`plan`).
+
+## What worked (Milestone 8)
+
+Screen: `/results` ("What worked" in the menu). Code:
+`libraries/nestjs-libraries/src/ours/performance/`,
+`libraries/nestjs-libraries/src/ours/approval/`,
+`apps/backend/src/ours/performance.controller.ts`,
+`apps/backend/src/ours/direct.posting.guard.ts`, `apps/frontend/src/ours/results/`.
+
+- Each approved post's results are read through upstream's post analytics when
+  the owner opens the screen. Sandbox posts report **simulated** results
+  (labelled everywhere, repeatable per post).
+- Until 20 posts have results the screen says there isn't enough to go on and
+  nothing changes. After that it says which kinds of post, days and graphics
+  did clearly better or worse than the rest (at least 5 posts each, 99% range one side).
+- Kinds that did clearly better or worse steer which ideas next week's posts
+  use. They never add claims: the business profile is still the only source.
+- Posts from the public API, CLI and MCP/agent tools can only be drafts, so
+  nothing is scheduled without approval in the app.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `OURS_ALLOW_DIRECT_POSTING` | `false` | `true` lets the public API, CLI and MCP/agent schedule posts directly again (skipping approval). Leave off for customers. |
+
+API: `GET /ours/performance`.
