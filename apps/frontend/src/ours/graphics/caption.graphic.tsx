@@ -37,7 +37,9 @@ export const CaptionGraphic: FC<{
   const hasGraphic = approved ? !!caption.graphic.path : !!caption.graphic.layout;
   const { data: preview, error } = useCaptionGraphic(
     caption.id,
-    !approved && hasGraphic ? `${caption.graphic.choice}-${brandVersion}` : null
+    !approved && hasGraphic
+      ? `${caption.graphic.layout}-${caption.graphic.profileVersion}-${brandVersion}`
+      : null
   );
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);

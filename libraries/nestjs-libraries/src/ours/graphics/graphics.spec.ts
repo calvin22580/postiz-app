@@ -209,6 +209,10 @@ describe('GraphicService logo', () => {
     await expect(service.setLogo('org-1', dataUrl('image/png', Buffer.from('not an image')))).rejects.toThrow('PNG, JPEG or WebP');
     await expect(service.setLogo('org-1', 'https://example.test/logo.png')).rejects.toThrow('PNG, JPEG or WebP');
     await expect(service.setLogo('org-1', dataUrl('image/png', Buffer.alloc(3 * 1024 * 1024 + 1)))).rejects.toThrow('too big');
+    // a tiny file that would decode to an enormous image
+    const huge = await sharp({ create: { width: 6000, height: 6000, channels: 3, background: '#FFFFFF' } }).png({ compressionLevel: 9 }).toBuffer();
+    expect(huge.length).toBeLessThan(3 * 1024 * 1024);
+    await expect(service.setLogo('org-1', dataUrl('image/png', huge))).rejects.toThrow('PNG, JPEG or WebP');
     expect(repo.setLogo).not.toHaveBeenCalled();
   });
 

@@ -24,6 +24,8 @@ const MAX_LOGO_BYTES = 3 * 1024 * 1024;
 const LOGO_FORMATS = ['png', 'jpeg', 'webp'];
 // big enough for the largest logo tile, small enough to keep in the database
 const LOGO_MAX_SIDE = 600;
+// a small, highly compressed file can still decode to a huge image
+const LOGO_MAX_PIXELS = 25_000_000;
 
 @Injectable()
 export class GraphicService {
@@ -63,11 +65,14 @@ export class GraphicService {
     }
     let logo: Buffer;
     try {
-      const meta = await sharp(parsed.buffer).metadata();
+      const meta = await sharp(parsed.buffer, { limitInputPixels: LOGO_MAX_PIXELS }).metadata();
       if (!meta.format || !LOGO_FORMATS.includes(meta.format)) {
         throw new Error(`format ${meta.format}`);
       }
-      logo = await sharp(parsed.buffer)
+      if ((meta.width || 0) * (meta.height || 0) > LOGO_MAX_PIXELS) {
+        throw new Error(`${meta.width}x${meta.height} pixels`);
+      }
+      logo = await sharp(parsed.buffer, { limitInputPixels: LOGO_MAX_PIXELS })
         .rotate()
         .resize({ width: LOGO_MAX_SIDE, height: LOGO_MAX_SIDE, fit: 'inside', withoutEnlargement: true })
         .png()
@@ -129,5 +134,14 @@ export class GraphicService {
     );
     const media = await this._mediaService.saveFile(orgId, path.split('/').pop()!, path);
     return { id: media.id, path: media.path };
+  }
+
+  // Never throws: a failed clean-up is logged, not shown to the owner.
+  async removeFromMediaLibrary(orgId: string, mediaId: string) {
+    try {
+      await this._mediaService.deleteMedia(orgId, mediaId);
+    } catch (e) {
+      this._logger.error(`Could not remove unused graphic media=${mediaId} for org=${orgId}: ${(e as Error)?.message}`);
+    }
   }
 }

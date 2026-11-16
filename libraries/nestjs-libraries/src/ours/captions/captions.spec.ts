@@ -268,6 +268,7 @@ const makeService = () => {
     // no graphic unless a test draws one
     render: vi.fn(async (): Promise<{ png: Buffer; layout: string } | null> => null),
     saveToMediaLibrary: vi.fn(async () => ({ id: 'media-1', path: 'http://localhost:4200/uploads/2030/01/01/abc.png' })),
+    removeFromMediaLibrary: vi.fn(async () => undefined),
   };
   const service = new CaptionService(repo as never, {} as never, usage as never, integrations as never, posts as never, graphics as never);
   return { service, repo, usage, posts, graphics };
@@ -504,8 +505,19 @@ describe('CaptionService graphics', () => {
     expect(repo.releaseApproval).toHaveBeenCalledTimes(2);
   });
 
+  it('takes the graphic out of the media library again if the post can’t be scheduled', async () => {
+    const { service, repo, posts, graphics } = makeService();
+    repo.getDraft.mockResolvedValue(draft());
+    graphics.render.mockResolvedValueOnce({ png: Buffer.from('png'), layout: 'details' });
+    posts.createPost.mockRejectedValueOnce(new Error('db down'));
+    await expect(service.approve('org-1', 'd1', 'sbx')).rejects.toThrow('couldn’t schedule');
+    expect(graphics.removeFromMediaLibrary).toHaveBeenCalledWith('org-1', 'media-1');
+    expect(repo.releaseApproval).toHaveBeenCalledWith('org-1', 'd1');
+  });
+
   it('changes the layout only while waiting for approval, and only to a known layout', async () => {
     const { service, repo } = makeService();
+    repo.getDraft.mockResolvedValue(draft());
     await service.setGraphicLayout('org-1', 'd1', 'auto');
     expect(repo.setGraphicLayout).toHaveBeenLastCalledWith('org-1', 'd1', null);
     await service.setGraphicLayout('org-1', 'd1', 'none');
@@ -513,6 +525,8 @@ describe('CaptionService graphics', () => {
     await expect(service.setGraphicLayout('org-1', 'd1', 'poster')).rejects.toThrow('Unknown layout');
     repo.setGraphicLayout.mockResolvedValueOnce(false);
     await expect(service.setGraphicLayout('org-1', 'd1', 'card')).rejects.toThrow('before the post is approved');
+    repo.getDraft.mockResolvedValue(null);
+    await expect(service.setGraphicLayout('org-1', 'd1', 'card')).rejects.toThrow('Caption not found');
   });
 
   it('has no preview for a caption with no graphic', async () => {

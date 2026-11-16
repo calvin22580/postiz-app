@@ -1,7 +1,6 @@
 'use client';
 // OURS: data for post graphics: the brand kit and graphic previews. Previews
-// are images from our API, fetched with the signed-in session and shown as
-// object URLs.
+// are images from our API, fetched with the signed-in session.
 import useSWR from 'swr';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 
@@ -25,6 +24,16 @@ export const useBrandKit = () => {
   );
 };
 
+// Images come back as data URLs rather than object URLs: nothing to free by
+// hand, and an older version still in SWR's cache keeps working.
+const toDataUrl = (blob: Blob) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+
 const useImage = (key: string | null, path: string) => {
   const fetch = useFetch();
   return useSWR<string>(
@@ -32,14 +41,14 @@ const useImage = (key: string | null, path: string) => {
     async () => {
       const res = await fetch(path);
       if (!res.ok) throw new Error('load failed');
-      return URL.createObjectURL(await res.blob());
+      return toDataUrl(await res.blob());
     },
     { revalidateOnFocus: false }
   );
 };
 
-// `version` changes whenever the picture would: the layout choice or the
-// brand kit.
+// `version` changes whenever the picture would: the layout, the profile or
+// the brand kit.
 export const useCaptionGraphic = (captionId: string, version: string | null) =>
   useImage(version === null ? null : `ours-graphic-${captionId}-${version}`, `/ours/captions/${captionId}/graphic`);
 

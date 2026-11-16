@@ -112,10 +112,10 @@ export class CaptionService {
         ? await this._captionRepository.getDrafts(orgId, week.id)
         : [];
     // graphics fall back to a layout the profile can fill, so show that one
-    const fields = drafts.length
-      ? ((await this._businessProfileService.getProfile(orgId)).profile?.fields as ProfileFields | undefined)
-      : undefined;
-    return { week: this.present(week, drafts, fields), nextWeekStart: nextWeek };
+    const profile = drafts.length
+      ? (await this._businessProfileService.getProfile(orgId)).profile
+      : null;
+    return { week: this.present(week, drafts, profile), nextWeekStart: nextWeek };
   }
 
   async startWriting(orgId: string) {
@@ -269,6 +269,7 @@ export class CaptionService {
 
     let postId: string | undefined;
     let graphicPath: string | null = null;
+    let mediaId: string | null = null;
     try {
       // the graphic is drawn now, from the profile and brand kit as they are,
       // and saved to the media library so the post carries it
@@ -278,6 +279,7 @@ export class CaptionService {
         const media = await this._graphicService.saveToMediaLibrary(orgId, graphic.png);
         image.push(media);
         graphicPath = media.path;
+        mediaId = media.id;
       }
       const body = await this._postsService.mapTypeToPost(
         {
@@ -315,6 +317,11 @@ export class CaptionService {
       this._logger.error(
         `Scheduling approved caption failed for org=${orgId} draft=${draftId}: ${(e as Error)?.message}`
       );
+      // no post carries the graphic: take it out of the media library again,
+      // so retries don't leave copies behind
+      if (mediaId) {
+        await this._graphicService.removeFromMediaLibrary(orgId, mediaId);
+      }
       await this._captionRepository.releaseApproval(orgId, draftId);
       throw new HttpException('We couldn’t schedule this caption. Please try again.', 400);
     }
@@ -374,6 +381,9 @@ export class CaptionService {
     if (stored !== null && stored !== NO_GRAPHIC && !isGraphicLayout(stored)) {
       throw new HttpException('Unknown layout', 400);
     }
+    if (!(await this._captionRepository.getDraft(orgId, draftId))) {
+      throw new HttpException('Caption not found', 404);
+    }
     if (!(await this._captionRepository.setGraphicLayout(orgId, draftId, stored))) {
       throw new HttpException('The graphic can only be changed before the post is approved.', 400);
     }
@@ -389,10 +399,15 @@ export class CaptionService {
     }
   }
 
-  private present(week: StoredCaptionWeek, drafts: StoredCaptionDraft[], fields?: ProfileFields) {
+  private present(
+    week: StoredCaptionWeek,
+    drafts: StoredCaptionDraft[],
+    profile?: { fields: unknown; updatedAt: Date | string } | null
+  ) {
+    const fields = profile?.fields as ProfileFields | undefined;
     const drawnLayout = (d: StoredCaptionDraft) => {
       const wanted = this.graphicLayoutFor(d);
-      if (!wanted || !fields) return wanted;
+      if (!wanted || !fields) return null;
       return graphicContent(wanted, (d.facts || []) as { field: string; value: string }[], fields)?.layout || null;
     };
     return {
@@ -420,6 +435,8 @@ export class CaptionService {
           size: GRAPHIC_SIZES[d.platform as CaptionPlatform] || null,
           // the image attached to the scheduled post, once approved
           path: d.graphicPath,
+          // changes when the profile does, so previews redraw
+          profileVersion: profile ? new Date(profile.updatedAt).getTime() : null,
         },
       })),
     };

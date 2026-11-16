@@ -24,6 +24,7 @@ export interface Caption {
     size: { width: number; height: number } | null;
     // the image attached to the scheduled post, once approved
     path: string | null;
+    profileVersion: number | null;
   };
 }
 

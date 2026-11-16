@@ -149,6 +149,14 @@ test('weekly posts come with branded graphics, attached only when approved', asy
     await expect(page.getByTestId('sandbox-post')).toBeVisible();
     await expect(page.getByTestId('sandbox-post-image')).toHaveCount(1);
     await page.screenshot({ path: 'test-results/graphics-sandbox-post.png', fullPage: true });
+
+    // phone width: previews stack above the text, nothing spills sideways
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/captions');
+    await expect(page.getByTestId('caption-graphic-image').first()).toBeVisible({ timeout: 60_000 });
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+    await page.screenshot({ path: 'test-results/graphics-phone.png' });
   } finally {
     await site.close();
   }

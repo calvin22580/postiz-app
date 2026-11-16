@@ -10,7 +10,7 @@ Everything in this fork that is ours rather than upstream Postiz. Read
 |------|------|
 | Fork tooling, dev stack, tests config | `ours/` |
 | Backend and orchestrator code | `libraries/nestjs-libraries/src/ours/` |
-| Frontend code | `apps/frontend/src/ours/` (brand, locale, developer-tools, sandbox) |
+| Frontend code | `apps/frontend/src/ours/` (brand, locale, developer-tools, sandbox, profile, captions, graphics) |
 | Frontend routes | `apps/frontend/src/app/(app)/(site)/{sandbox,business-profile,captions}/` (new files only) |
 | Browser tests | `ours/e2e/` (standalone package, outside the pnpm workspace) |
 
@@ -201,3 +201,36 @@ failed. Each AI call's cost is logged under the feature `captions`.
 | Variable | Used by | Default |
 |----------|---------|---------|
 | `OURS_DEFAULT_TIMEZONE` | backend: caption posting times | `Europe/London` |
+
+## Post graphics
+
+Every weekly post gets a graphic in the business's own colour and logo.
+Screen: the "Your graphics" panel and a preview on each post in `/captions`.
+Code: `libraries/nestjs-libraries/src/ours/graphics/`,
+`apps/backend/src/ours/brand.kit.controller.ts`, `apps/frontend/src/ours/graphics/`.
+
+How it works:
+
+1. **Brand kit**: the owner picks a brand colour (a neutral grey until then,
+   never our product's colour) and can upload a logo (PNG, JPEG or WebP, up to
+   3 MB). The logo is re-encoded as a PNG of at most 600 px, so nothing else
+   in the file survives, and kept in `ours_brand_kit`.
+2. **Layouts** (`graphic.content.ts`): statement, card, contact details, and
+   name and logo. One a day is chosen automatically and is the same on every
+   platform that day; the owner can pick another or "No graphic" before
+   approving.
+3. **Words**: only fixed labels ("Our services", "Find us") and business
+   profile values, copied as they are. Too long to fit means not used, never
+   shortened. A layout without what it needs falls back to one that has it.
+4. **Sizes**: Instagram and Facebook 1080 × 1350 (4:5 portrait), LinkedIn
+   1200 × 1200.
+5. **Drawing** (`graphic.renderer.ts`): `sharp`, with our bundled font files,
+   so it needs no fonts on the server and no image service.
+6. **Approval**: the graphic is drawn, saved to the organisation's media
+   library (upstream storage) and attached to the scheduled post. Previews
+   are never stored.
+
+| Variable | Used by | Default |
+|----------|---------|---------|
+| `OURS_GRAPHICS_FONT_DIR` | backend: where the graphic fonts are, if not found next to the source | found automatically |
+
