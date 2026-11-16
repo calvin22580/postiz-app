@@ -10,6 +10,7 @@ type Recorded = {
   content: string;
   state: string;
   publishDate: string;
+  image?: string | null;
   integration?: { name: string; providerIdentifier: string };
 };
 
@@ -17,6 +18,16 @@ const toText = (html: string) => {
   if (typeof window === 'undefined') return html;
   const doc = new DOMParser().parseFromString(html || '', 'text/html');
   return doc.body.textContent || '';
+};
+
+// upstream stores a post's media as a JSON list of { id, path }
+const imagesOf = (image?: string | null): string[] => {
+  try {
+    const list = JSON.parse(image || '[]');
+    return Array.isArray(list) ? list.map((m) => m?.path).filter((p) => typeof p === 'string') : [];
+  } catch {
+    return [];
+  }
 };
 
 const ukDateTime = (iso: string) =>
@@ -74,6 +85,15 @@ export const SandboxPostView: FC<{ id: string }> = ({ id }) => {
             <div className="whitespace-pre-wrap text-[16px] leading-[1.5]">
               {toText(post.content)}
             </div>
+            {imagesOf(post.image).map((src) => (
+              <img
+                key={src}
+                src={src}
+                alt="Image recorded with this sandbox post"
+                className="max-w-[360px] w-full rounded-[8px] border border-newBorder"
+                data-testid="sandbox-post-image"
+              />
+            ))}
           </div>
         )}
       </div>

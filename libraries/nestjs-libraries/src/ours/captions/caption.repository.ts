@@ -34,6 +34,8 @@ const DRAFT_SELECT = {
   integrationId: true,
   postId: true,
   approvedAt: true,
+  graphicLayout: true,
+  graphicPath: true,
 } satisfies Prisma.OursCaptionDraftSelect;
 
 export type StoredCaptionWeek = Prisma.OursCaptionWeekGetPayload<{
@@ -193,11 +195,24 @@ export class CaptionRepository {
     return count === 1;
   }
 
-  setPostId(orgId: string, id: string, postId: string) {
+  setPostId(orgId: string, id: string, postId: string, graphicPath: string | null = null) {
     return this._draft.model.oursCaptionDraft.updateMany({
       where: { organizationId: orgId, id },
-      data: { postId },
+      data: { postId, graphicPath },
     });
+  }
+
+  // null = automatic. Only while the caption is still waiting for approval.
+  async setGraphicLayout(orgId: string, id: string, graphicLayout: string | null) {
+    const { count } = await this._draft.model.oursCaptionDraft.updateMany({
+      where: {
+        organizationId: orgId,
+        id,
+        status: OursCaptionStatus.PENDING_APPROVAL,
+      },
+      data: { graphicLayout },
+    });
+    return count === 1;
   }
 
   releaseApproval(orgId: string, id: string) {

@@ -17,6 +17,9 @@ import {
   readError,
   useBusinessProfile,
 } from '@gitroom/frontend/ours/profile/business.profile.hooks';
+import { useBrandKit } from '@gitroom/frontend/ours/graphics/graphics.hooks';
+import { BrandKitPanel } from '@gitroom/frontend/ours/graphics/brand.kit.panel';
+import { CaptionGraphic } from '@gitroom/frontend/ours/graphics/caption.graphic';
 
 const PLATFORMS: Record<Caption['platform'], string> = {
   facebook: 'Facebook',
@@ -29,7 +32,7 @@ const formatDay = (date: string) => newDayjs(date).format('dddd DD/MM/YYYY');
 
 const Shell: FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="flex-1 bg-newBgColorInner overflow-auto p-[40px] mobile:p-[16px]">
-    <div className="max-w-[760px] mx-auto flex flex-col gap-[28px]">{children}</div>
+    <div className="max-w-[820px] mx-auto flex flex-col gap-[28px]">{children}</div>
   </div>
 );
 
@@ -80,8 +83,9 @@ const CaptionCard: FC<{
   caption: Caption;
   channelId: string | null;
   channelName: string | null;
+  brandVersion: string;
   onApproved: () => void;
-}> = ({ caption, channelId, channelName, onApproved }) => {
+}> = ({ caption, channelId, channelName, brandVersion, onApproved }) => {
   const fetch = useFetch();
   const [approving, setApproving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -130,14 +134,19 @@ const CaptionCard: FC<{
           {approved ? 'Approved and scheduled' : 'Waiting for your approval'}
         </span>
       </div>
-      <p className="whitespace-pre-wrap text-[15px] leading-[1.6]" data-testid="caption-text">
-        {caption.text}
-      </p>
-      {caption.facts.length > 0 && (
-        <p className="text-[13px] leading-[1.5] text-textItemBlur">
-          Based on your profile: {caption.facts.map((f) => f.value).join(' · ')}
-        </p>
-      )}
+      <div className="flex gap-[20px] mobile:flex-col">
+        <CaptionGraphic caption={caption} brandVersion={brandVersion} onChanged={onApproved} />
+        <div className="flex flex-1 flex-col gap-[14px] min-w-0">
+          <p className="whitespace-pre-wrap text-[15px] leading-[1.6]" data-testid="caption-text">
+            {caption.text}
+          </p>
+          {caption.facts.length > 0 && (
+            <p className="text-[13px] leading-[1.5] text-textItemBlur">
+              Based on your profile: {caption.facts.map((f) => f.value).join(' · ')}
+            </p>
+          )}
+        </div>
+      </div>
       {error && (
         <div role="alert" className="text-[14px]">
           {error}
@@ -216,6 +225,8 @@ const ChannelBar: FC<{
 
 const WeekList: FC<{ week: CaptionWeek; onChanged: () => void }> = ({ week, onChanged }) => {
   const { data: channels } = useCaptionChannels();
+  const { data: brandKit } = useBrandKit();
+  const brandVersion = brandKit ? `${brandKit.colour}-${brandKit.updatedAt}` : 'default';
   const [channelId, setChannelId] = useState<string | null>(null);
   useEffect(() => {
     if (!channelId && channels?.channels.length) setChannelId(channels.channels[0].id);
@@ -261,6 +272,7 @@ const WeekList: FC<{ week: CaptionWeek; onChanged: () => void }> = ({ week, onCh
           to fill the week next time.
         </Notice>
       )}
+      <BrandKitPanel />
       <ChannelBar channelId={channelId} setChannelId={setChannelId} />
       {Object.entries(days).map(([day, captions]) => (
         <section key={day} className="flex flex-col gap-[12px]" data-testid="caption-day">
@@ -276,6 +288,7 @@ const WeekList: FC<{ week: CaptionWeek; onChanged: () => void }> = ({ week, onCh
               caption={c}
               channelId={channelId}
               channelName={channelName}
+              brandVersion={brandVersion}
               onApproved={onChanged}
             />
           ))}

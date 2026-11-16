@@ -11,10 +11,14 @@ import { CaptionsController } from '@gitroom/backend/ours/captions.controller';
 import { CaptionService } from '@gitroom/nestjs-libraries/ours/captions/caption.service';
 import { CaptionRepository } from '@gitroom/nestjs-libraries/ours/captions/caption.repository';
 import { WebsiteCrawler } from '@gitroom/nestjs-libraries/ours/crawler/website.crawler';
+import { BrandKitController } from '@gitroom/backend/ours/brand.kit.controller';
+import { GraphicService } from '@gitroom/nestjs-libraries/ours/graphics/graphic.service';
+import { BrandKitRepository } from '@gitroom/nestjs-libraries/ours/graphics/brand.kit.repository';
 
 const authenticatedController = [
   BusinessProfileController,
   CaptionsController,
+  BrandKitController,
 ];
 
 @Module({
@@ -28,6 +32,8 @@ const authenticatedController = [
     WebsiteCrawler,
     CaptionService,
     CaptionRepository,
+    GraphicService,
+    BrandKitRepository,
   ],
 })
 export class OursModule implements NestModule {

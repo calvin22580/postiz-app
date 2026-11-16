@@ -48,6 +48,7 @@ const profileFields = (): ProfileFields => {
 vi.mock('@gitroom/nestjs-libraries/database/prisma/posts/posts.service', () => ({ PostsService: class {} }));
 vi.mock('@gitroom/nestjs-libraries/database/prisma/integrations/integration.service', () => ({ IntegrationService: class {} }));
 vi.mock('@gitroom/nestjs-libraries/ours/profile/business.profile.service', () => ({ BusinessProfileService: class {} }));
+vi.mock('@gitroom/nestjs-libraries/ours/graphics/graphic.service', () => ({ GraphicService: class {} }));
 
 const FACTS = factsFromProfile(profileFields());
 const id = (field: string, i = 0) => `${field}.${i}`;
@@ -245,6 +246,7 @@ const makeService = () => {
     releaseApproval: vi.fn(async () => ({ count: 1 })),
     latestWeek: vi.fn(async () => null),
     getDrafts: vi.fn(async () => []),
+    setGraphicLayout: vi.fn(async () => true),
   };
   const usage = { logCall: vi.fn(async () => null) };
   const integrations = {
@@ -262,8 +264,13 @@ const makeService = () => {
     validatePosts: vi.fn(async () => [{ valid: true, errors: true, tooLong: false, emptyContent: false }]),
     createPost: vi.fn(async () => [{ postId: 'post-1', integration: 'sbx' }]),
   };
-  const service = new CaptionService(repo as never, {} as never, usage as never, integrations as never, posts as never);
-  return { service, repo, usage, posts };
+  const graphics = {
+    // no graphic unless a test draws one
+    render: vi.fn(async (): Promise<{ png: Buffer; layout: string } | null> => null),
+    saveToMediaLibrary: vi.fn(async () => ({ id: 'media-1', path: 'http://localhost:4200/uploads/2030/01/01/abc.png' })),
+  };
+  const service = new CaptionService(repo as never, {} as never, usage as never, integrations as never, posts as never, graphics as never);
+  return { service, repo, usage, posts, graphics };
 };
 
 describe('CaptionService.runWriting', () => {
@@ -357,7 +364,7 @@ describe('CaptionService.approve', () => {
     expect(body.posts[0].value[0].id).toHaveLength(10);
     expect(body.posts[0].value[0].content).toBe('<p>Fresh bread &amp; cakes</p><p>&lt;b&gt;Harbour Lane&lt;/b&gt;</p>');
     expect(body.date).toBe('2030-01-07T12:30:00');
-    expect(repo.setPostId).toHaveBeenCalledWith('org-1', 'd1', 'post-1');
+    expect(repo.setPostId).toHaveBeenCalledWith('org-1', 'd1', 'post-1', null);
   });
 
   it('never schedules on a real platform account', async () => {
@@ -423,6 +430,97 @@ describe('CaptionService.approve', () => {
       sandboxEnabled: true,
       channels: [{ id: 'sbx', name: 'Sandbox · Cafe' }],
     });
+  });
+});
+
+describe('CaptionService graphics', () => {
+  const draft = (over: Record<string, unknown> = {}) => ({
+    id: 'd1',
+    status: 'PENDING_APPROVAL',
+    platform: 'instagram',
+    // Wednesday 09/01/2030, 18:30 in London
+    scheduledFor: new Date('2030-01-09T18:30:00Z'),
+    text: 'Celebration cakes to order at Harbour Lane Bakery',
+    facts: [{ id: 'services.1', field: 'services', value: 'Celebration cakes to order' }],
+    graphicLayout: null,
+    ...over,
+  });
+  beforeEach(() => {
+    process.env.SANDBOX_CHANNEL_ENABLED = 'true';
+  });
+  afterEach(() => {
+    delete process.env.SANDBOX_CHANNEL_ENABLED;
+  });
+
+  it('picks one layout a day automatically, or the owner’s choice, or none', () => {
+    const { service } = makeService();
+    // Monday, Wednesday and Thursday of the same week
+    expect(service.graphicLayoutFor(draft({ scheduledFor: new Date('2030-01-07T12:30:00Z') }))).toBe('statement');
+    expect(service.graphicLayoutFor(draft())).toBe('details');
+    expect(service.graphicLayoutFor(draft({ scheduledFor: new Date('2030-01-10T08:30:00Z') }))).toBe('name');
+    expect(service.graphicLayoutFor(draft({ graphicLayout: 'card' }))).toBe('card');
+    expect(service.graphicLayoutFor(draft({ graphicLayout: 'none' }))).toBeNull();
+    // an unknown stored value falls back to automatic, never breaks the screen
+    expect(service.graphicLayoutFor(draft({ graphicLayout: 'retired-layout' }))).toBe('details');
+  });
+
+  it('attaches the drawn graphic to the scheduled post', async () => {
+    const { service, repo, posts, graphics } = makeService();
+    repo.getDraft.mockResolvedValue(draft({ graphicLayout: 'card' }));
+    graphics.render.mockResolvedValueOnce({ png: Buffer.from('png'), layout: 'card' });
+    await service.approve('org-1', 'd1', 'sbx');
+
+    expect(graphics.render).toHaveBeenCalledWith('org-1', {
+      platform: 'instagram',
+      layout: 'card',
+      facts: [{ id: 'services.1', field: 'services', value: 'Celebration cakes to order' }],
+    });
+    expect(graphics.saveToMediaLibrary).toHaveBeenCalledWith('org-1', Buffer.from('png'));
+    const [, body] = posts.createPost.mock.calls[0] as unknown as [string, any];
+    expect(body.posts[0].value[0].image).toEqual([
+      { id: 'media-1', path: 'http://localhost:4200/uploads/2030/01/01/abc.png' },
+    ]);
+    expect(repo.setPostId).toHaveBeenCalledWith('org-1', 'd1', 'post-1', 'http://localhost:4200/uploads/2030/01/01/abc.png');
+  });
+
+  it('schedules without an image when the owner chose no graphic', async () => {
+    const { service, repo, posts, graphics } = makeService();
+    repo.getDraft.mockResolvedValue(draft({ graphicLayout: 'none' }));
+    await service.approve('org-1', 'd1', 'sbx');
+    expect(graphics.render).not.toHaveBeenCalled();
+    const [, body] = posts.createPost.mock.calls[0] as unknown as [string, any];
+    expect(body.posts[0].value[0].image).toEqual([]);
+  });
+
+  it('schedules nothing if the graphic can’t be drawn or saved', async () => {
+    const { service, repo, posts, graphics } = makeService();
+    repo.getDraft.mockResolvedValue(draft());
+    graphics.render.mockRejectedValueOnce(new Error('font missing'));
+    await expect(service.approve('org-1', 'd1', 'sbx')).rejects.toThrow('couldn’t schedule');
+    graphics.render.mockResolvedValueOnce({ png: Buffer.from('png'), layout: 'details' });
+    graphics.saveToMediaLibrary.mockRejectedValueOnce(new Error('storage down'));
+    await expect(service.approve('org-1', 'd1', 'sbx')).rejects.toThrow('couldn’t schedule');
+    expect(posts.createPost).not.toHaveBeenCalled();
+    expect(repo.releaseApproval).toHaveBeenCalledTimes(2);
+  });
+
+  it('changes the layout only while waiting for approval, and only to a known layout', async () => {
+    const { service, repo } = makeService();
+    await service.setGraphicLayout('org-1', 'd1', 'auto');
+    expect(repo.setGraphicLayout).toHaveBeenLastCalledWith('org-1', 'd1', null);
+    await service.setGraphicLayout('org-1', 'd1', 'none');
+    expect(repo.setGraphicLayout).toHaveBeenLastCalledWith('org-1', 'd1', 'none');
+    await expect(service.setGraphicLayout('org-1', 'd1', 'poster')).rejects.toThrow('Unknown layout');
+    repo.setGraphicLayout.mockResolvedValueOnce(false);
+    await expect(service.setGraphicLayout('org-1', 'd1', 'card')).rejects.toThrow('before the post is approved');
+  });
+
+  it('has no preview for a caption with no graphic', async () => {
+    const { service, repo } = makeService();
+    repo.getDraft.mockResolvedValue(draft({ graphicLayout: 'none' }));
+    await expect(service.getGraphic('org-1', 'd1')).rejects.toThrow('no graphic');
+    repo.getDraft.mockResolvedValue(null);
+    await expect(service.getGraphic('org-1', 'd1')).rejects.toThrow('Caption not found');
   });
 });
 

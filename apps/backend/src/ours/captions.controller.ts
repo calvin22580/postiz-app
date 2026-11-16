@@ -1,6 +1,7 @@
 // OURS: caption endpoints, under /ours/captions.
 // The organisation always comes from the signed-in session.
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { Organization } from '@prisma/client';
 import { GetOrgFromRequest } from '@gitroom/nestjs-libraries/user/org.from.request';
@@ -11,6 +12,7 @@ import {
   Sections,
 } from '@gitroom/backend/services/auth/permissions/permission.exception.class';
 import { ApproveCaptionDto } from '@gitroom/nestjs-libraries/ours/captions/dtos/caption.dto';
+import { GraphicLayoutDto } from '@gitroom/nestjs-libraries/ours/graphics/dtos/brand.kit.dto';
 
 @ApiTags('Captions')
 @Controller('/ours/captions')
@@ -41,5 +43,28 @@ export class CaptionsController {
     @Body() body: ApproveCaptionDto
   ) {
     return this._captionService.approve(org.id, id, body.integrationId);
+  }
+
+  // a preview of the caption's graphic, drawn from the current profile and
+  // brand kit
+  @Get('/:id/graphic')
+  async getGraphic(
+    @GetOrgFromRequest() org: Organization,
+    @Param('id') id: string,
+    @Res() res: Response
+  ) {
+    const png = await this._captionService.getGraphic(org.id, id);
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.send(png);
+  }
+
+  @Put('/:id/graphic')
+  setGraphicLayout(
+    @GetOrgFromRequest() org: Organization,
+    @Param('id') id: string,
+    @Body() body: GraphicLayoutDto
+  ) {
+    return this._captionService.setGraphicLayout(org.id, id, body.layout);
   }
 }

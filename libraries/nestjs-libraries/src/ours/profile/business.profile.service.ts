@@ -74,7 +74,8 @@ export class BusinessProfileService {
         orgId,
         'Reading your website took too long. Please try again.'
       );
-      return this.getProfile(orgId);
+      const failed = await this._businessProfileRepository.getProfile(orgId);
+      return { profile: failed ? this.present(failed) : null };
     }
     return { profile: this.present(profile) };
   }
