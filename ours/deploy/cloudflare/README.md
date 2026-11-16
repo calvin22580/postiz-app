@@ -70,3 +70,13 @@ The first deploy creates the `app.steadylamp.com` custom domain. After deploying
 ## Costs (estimate)
 
 About $34 a month for the container on 24/7, plus about $5–7 for PlanetScale and a few dollars for Temporal Cloud. See `deployment-plan.md`.
+
+## Deploy from GitHub (no local Docker)
+
+`.github/workflows/ours-deploy-cloudflare.yml` runs the same deploy on GitHub's machines. Start it from the repo's **Actions** tab ("Deploy to Cloudflare (ours)", Run workflow). It is manual only.
+
+It needs two repository secrets (Settings → Secrets and variables → Actions):
+- `CLOUDFLARE_ACCOUNT_ID`
+- `CLOUDFLARE_API_TOKEN`: an account API token created from the "Edit Cloudflare Workers" template, plus **Containers: Edit** if it's listed separately, scoped to this account and the `steadylamp.com` zone.
+
+The app's secrets stay on the Worker. The workflow never sees them.
