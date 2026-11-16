@@ -98,6 +98,7 @@ test('edit, rewrite, reject and approve all on the review screen', async ({ page
     expect((await week()).captions.every((c: any) => c.postId === null)).toBe(true);
     await page.getByTestId('captions-approve-all').click();
     await expect(page.getByTestId('captions-approve-all-confirm')).toContainText('Schedule 11 posts on Sandbox · Review Cafe?');
+    await expect(page.getByTestId('captions-approve-all-confirm')).toContainText('1 has details marked “Check before approving”');
     await page.getByTestId('captions-approve-all-yes').click();
     await expect(page.getByTestId('captions-approve-all-result')).toContainText('Approved and scheduled 11 posts.', { timeout: 120_000 });
     await expect(page.getByTestId('captions-summary')).toContainText('Nothing is waiting for you. 11 of 12 posts are approved.');

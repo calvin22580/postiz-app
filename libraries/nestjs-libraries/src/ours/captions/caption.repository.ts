@@ -181,13 +181,16 @@ export class CaptionRepository {
     });
   }
 
-  // Only one approval can win: the update matches a draft still waiting.
-  async claimForApproval(orgId: string, id: string, integrationId: string) {
+  // Only one approval can win: the update matches a draft still waiting, with
+  // the text the post is built from (an edit or rewrite in between makes the
+  // claim fail rather than schedule the old wording).
+  async claimForApproval(orgId: string, id: string, integrationId: string, text: string) {
     const { count } = await this._draft.model.oursCaptionDraft.updateMany({
       where: {
         organizationId: orgId,
         id,
         status: OursCaptionStatus.PENDING_APPROVAL,
+        text,
       },
       data: {
         status: OursCaptionStatus.APPROVED,
@@ -267,7 +270,8 @@ export class CaptionRepository {
   }
 
   // Takes one of the caption's AI rewrites before the (billed) call is made,
-  // so double clicks can't go past the limit.
+  // so double clicks can't go past the limit. giveBackRewrite returns it when
+  // the call failed without being billed.
   async claimRewrite(orgId: string, id: string, max: number) {
     const { count } = await this._draft.model.oursCaptionDraft.updateMany({
       where: {
@@ -290,6 +294,13 @@ export class CaptionRepository {
       text: body.text,
       facts: body.facts,
       editedAt: null,
+    });
+  }
+
+  giveBackRewrite(orgId: string, id: string) {
+    return this._draft.model.oursCaptionDraft.updateMany({
+      where: { organizationId: orgId, id, rewriteCount: { gt: 0 } },
+      data: { rewriteCount: { decrement: 1 } },
     });
   }
 }

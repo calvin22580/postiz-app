@@ -2,7 +2,7 @@
 // OURS: one post on the review screen. While it waits for the owner it can be
 // approved, edited, rewritten or rejected; a rejected post can be brought
 // back; an approved post is scheduled and no longer changes here.
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
@@ -10,10 +10,10 @@ import type { Caption, CaptionWeek } from '@gitroom/frontend/ours/captions/capti
 import { readError } from '@gitroom/frontend/ours/profile/business.profile.hooks';
 import { CaptionGraphic } from '@gitroom/frontend/ours/graphics/caption.graphic';
 
-export const PLATFORMS: Record<Caption['platform'], { label: string; maxLength: number }> = {
-  facebook: { label: 'Facebook', maxLength: 2000 },
-  instagram: { label: 'Instagram', maxLength: 2200 },
-  linkedin: { label: 'LinkedIn', maxLength: 3000 },
+export const PLATFORMS: Record<Caption['platform'], { label: string }> = {
+  facebook: { label: 'Facebook' },
+  instagram: { label: 'Instagram' },
+  linkedin: { label: 'LinkedIn' },
 };
 
 const NOTE_MAX = 300;
@@ -74,7 +74,7 @@ export const CaptionCard: FC<{
   onChanged: () => void;
 }> = ({ caption, week, channelId, channelName, brandVersion, onChanged }) => {
   const fetch = useFetch();
-  const [mode, setMode] = useState<Mode>('view');
+  const [chosenMode, setMode] = useState<Mode>('view');
   const [busy, setBusy] = useState<null | 'approve' | 'save' | 'rewrite' | 'reject' | 'restore'>(null);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState(caption.text);
@@ -82,6 +82,12 @@ export const CaptionCard: FC<{
   const approved = caption.status === 'APPROVED';
   const rejected = caption.status === 'REJECTED';
   const platform = PLATFORMS[caption.platform];
+  // editing and rewriting only exist while the post waits: if it is approved
+  // (for example by "Approve all") or rejected meanwhile, the panels close
+  const mode: Mode = caption.status === 'PENDING_APPROVAL' ? chosenMode : 'view';
+  useEffect(() => {
+    if (caption.status !== 'PENDING_APPROVAL') setMode('view');
+  }, [caption.status]);
 
   const act = async (
     kind: NonNullable<typeof busy>,
@@ -228,10 +234,10 @@ export const CaptionCard: FC<{
               <span
                 className={clsx(
                   'self-end text-[12px]',
-                  draft.trim().length > platform.maxLength ? 'text-red-500' : 'text-textItemBlur'
+                  draft.trim().length > caption.maxLength ? 'text-red-500' : 'text-textItemBlur'
                 )}
               >
-                {draft.trim().length.toLocaleString('en-GB')} / {platform.maxLength.toLocaleString('en-GB')}
+                {draft.trim().length.toLocaleString('en-GB')} / {caption.maxLength.toLocaleString('en-GB')}
               </span>
             </div>
           ) : (
@@ -241,7 +247,7 @@ export const CaptionCard: FC<{
           )}
           {caption.facts.length > 0 && mode !== 'edit' && (
             <p className="text-[13px] leading-[1.5] text-textItemBlur">
-              {caption.editedAt ? 'Written from your profile: ' : 'Based on your profile: '}
+              {caption.editedAt ? 'Original idea from your profile: ' : 'Based on your profile: '}
               {caption.facts.map((f) => f.value).join(' · ')}
             </p>
           )}
@@ -309,7 +315,7 @@ export const CaptionCard: FC<{
           <PrimarySmallButton
             testId="caption-edit-save"
             onClick={save}
-            disabled={!!busy || !draft.trim() || draft.trim().length > platform.maxLength}
+            disabled={!!busy || !draft.trim() || draft.trim().length > caption.maxLength}
           >
             {busy === 'save' ? 'Saving…' : 'Save changes'}
           </PrimarySmallButton>

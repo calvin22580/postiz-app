@@ -143,6 +143,7 @@ const ApproveAll: FC<{
 }> = ({ waiting, channelId, channelName, onChanged }) => {
   const fetch = useFetch();
   const [confirming, setConfirming] = useState(false);
+  const toCheck = waiting.filter((c) => c.notInProfile.length > 0).length;
   const [progress, setProgress] = useState<number | null>(null);
   const [result, setResult] = useState<{ ok: number; failed: { caption: Caption; reason: string }[] } | null>(null);
 
@@ -182,6 +183,8 @@ const ApproveAll: FC<{
         <div className="flex flex-wrap items-center gap-[10px]" data-testid="captions-approve-all-confirm">
           <span className="text-[14px]">
             Schedule {waiting.length} {waiting.length === 1 ? 'post' : 'posts'} on {channelName}?
+            {toCheck > 0 &&
+              ` ${toCheck} ${toCheck === 1 ? 'has' : 'have'} details marked “Check before approving”.`}
           </span>
           <PrimarySmallButton testId="captions-approve-all-yes" onClick={run}>
             Yes, approve {waiting.length === 1 ? 'it' : 'all'}
@@ -230,7 +233,7 @@ const ReviewBar: FC<{
     status === 'all' ? week.captions.length : week.captions.filter((c) => c.status === status).length;
   const waiting = week.captions.filter(
     // a post whose time has passed can't be scheduled any more
-    (c) => c.status === 'PENDING_APPROVAL' && new Date(c.scheduledFor).getTime() > Date.now() + 5 * 60 * 1000
+    (c) => c.status === 'PENDING_APPROVAL' && new Date(c.scheduledFor).getTime() > Date.now() + week.minLeadMs
   );
   return (
     <div

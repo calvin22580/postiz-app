@@ -259,6 +259,9 @@ export class CaptionService {
     if (!draft) {
       throw new HttpException('Caption not found', 404);
     }
+    if (draft.status === OursCaptionStatus.REJECTED) {
+      throw new HttpException('This post was rejected. Bring it back first.', 400);
+    }
     if (draft.status !== OursCaptionStatus.PENDING_APPROVAL) {
       throw new HttpException('This caption is already approved.', 400);
     }
@@ -274,8 +277,8 @@ export class CaptionService {
         400
       );
     }
-    if (!(await this._captionRepository.claimForApproval(orgId, draftId, channel.id))) {
-      throw new HttpException('This caption is already approved.', 409);
+    if (!(await this._captionRepository.claimForApproval(orgId, draftId, channel.id, draft.text))) {
+      throw new HttpException('This post was approved or changed a moment ago. Please check it and try again.', 409);
     }
 
     let postId: string | undefined;
@@ -429,6 +432,10 @@ export class CaptionService {
     } catch (e) {
       if (e instanceof CaptionWriterWithUsageError) {
         await this.logUsages(orgId, e.usages, CAPTION_REWRITE_FEATURE);
+      } else {
+        // nothing was billed (busy service, network, demo has no other
+        // version), so the owner keeps this rewrite
+        await this._captionRepository.giveBackRewrite(orgId, draftId).catch(() => undefined);
       }
       if (e instanceof CaptionWriterError) {
         throw new HttpException(e.message, 400);
@@ -469,6 +476,9 @@ export class CaptionService {
     }
     if (draft.status === OursCaptionStatus.REJECTED) {
       throw new HttpException('Bring this post back first.', 400);
+    }
+    if (draft.scheduledFor.getTime() < Date.now() + MIN_LEAD_MS) {
+      throw new HttpException('The planned time for this post has passed.', 400);
     }
     return draft;
   }
@@ -559,6 +569,8 @@ export class CaptionService {
       // rewrites come from the demo writer when no AI service is connected
       demoRewrites: captionWriterName() === 'demo',
       maxRewrites: MAX_REWRITES,
+      // posts closer than this to their time can't be approved any more
+      minLeadMs: MIN_LEAD_MS,
       captions: drafts.map((d) => ({
         id: d.id,
         platform: d.platform,
@@ -573,6 +585,7 @@ export class CaptionService {
         editedAt: d.editedAt,
         rejectedAt: d.rejectedAt,
         rewritesLeft: Math.max(0, MAX_REWRITES - d.rewriteCount),
+        maxLength: CAPTION_PLATFORMS.find((p) => p.key === d.platform)?.maxLength || 0,
         // details in the owner's own words that the profile doesn't have:
         // shown as a reminder to check, never removed
         notInProfile:

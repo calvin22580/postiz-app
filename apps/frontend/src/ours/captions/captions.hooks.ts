@@ -22,6 +22,8 @@ export interface Caption {
   rejectedAt: string | null;
   // AI rewrites still allowed for this caption
   rewritesLeft: number;
+  // the platform's character limit
+  maxLength: number;
   // details in the owner's own wording that the profile doesn't have
   notInProfile: string[];
   graphic: {
@@ -47,6 +49,8 @@ export interface CaptionWeek {
   // rewrites use prepared versions, not AI, when no AI service is connected
   demoRewrites: boolean;
   maxRewrites: number;
+  // posts closer than this to their time can't be approved any more
+  minLeadMs: number;
   captions: Caption[];
 }
 

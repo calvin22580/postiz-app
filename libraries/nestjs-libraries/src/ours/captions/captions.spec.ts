@@ -24,7 +24,7 @@ import {
   CAPTION_SYSTEM_PROMPT,
   captionSchema,
 } from '@gitroom/nestjs-libraries/ours/captions/writers/anthropic.caption.writer';
-import { CaptionWriterWithUsageError } from '@gitroom/nestjs-libraries/ours/captions/writers/caption.writer';
+import { CaptionWriterError, CaptionWriterWithUsageError } from '@gitroom/nestjs-libraries/ours/captions/writers/caption.writer';
 import {
   CaptionService,
   captionToHtml,
@@ -299,6 +299,7 @@ describe('AnthropicCaptionWriter.rewrite (fake client)', () => {
     const user = req.messages[0].content as string;
     expect(user).toBe(buildRewriteMessage(input));
     expect(user).toContain('for linkedin only');
+    expect(user).toContain('exactly one caption, for linkedin');
     expect(user).toContain('Spotlight: Sourdough loaves');
     expect(user).toContain('It is not a source of facts');
     expect(user).toContain('<untrusted_business_profile>');
@@ -330,6 +331,7 @@ const makeService = () => {
     restore: vi.fn(async () => true),
     claimRewrite: vi.fn(async () => true),
     saveRewrite: vi.fn(async () => true),
+    giveBackRewrite: vi.fn(async () => ({ count: 1 })),
   };
   const profiles = {
     getProfile: vi.fn(async () => ({
@@ -441,7 +443,7 @@ describe('CaptionService.approve', () => {
     repo.getDraft.mockResolvedValue(draft({ scheduledFor: new Date('2030-01-07T12:30:00Z') }));
     await service.approve('org-1', 'd1', 'sbx');
 
-    expect(repo.claimForApproval).toHaveBeenCalledWith('org-1', 'd1', 'sbx');
+    expect(repo.claimForApproval).toHaveBeenCalledWith('org-1', 'd1', 'sbx', 'Fresh bread & cakes\n<b>Harbour Lane</b>');
     const [orgId, body, method] = posts.createPost.mock.calls[0] as unknown as [string, any, string];
     expect(orgId).toBe('org-1');
     expect(method).toBe('WEB');
@@ -482,8 +484,9 @@ describe('CaptionService.approve', () => {
     await expect(service.approve('org-1', 'd1', 'sbx')).rejects.toThrow('has passed');
     // two clicks at once: only one claim wins
     repo.getDraft.mockResolvedValueOnce(draft());
+    // (or the text was edited or rewritten after it was read)
     repo.claimForApproval.mockResolvedValueOnce(false);
-    await expect(service.approve('org-1', 'd1', 'sbx')).rejects.toThrow('already approved');
+    await expect(service.approve('org-1', 'd1', 'sbx')).rejects.toThrow('changed a moment ago');
     expect(posts.createPost).not.toHaveBeenCalled();
   });
 
@@ -704,7 +707,7 @@ describe('CaptionService review', () => {
     process.env.SANDBOX_CHANNEL_ENABLED = 'true';
     const { service, repo, posts } = makeService();
     repo.getDraft.mockResolvedValue(draft({ status: 'REJECTED' }));
-    await expect(service.approve('org-1', 'd1', 'sbx')).rejects.toThrow();
+    await expect(service.approve('org-1', 'd1', 'sbx')).rejects.toThrow('Bring it back first');
     expect(repo.claimForApproval).not.toHaveBeenCalled();
     expect(posts.createPost).not.toHaveBeenCalled();
     delete process.env.SANDBOX_CHANNEL_ENABLED;
@@ -783,6 +786,25 @@ describe('CaptionService review', () => {
     await expect(
       service.rewrite('org-1', 'd1', undefined, rewriter('Sourdough loaves from Harbour Lane Bakery, made for you.'))
     ).rejects.toThrow('left as it is');
+  });
+
+  it('gives the rewrite back when the call failed without being billed, and refuses past posts', async () => {
+    const { service, repo } = makeService();
+    repo.getDraft.mockResolvedValue(draft());
+    const busy = {
+      name: 'anthropic' as const,
+      write: vi.fn(),
+      rewrite: vi.fn(async () => {
+        throw new CaptionWriterError('The AI service is busy. Please try again in a few minutes.');
+      }),
+    };
+    await expect(service.rewrite('org-1', 'd1', undefined, busy)).rejects.toThrow('busy');
+    expect(repo.giveBackRewrite).toHaveBeenCalledWith('org-1', 'd1');
+
+    repo.getDraft.mockResolvedValue(draft({ scheduledFor: new Date(Date.now() + 60 * 1000) }));
+    await expect(service.rewrite('org-1', 'd1', undefined, busy)).rejects.toThrow('has passed');
+    await expect(service.editText('org-1', 'd1', 'New text')).rejects.toThrow('has passed');
+    expect(busy.rewrite).toHaveBeenCalledTimes(1);
   });
 
   it('rewrites in demo mode without any AI cost', async () => {
