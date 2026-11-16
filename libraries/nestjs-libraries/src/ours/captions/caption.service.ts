@@ -11,12 +11,14 @@ import {
 } from '@prisma/client';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import { PostsService } from '@gitroom/nestjs-libraries/database/prisma/posts/posts.service';
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
 import { CreatePostDto } from '@gitroom/nestjs-libraries/dtos/posts/create.post.dto';
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
 import { AiUsageService } from '@gitroom/nestjs-libraries/ours/ai/ai.usage.service';
 import { BusinessProfileService } from '@gitroom/nestjs-libraries/ours/profile/business.profile.service';
+import { ProfileFields } from '@gitroom/nestjs-libraries/ours/profile/business.profile.fields';
 import {
   CaptionRepository,
   StoredCaptionDraft,
@@ -24,6 +26,7 @@ import {
 } from '@gitroom/nestjs-libraries/ours/captions/caption.repository';
 import {
   CaptionFact,
+  CaptionPlatform,
   captionTimezone,
   factsFromProfile,
   hasEnoughToWrite,
@@ -44,8 +47,18 @@ import {
   isSandboxEnabled,
   SANDBOX_IDENTIFIER,
 } from '@gitroom/nestjs-libraries/ours/sandbox/sandbox.config';
+import { GraphicService } from '@gitroom/nestjs-libraries/ours/graphics/graphic.service';
+import {
+  automaticLayout,
+  GRAPHIC_SIZES,
+  graphicContent,
+  GraphicLayout,
+  isGraphicLayout,
+  NO_GRAPHIC,
+} from '@gitroom/nestjs-libraries/ours/graphics/graphic.content';
 
 dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export const CAPTIONS_FEATURE = 'captions';
 const STALE_AFTER_MS = 10 * 60 * 1000;
@@ -76,7 +89,8 @@ export class CaptionService {
     private _businessProfileService: BusinessProfileService,
     private _aiUsageService: AiUsageService,
     private _integrationService: IntegrationService,
-    private _postsService: PostsService
+    private _postsService: PostsService,
+    private _graphicService: GraphicService
   ) {}
 
   async getWeek(orgId: string) {
@@ -97,7 +111,11 @@ export class CaptionService {
       week.status === OursCaptionWeekStatus.READY
         ? await this._captionRepository.getDrafts(orgId, week.id)
         : [];
-    return { week: this.present(week, drafts), nextWeekStart: nextWeek };
+    // graphics fall back to a layout the profile can fill, so show that one
+    const profile = drafts.length
+      ? (await this._businessProfileService.getProfile(orgId)).profile
+      : null;
+    return { week: this.present(week, drafts, profile), nextWeekStart: nextWeek };
   }
 
   async startWriting(orgId: string) {
@@ -250,7 +268,19 @@ export class CaptionService {
     }
 
     let postId: string | undefined;
+    let graphicPath: string | null = null;
+    let mediaId: string | null = null;
     try {
+      // the graphic is drawn now, from the profile and brand kit as they are,
+      // and saved to the media library so the post carries it
+      const image = [] as { id: string; path: string }[];
+      const graphic = await this.renderDraftGraphic(orgId, draft);
+      if (graphic) {
+        const media = await this._graphicService.saveToMediaLibrary(orgId, graphic.png);
+        image.push(media);
+        graphicPath = media.path;
+        mediaId = media.id;
+      }
       const body = await this._postsService.mapTypeToPost(
         {
           type: 'schedule',
@@ -263,7 +293,7 @@ export class CaptionService {
               group: makeId(10),
               settings: { __type: SANDBOX_IDENTIFIER },
               value: [
-                { id: makeId(10), content: captionToHtml(draft.text), delay: 0, image: [] },
+                { id: makeId(10), content: captionToHtml(draft.text), delay: 0, image },
               ],
             },
           ],
@@ -287,17 +317,75 @@ export class CaptionService {
       this._logger.error(
         `Scheduling approved caption failed for org=${orgId} draft=${draftId}: ${(e as Error)?.message}`
       );
+      // no post carries the graphic: take it out of the media library again,
+      // so retries don't leave copies behind
+      if (mediaId) {
+        await this._graphicService.removeFromMediaLibrary(orgId, mediaId);
+      }
       await this._captionRepository.releaseApproval(orgId, draftId);
       throw new HttpException('We couldn’t schedule this caption. Please try again.', 400);
     }
     // the post exists now: never put the caption back to waiting, or a retry
     // would schedule it twice
     try {
-      await this._captionRepository.setPostId(orgId, draftId, postId);
+      await this._captionRepository.setPostId(orgId, draftId, postId, graphicPath);
     } catch (e) {
       this._logger.error(
         `Could not link post=${postId} to caption draft=${draftId} for org=${orgId}: ${(e as Error)?.message}`
       );
+    }
+    return this.getWeek(orgId);
+  }
+
+  // The layout a caption's graphic uses: the owner's choice, or one a day,
+  // rotating through the layouts. Null means no graphic.
+  graphicLayoutFor(draft: Pick<StoredCaptionDraft, 'graphicLayout' | 'scheduledFor'>): GraphicLayout | null {
+    if (draft.graphicLayout === NO_GRAPHIC) {
+      return null;
+    }
+    if (draft.graphicLayout && isGraphicLayout(draft.graphicLayout)) {
+      return draft.graphicLayout;
+    }
+    const weekday = dayjs(draft.scheduledFor).tz(captionTimezone()).day();
+    return automaticLayout((weekday + 6) % 7);
+  }
+
+  private renderDraftGraphic(orgId: string, draft: StoredCaptionDraft) {
+    const layout = this.graphicLayoutFor(draft);
+    if (!layout) {
+      return Promise.resolve(null);
+    }
+    return this._graphicService.render(orgId, {
+      platform: draft.platform as CaptionPlatform,
+      layout,
+      facts: (draft.facts || []) as { field: string; value: string }[],
+    });
+  }
+
+  // A preview of a caption's graphic, drawn now. Once approved, the screen
+  // shows the image that was attached instead.
+  async getGraphic(orgId: string, draftId: string) {
+    const draft = await this._captionRepository.getDraft(orgId, draftId);
+    if (!draft) {
+      throw new HttpException('Caption not found', 404);
+    }
+    const graphic = await this.renderDraftGraphic(orgId, draft);
+    if (!graphic) {
+      throw new HttpException('This post has no graphic', 404);
+    }
+    return graphic.png;
+  }
+
+  async setGraphicLayout(orgId: string, draftId: string, layout: string) {
+    const stored = layout === 'auto' ? null : layout;
+    if (stored !== null && stored !== NO_GRAPHIC && !isGraphicLayout(stored)) {
+      throw new HttpException('Unknown layout', 400);
+    }
+    if (!(await this._captionRepository.getDraft(orgId, draftId))) {
+      throw new HttpException('Caption not found', 404);
+    }
+    if (!(await this._captionRepository.setGraphicLayout(orgId, draftId, stored))) {
+      throw new HttpException('The graphic can only be changed before the post is approved.', 400);
     }
     return this.getWeek(orgId);
   }
@@ -311,7 +399,17 @@ export class CaptionService {
     }
   }
 
-  private present(week: StoredCaptionWeek, drafts: StoredCaptionDraft[]) {
+  private present(
+    week: StoredCaptionWeek,
+    drafts: StoredCaptionDraft[],
+    profile?: { fields: unknown; updatedAt: Date | string } | null
+  ) {
+    const fields = profile?.fields as ProfileFields | undefined;
+    const drawnLayout = (d: StoredCaptionDraft) => {
+      const wanted = this.graphicLayoutFor(d);
+      if (!wanted || !fields) return null;
+      return graphicContent(wanted, (d.facts || []) as { field: string; value: string }[], fields)?.layout || null;
+    };
     return {
       id: week.id,
       weekStart: week.weekStart,
@@ -331,6 +429,15 @@ export class CaptionService {
         channelId: d.integrationId,
         postId: d.postId,
         approvedAt: d.approvedAt,
+        graphic: {
+          choice: d.graphicLayout || 'auto',
+          layout: drawnLayout(d),
+          size: GRAPHIC_SIZES[d.platform as CaptionPlatform] || null,
+          // the image attached to the scheduled post, once approved
+          path: d.graphicPath,
+          // changes when the profile does, so previews redraw
+          profileVersion: profile ? new Date(profile.updatedAt).getTime() : null,
+        },
       })),
     };
   }

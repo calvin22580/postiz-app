@@ -16,6 +16,16 @@ export interface Caption {
   channelId: string | null;
   postId: string | null;
   approvedAt: string | null;
+  graphic: {
+    // what the owner chose: automatic, a layout, or no graphic
+    choice: string;
+    // the layout drawn, or null for no graphic
+    layout: string | null;
+    size: { width: number; height: number } | null;
+    // the image attached to the scheduled post, once approved
+    path: string | null;
+    profileVersion: number | null;
+  };
 }
 
 export interface CaptionWeek {

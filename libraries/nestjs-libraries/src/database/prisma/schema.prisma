@@ -1942,9 +1942,27 @@ model OursCaptionDraft {
   integrationId  String?
   postId         String?
   approvedAt     DateTime?
+  // Milestone 4: the graphic layout the owner chose (null = automatic,
+  // "none" = no graphic) and the image attached when it was approved
+  graphicLayout  String?
+  graphicPath    String?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
   @@index([organizationId, weekId])
   @@map("ours_caption_draft")
+}
+
+// Milestone 4: the business's look for post graphics. The logo is the owner's
+// own upload, re-encoded as a small PNG and kept here (never fetched from
+// elsewhere at render time).
+model OursBrandKit {
+  id             String   @id @default(uuid())
+  organizationId String   @unique
+  colour         String
+  logo           Bytes?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("ours_brand_kit")
 }

@@ -37,7 +37,7 @@ export class BusinessProfileRepository {
       websiteUrl,
       status: OursProfileStatus.CRAWLING,
       progress: { stage: 'checking', done: 0, total: 1 },
-      errorMessage: null,
+      errorMessage: null as string | null,
       buildStartedAt: new Date(),
     };
     return this._profile.model.oursBusinessProfile.upsert({

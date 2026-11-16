@@ -103,6 +103,8 @@ Milestone 2 added `OursBusinessProfile` (one per organisation, `organizationId` 
 
 Milestone 3 added `OursCaptionWeek` (one row per "write next week's posts") and `OursCaptionDraft` (one row per caption, waiting for approval). A draft becomes an upstream `Post` only when the owner approves it; `postId` then links the two (plain column, as above).
 
+Milestone 4 added `OursBrandKit` (one per organisation: brand colour, and the owner's logo as a small re-encoded PNG in a `Bytes` column) and two nullable columns on `OursCaptionDraft`: `graphicLayout` (null = automatic, `none` = no graphic) and `graphicPath` (the image attached when approved).
+
 ## AI calls (Milestone 2)
 
 - Our AI calls use the official Anthropic SDK (`@anthropic-ai/sdk`, added as a root dependency). They do not go through upstream's `OpenaiService`.
@@ -113,4 +115,11 @@ Milestone 3 added `OursCaptionWeek` (one row per "write next week's posts") and 
 ## Approval before scheduling (Milestone 3)
 
 Captions live in our own tables until the owner approves one. Approval calls upstream's `PostsService.createPost` (type `schedule`) for that single caption, so the normal scheduler and workflows take over from there. Until the review screen (Milestone 5), approval only accepts a Sandbox channel, and nothing else in our code creates posts.
+
+## Post graphics (Milestone 4)
+
+- Drawn on the server with `sharp`, which upstream already uses, so there is no paid image service and no new dependency. Shapes are SVG; text is rendered by Pango from our bundled Plus Jakarta Sans font files (`libs/ours/graphics/fonts`, OFL), so the output does not depend on fonts installed on the server.
+- Four fixed layouts (`graphic.content.ts`): statement, card, contact details, name and logo. Sizes per platform: Instagram and Facebook 1080 × 1350 (4:5), LinkedIn 1200 × 1200.
+- Every word on a graphic is a fixed label or a business profile value copied as it is. A value too long to fit is never shortened; a shorter fact or a simpler layout is used instead.
+- Previews are drawn on demand (`GET /ours/captions/:id/graphic`) from the current profile and brand kit, so nothing is stored until approval. On approval the PNG is saved through upstream's `UploadFactory` storage and `MediaService.saveFile` (the same path upstream's generated images take) and attached to the post's `image` list.
 
