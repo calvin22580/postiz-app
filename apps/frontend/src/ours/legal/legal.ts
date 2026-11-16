@@ -48,6 +48,7 @@ export const missingFacts = (facts: LegalFacts) =>
 // frontend proxy, so signed-in and signed-out visitors (and Meta's crawler)
 // all reach them without an upstream change.
 export const legalPaths = {
+  about: '/about.html',
   privacy: '/privacy.html',
   terms: '/terms.html',
   dataDeletion: '/data-deletion.html',

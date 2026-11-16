@@ -1,0 +1,64 @@
+# Chrome prompt: Meta apps
+
+**Calvin:** log in to https://developers.facebook.com and https://business.facebook.com in Chrome (and to Cloudflare at https://dash.cloudflare.com), then paste everything in the box below into Claude in Chrome.
+
+Download `assets/app-icon-1024.png` from this folder first (GitHub → the file → Download), so the agent can upload it from your Downloads folder.
+
+---
+
+```text
+You are setting up Meta developer apps for Tidepost, a social media scheduling service run by Steady Lamp Ltd (UK). Calvin is logged in. Work in a new tab. Follow these rules:
+- Do NOT submit anything for App Review, do NOT click Publish / Go Live, and do NOT start Business Verification without asking Calvin first in chat.
+- Never type a secret into chat or a note. Copy App IDs and secrets only into the Cloudflare form in step 5.
+- If a field asks for something not given here (phone number, company number, address), stop and ask Calvin.
+- If a screen looks different from these steps, do the closest equivalent and tell Calvin what you did.
+
+Values:
+- Business portfolio: Steady Lamp Ltd (create it if it doesn't exist, ask Calvin first)
+- Contact email: support@steadylamp.com
+- App domain: app.steadylamp.com
+- Website / Site URL: https://app.steadylamp.com/about.html
+- Privacy policy URL: https://app.steadylamp.com/privacy.html
+- Terms of service URL: https://app.steadylamp.com/terms.html
+- User data deletion (instructions URL): https://app.steadylamp.com/data-deletion.html
+- Category: Business and pages
+- Icon: app-icon-1024.png in Downloads
+
+STEP 1. App 1, name "Tidepost"
+a. developers.facebook.com/apps → Create app. Name "Tidepost", contact email support@steadylamp.com.
+b. Use cases: choose "Manage everything on your Page" AND "Manage messaging and content on Instagram". App type Business if asked. Connect it to the Steady Lamp Ltd business portfolio.
+c. Customise "Manage everything on your Page": keep business_management, pages_show_list, public_profile; ADD pages_manage_posts, pages_manage_engagement, pages_read_engagement, read_insights. Add nothing else.
+d. Customise "Manage messaging and content on Instagram": choose "API setup with Facebook login". Keep/ADD instagram_basic, instagram_content_publish, instagram_manage_comments, instagram_manage_insights, pages_show_list, pages_read_engagement, business_management. REMOVE instagram_manage_messages and any other messaging permission if allowed. Tell Calvin if something can't be removed.
+e. App settings → Basic: App domains app.steadylamp.com; privacy, terms and data deletion URLs above; category Business and pages; upload the icon; Add platform → Website, Site URL above. Save.
+f. Facebook Login for Business → Settings: Client OAuth login ON, Web OAuth login ON, Enforce HTTPS ON, Use Strict Mode for redirect URIs ON, Login with the JavaScript SDK OFF, Login from devices OFF. Valid OAuth Redirect URIs, exactly these two (no trailing slash):
+   https://app.steadylamp.com/integrations/social/facebook
+   https://app.steadylamp.com/integrations/social/instagram
+   Save.
+g. App roles: confirm Calvin's Facebook account is an Administrator.
+
+STEP 2. App 2, name "Tidepost for Instagram"
+a. Create app. Name "Tidepost for Instagram", same email, same business portfolio.
+b. Use case "Manage messaging and content on Instagram", choose "API setup with Instagram login".
+c. Permissions: instagram_business_basic, instagram_business_content_publish, instagram_business_manage_comments, instagram_business_manage_insights. Remove instagram_business_manage_messages if allowed; if not, leave it but tell Calvin.
+d. Instagram → API setup with Instagram login → Set up business login → Business login settings → OAuth redirect URIs:
+   https://app.steadylamp.com/integrations/social/instagram-standalone
+   (check the saved value has no trailing slash). Deauthorise / data deletion URLs if asked: https://app.steadylamp.com/data-deletion.html
+e. App settings → Basic: same domain, URLs, category and icon as App 1.
+f. On the "API setup with Instagram login" page, note where the Instagram app ID and Instagram app secret are (these are different from the Meta app ID).
+
+STEP 3. Tech Provider
+In App 1's dashboard, find "Become a Tech Provider" / Access verification. Read Calvin the questions and requirements. Do not submit; Calvin decides.
+
+STEP 4. Business Verification
+Business settings (business.facebook.com/settings) → Security Centre / Business info. Tell Calvin whether Steady Lamp Ltd is verified, and if not, list exactly what the form asks for (company number, address, phone, domain check). Do not start it without Calvin.
+
+STEP 5. Secrets into Cloudflare (no chat)
+dash.cloudflare.com → Workers & Pages → the Worker serving app.steadylamp.com (ask Calvin if unsure which) → Settings → Variables and Secrets → Add, type "Secret", for each:
+   FACEBOOK_APP_ID = App 1 App ID (App settings → Basic)
+   FACEBOOK_APP_SECRET = App 1 App secret
+   INSTAGRAM_APP_ID = App 2 Instagram app ID (from step 2f)
+   INSTAGRAM_APP_SECRET = App 2 Instagram app secret
+Deploy/save. Do not show the values in chat.
+
+STEP 6. Report to Calvin in chat (no secrets): both app names and App IDs (IDs are not secret), which permissions each app has and anything that could not be added or removed, the redirect URIs as saved, Business Verification status and what it needs, the Tech Provider requirements, and anything that looked different from these steps. Calvin will paste this report back to Claude.
+```

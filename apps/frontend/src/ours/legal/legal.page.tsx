@@ -1,5 +1,5 @@
-// OURS: the shared frame and building blocks of our legal pages (privacy,
-// terms, data deletion). Server components only, no client JavaScript.
+// OURS: the shared frame and building blocks of our public pages (about,
+// privacy, terms, data deletion; `plain` drops the legal date and draft notice). Server components only, no client JavaScript.
 import { FC, ReactNode } from 'react';
 import { brand } from '@gitroom/frontend/ours/brand/brand';
 import {
@@ -81,6 +81,7 @@ export const Table: FC<{ head: string[]; rows: ReactNode[][] }> = ({
 );
 
 const nav = [
+  { href: legalPaths.about, label: 'About' },
   { href: legalPaths.privacy, label: 'Privacy policy' },
   { href: legalPaths.terms, label: 'Terms of service' },
   { href: legalPaths.dataDeletion, label: 'Delete your data' },
@@ -91,8 +92,10 @@ export const LegalPage: FC<{
   current: string;
   facts: LegalFacts;
   children: ReactNode;
-}> = ({ title, current, facts, children }) => {
-  const draft = !facts.reviewed || missingFacts(facts).length > 0;
+  // An ordinary public page (About): no "last updated" line or draft notice.
+  plain?: boolean;
+}> = ({ title, current, facts, children, plain }) => {
+  const draft = !plain && (!facts.reviewed || missingFacts(facts).length > 0);
   return (
     <div className="min-h-screen bg-newBgColor text-newTextColor">
       <header className="mx-auto flex max-w-[760px] flex-wrap items-center justify-between gap-[12px] px-[16px] pt-[32px]">
@@ -120,9 +123,11 @@ export const LegalPage: FC<{
         <article className="flex flex-col gap-[28px] rounded-[16px] bg-newBgColorInner p-[40px] text-[15px] leading-[1.7] mobile:p-[20px]">
           <div className="flex flex-col gap-[8px]">
             <h1 className="text-[30px] font-[700] leading-[1.2]">{title}</h1>
-            <p className="text-[14px] text-textItemBlur">
-              Last updated: <Fact value={facts.lastUpdated} label="date published (DD/MM/YYYY)" />
-            </p>
+            {!plain && (
+              <p className="text-[14px] text-textItemBlur">
+                Last updated: <Fact value={facts.lastUpdated} label="date published (DD/MM/YYYY)" />
+              </p>
+            )}
           </div>
           {draft && (
             <div
