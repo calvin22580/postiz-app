@@ -150,34 +150,50 @@ const median = (values: number[]) => {
   return v.length % 2 ? v[mid] : (v[mid - 1] + v[mid]) / 2;
 };
 
-// Two-sided 95% t values for small samples (degrees of freedom → value).
-const T_95: [number, number][] = [
-  [1, 12.71], [2, 4.3], [3, 3.18], [4, 2.78], [5, 2.57], [6, 2.45], [7, 2.36],
-  [8, 2.31], [9, 2.26], [10, 2.23], [15, 2.13], [20, 2.09], [30, 2.04], [60, 2.0],
+// Two-sided 99% t values for small samples (degrees of freedom → value).
+// 99% rather than 95% because each summary makes about twenty comparisons,
+// and a false "did better" would steer the writer.
+const T_99: [number, number][] = [
+  [1, 63.66], [2, 9.92], [3, 5.84], [4, 4.6], [5, 4.03], [6, 3.71], [7, 3.5],
+  [8, 3.36], [9, 3.25], [10, 3.17], [15, 2.95], [20, 2.85], [30, 2.75], [60, 2.66],
 ];
 const tValue = (df: number) =>
-  [...T_95].reverse().find(([d]) => df >= d)?.[1] ?? T_95[0][1];
+  [...T_99].reverse().find(([d]) => df >= d)?.[1] ?? T_99[0][1];
 
 const weekdayIndex = (date: Date, tz: string) => (dayjs(date).tz(tz).day() + 6) % 7;
 
 const layoutKey = (p: MeasuredPost, tz: string) =>
   p.hadGraphic ? layoutForDay(p.graphicLayout, weekdayIndex(p.scheduledFor, tz)) || 'none' : 'none';
 
-// How a group compares with the business's typical post. Each post is
-// compared with the typical post on its own platform (platforms differ a lot
-// in size), on a log scale so one viral post can't decide everything. A group
-// only "did better" or "did worse" when the whole 95% range is on one side.
-export const compareGroup = (scores: number[]): Pick<InsightGroup, 'ratio' | 'verdict'> => {
-  const n = scores.length;
-  if (n < MIN_GROUP_POSTS) {
+// How a group compares with the rest of the business's posts. Each post is
+// first compared with the typical post on its own platform (platforms differ
+// a lot in size), on a log scale so one viral post can't decide everything.
+// The group is then compared with all the other posts (Welch's t-test): it
+// only "did better" or "did worse" when the whole 99% range is on one side.
+const meanAndVariance = (xs: number[]) => {
+  const mean = xs.reduce((s, x) => s + x, 0) / xs.length;
+  const variance = xs.length > 1 ? xs.reduce((s, x) => s + (x - mean) ** 2, 0) / (xs.length - 1) : 0;
+  return { mean, variance };
+};
+
+export const compareGroup = (
+  scores: number[],
+  rest: number[]
+): Pick<InsightGroup, 'ratio' | 'verdict'> => {
+  if (scores.length < MIN_GROUP_POSTS || rest.length < MIN_GROUP_POSTS) {
     return { ratio: null, verdict: 'too-few' };
   }
-  const mean = scores.reduce((s, x) => s + x, 0) / n;
-  const variance = scores.reduce((s, x) => s + (x - mean) ** 2, 0) / (n - 1);
-  const margin = tValue(n - 1) * Math.sqrt(variance / n);
-  const ratio = Math.round(Math.exp(mean) * 10) / 10;
-  if (mean - margin > 0) return { ratio, verdict: 'better' };
-  if (mean + margin < 0) return { ratio, verdict: 'worse' };
+  const a = meanAndVariance(scores);
+  const b = meanAndVariance(rest);
+  const va = a.variance / scores.length;
+  const vb = b.variance / rest.length;
+  const diff = a.mean - b.mean;
+  const se = Math.sqrt(va + vb);
+  const df = se > 0 ? (va + vb) ** 2 / ((va ** 2) / (scores.length - 1) + (vb ** 2) / (rest.length - 1)) : 1;
+  const margin = tValue(Math.floor(df)) * se;
+  const ratio = Math.round(Math.exp(diff) * 10) / 10;
+  if (diff - margin > 0 && ratio > 1) return { ratio, verdict: 'better' };
+  if (diff + margin < 0 && ratio < 1) return { ratio, verdict: 'worse' };
   return { ratio, verdict: 'no-difference' };
 };
 
@@ -200,7 +216,8 @@ export const summarise = (posts: MeasuredPost[], tz: string) => {
     groups: order
       .map(({ key: groupKey, label }) => {
         const scores = posts.filter((p) => of(p) === groupKey).map(score);
-        return { key: groupKey, label, posts: scores.length, ...compareGroup(scores) };
+        const rest = posts.filter((p) => of(p) !== groupKey).map(score);
+        return { key: groupKey, label, posts: scores.length, ...compareGroup(scores, rest) };
       })
       .filter((g) => g.posts > 0),
   });

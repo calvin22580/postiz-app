@@ -357,7 +357,7 @@ Screen: `/results` ("What worked" in the menu). Code:
   (labelled everywhere, repeatable per post).
 - Until 20 posts have results the screen says there isn't enough to go on and
   nothing changes. After that it says which kinds of post, days and graphics
-  did clearly better or worse (at least 5 posts each, 95% range one side).
+  did clearly better or worse than the rest (at least 5 posts each, 99% range one side).
 - Kinds that did clearly better or worse steer which ideas next week's posts
   use. They never add claims: the business profile is still the only source.
 - Posts from the public API, CLI and MCP/agent tools can only be drafts, so

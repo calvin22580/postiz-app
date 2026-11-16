@@ -202,6 +202,9 @@ const planFor = (day: number, idea: Idea, captions: Partial<Captions>): RawCapti
 // Milestone 8: ideas of the kinds that did better come first and those that
 // did worse go last, so with more ideas than days the week leans towards what
 // worked. The idea that ends the week stays last unless it is one to avoid.
+const isAvoided = (idea: Idea | undefined, prefs?: CaptionWriterInput['preferences']) =>
+  !!idea && !!prefs?.avoid.some((k) => k.key === postKind(idea.facts));
+
 const byPreference = (ideas: Idea[], prefs?: CaptionWriterInput['preferences']): Idea[] => {
   if (!prefs || (!prefs.favour.length && !prefs.avoid.length)) {
     return ideas;
@@ -213,7 +216,7 @@ const byPreference = (ideas: Idea[], prefs?: CaptionWriterInput['preferences']):
     return 1;
   };
   const end = ideas[ideas.length - 1];
-  const keepEnd = end && rank(end) !== 2;
+  const keepEnd = !!end && !isAvoided(end, prefs);
   const ranked = (keepEnd ? ideas.slice(0, -1) : ideas)
     .map((idea, i) => ({ idea, i }))
     .sort((a, b) => rank(a.idea) - rank(b.idea) || a.i - b.i)
@@ -228,7 +231,10 @@ export class DemoCaptionWriter implements CaptionWriter {
     const ideas = byPreference(ideasFrom(input.facts), input.preferences);
 
     // Contact details make a good end to the week; fill the days in order.
-    const last = ideas.length > input.days.length ? ideas.pop() : undefined;
+    // An idea of a kind to use less isn't kept for the end (Milestone 8).
+    const end = ideas[ideas.length - 1];
+    const last =
+      ideas.length > input.days.length && !isAvoided(end, input.preferences) ? ideas.pop() : undefined;
     const picked = ideas.slice(0, input.days.length - (last ? 1 : 0));
     if (last) picked.push(last);
 

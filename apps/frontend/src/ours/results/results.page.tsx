@@ -56,9 +56,9 @@ const Notice: FC<{ children: React.ReactNode; tone?: 'plain' | 'attention'; test
 const verdictText = (g: ResultGroup, minGroup: number) => {
   switch (g.verdict) {
     case 'better':
-      return `Did better: about ${g.ratio}× your usual interactions`;
+      return `Did better: about ${g.ratio}× the interactions of your other posts`;
     case 'worse':
-      return `Did worse: about ${g.ratio}× your usual interactions`;
+      return `Did worse: about ${g.ratio}× the interactions of your other posts`;
     case 'no-difference':
       return 'No clear difference yet';
     default:
@@ -94,7 +94,7 @@ const Findings: FC<{ data: PostResults }> = ({ data }) => {
                 )}
               />
               <span>
-                {subject(g)} got about {g.ratio}× the interactions of your usual post ({g.posts} posts).
+                {subject(g)} got about {g.ratio}× the interactions of your other posts ({g.posts} posts).
               </span>
             </li>
           ))}
@@ -107,7 +107,8 @@ const Findings: FC<{ data: PostResults }> = ({ data }) => {
       )}
       <p className="text-[13px] leading-[1.6] text-textItemBlur">
         We only call something better or worse when the difference is clear across at least{' '}
-        {data.minGroupPosts} posts. Each post is compared with your usual post on the same platform. Days and
+        {data.minGroupPosts} posts, and big enough that it’s very unlikely to be chance. Each post is first
+        compared with your usual post on the same platform. Days and
         graphics can overlap (each day has its own automatic graphic), so read them together.
       </p>
     </Card>
@@ -122,8 +123,8 @@ const NextWeek: FC<{ data: PostResults }> = ({ data }) => {
       {prefs && prefs.applied ? (
         <p className="text-[15px] leading-[1.6]">
           {prefs.favour.length > 0 &&
-            `We’ll write more ${listOf(prefs.favour.map((k) => `“${k.label}”`))} posts where your profile has something to say. `}
-          {prefs.avoid.length > 0 && `We’ll write fewer ${listOf(prefs.avoid.map((k) => `“${k.label}”`))} posts. `}
+            `We’ll aim for more ${listOf(prefs.favour.map((k) => `“${k.label}”`))} posts where your profile has something to say. `}
+          {prefs.avoid.length > 0 && `We’ll aim for fewer ${listOf(prefs.avoid.map((k) => `“${k.label}”`))} posts. `}
           You still approve every post.
         </p>
       ) : (

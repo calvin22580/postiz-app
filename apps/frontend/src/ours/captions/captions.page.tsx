@@ -327,9 +327,9 @@ const WeekList: FC<{ week: CaptionWeek; onChanged: () => void }> = ({ week, onCh
       {week.preferences && (
         <Notice tone={week.preferences.simulated ? 'demo' : 'plain'} testId="captions-learning-notice">
           {week.preferences.favour.length > 0 &&
-            `This week leans towards ${listOf(week.preferences.favour.map((k) => `“${k.label}”`))} posts, which did better than your usual ones. `}
+            `We aimed for more ${listOf(week.preferences.favour.map((k) => `“${k.label}”`))} posts this week, as they did better than your others. `}
           {week.preferences.avoid.length > 0 &&
-            `It has fewer ${listOf(week.preferences.avoid.map((k) => `“${k.label}”`))} posts, which did worse. `}
+            `We aimed for fewer ${listOf(week.preferences.avoid.map((k) => `“${k.label}”`))} posts, as they did worse. `}
           {week.preferences.simulated
             ? 'These results are simulated Sandbox numbers, not real ones. '
             : ''}

@@ -102,20 +102,28 @@ describe('kinds of post', () => {
   });
 });
 
-describe('comparing a group with the typical post', () => {
-  it('says nothing about fewer than five posts', () => {
-    expect(compareGroup([2, 2, 2, 2])).toEqual({ ratio: null, verdict: 'too-few' });
+describe('comparing a group with the rest', () => {
+  const rest = [0.1, -0.1, 0.05, -0.05, 0, 0.2, -0.2];
+  it('says nothing about fewer than five posts on either side', () => {
+    expect(compareGroup([2, 2, 2, 2], rest)).toEqual({ ratio: null, verdict: 'too-few' });
+    expect(compareGroup(rest, [1, 1, 1, 1])).toEqual({ ratio: null, verdict: 'too-few' });
   });
 
-  it('only calls a difference when the whole range is on one side', () => {
-    expect(compareGroup([0.9, 1.0, 1.1, 0.8, 1.2]).verdict).toBe('better');
-    expect(compareGroup([-0.9, -1.0, -1.1, -0.8, -1.2]).verdict).toBe('worse');
+  it('only calls a difference when the whole 99% range is on one side', () => {
+    expect(compareGroup([0.9, 1.0, 1.1, 0.8, 1.2], rest).verdict).toBe('better');
+    expect(compareGroup([-0.9, -1.0, -1.1, -0.8, -1.2], rest).verdict).toBe('worse');
     // a big average driven by one post isn't enough
-    expect(compareGroup([3, -0.4, 0.1, -0.3, 0.2]).verdict).toBe('no-difference');
+    expect(compareGroup([3, -0.4, 0.1, -0.3, 0.2], rest).verdict).toBe('no-difference');
   });
 
-  it('gives the ratio to the typical post', () => {
-    expect(compareGroup([Math.log(2), Math.log(2), Math.log(2), Math.log(2), Math.log(2) + 0.01]).ratio).toBe(2);
+  it('compares with the other posts, not with zero, so a skewed business is not all "worse"', () => {
+    // every score is below the platform median, as with many zero-interaction posts
+    const others = [-0.5, -0.6, -0.4, -0.55, -0.45, -0.5];
+    expect(compareGroup([-0.5, -0.45, -0.55, -0.6, -0.4], others).verdict).toBe('no-difference');
+  });
+
+  it('gives the ratio to the other posts', () => {
+    expect(compareGroup([0.7, 0.69, 0.7, 0.69, 0.7], [0.01, 0, -0.01, 0, 0.01]).ratio).toBe(2);
   });
 });
 
@@ -207,8 +215,9 @@ describe('PerformanceService', () => {
     delete process.env.SANDBOX_CHANNEL_ENABLED;
   });
 
-  it('asks only for posts that are due, at most 15 a visit, never-asked first', async () => {
-    const drafts = Array.from({ length: 20 }, (_, i) => approved(i));
+  it('asks only for posts that are due, at most 10 a visit, past posts and never-asked first', async () => {
+    // d19 is planned for later: asked about after the ones whose time has come
+    const drafts = [...Array.from({ length: 19 }, (_, i) => approved(i)), approved(19, -3)];
     const results = [
       // asked 30 minutes ago, nothing yet: not due
       { draftId: 'd0', checkedAt: new Date(NOW - HOUR / 2), measuredAt: null },
@@ -220,16 +229,22 @@ describe('PerformanceService', () => {
     const { service, posts } = make(drafts, results);
     await service.collect('org-1', NOW);
     const asked = posts.checkPostAnalytics.mock.calls.map((c) => c[1]);
-    expect(asked).toHaveLength(15);
+    expect(asked).toHaveLength(10);
+    expect(asked).not.toContain('p19');
     expect(asked).not.toContain('p0');
     expect(asked).not.toContain('p1');
     expect(asked).not.toContain('p2');
     expect(posts.checkPostAnalytics.mock.calls[0]).toEqual(['org-1', 'p3', 30]);
   });
 
-  it('stops asking about settled posts', async () => {
-    const old = approved(1, 40);
-    const { service, posts } = make([old], [{ draftId: 'd1', checkedAt: new Date(NOW - 10 * HOUR), measuredAt: new Date(NOW - 10 * HOUR) }]);
+  it('stops asking about settled posts, and posts that never reported anything', async () => {
+    const { service, posts } = make(
+      [approved(1, 40), approved(2, 35)],
+      [
+        { draftId: 'd1', checkedAt: new Date(NOW - 10 * HOUR), measuredAt: new Date(NOW - 10 * HOUR) },
+        { draftId: 'd2', checkedAt: new Date(NOW - 10 * HOUR), measuredAt: null },
+      ]
+    );
     await service.collect('org-1', NOW);
     expect(posts.checkPostAnalytics).not.toHaveBeenCalled();
   });
@@ -319,6 +334,12 @@ describe('preferences in the caption writers', () => {
     expect(leaning).not.toContain('Introducing the business');
     // the week still ends with how to get in touch
     expect(leaning[leaning.length - 1]).toBe('How to get in touch');
+  });
+
+  it('the demo writer drops the end-of-week idea when it is one to use less', async () => {
+    const leaning = await themes({ favour: [], avoid: [kind('contact')] });
+    expect(leaning).not.toContain('How to get in touch');
+    expect(leaning).toHaveLength(5);
   });
 
   it('the demo writer is unchanged without preferences', async () => {

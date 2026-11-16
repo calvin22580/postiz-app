@@ -33,7 +33,7 @@ const RECHECK_EMPTY_MS = HOUR;
 const RECHECK_MEASURED_MS = 6 * HOUR;
 const SETTLED_AFTER_MS = 30 * DAY;
 // platform calls per visit to the results screen; the rest wait for the next
-const MAX_CHECKS_PER_VISIT = 15;
+const MAX_CHECKS_PER_VISIT = 10;
 
 type ApprovedPost = Awaited<ReturnType<PerformanceRepository['approvedPosts']>>[number];
 
@@ -74,16 +74,25 @@ export class PerformanceService {
     const results = new Map(
       (await this._performanceRepository.results(orgId, posts.map((p) => p.id))).map((r) => [r.draftId, r])
     );
+    // A post planned for later can still have gone out (the owner can move it
+    // in the calendar), so it is asked about too, but after the ones whose
+    // time has come.
+    const isPast = (p: ApprovedPost) => p.scheduledFor.getTime() <= now;
     const due = posts
       .filter((p) => {
+        // numbers settle (or a post never reports anything): stop asking
+        if (now - p.scheduledFor.getTime() >= SETTLED_AFTER_MS) return false;
         const r = results.get(p.id);
         if (!r) return true;
         const age = now - r.checkedAt.getTime();
-        if (!r.measuredAt) return age >= RECHECK_EMPTY_MS;
-        return age >= RECHECK_MEASURED_MS && now - p.scheduledFor.getTime() < SETTLED_AFTER_MS;
+        return age >= (r.measuredAt ? RECHECK_MEASURED_MS : RECHECK_EMPTY_MS);
       })
-      // never asked first, then the longest since asked
-      .sort((a, b) => (results.get(a.id)?.checkedAt.getTime() ?? 0) - (results.get(b.id)?.checkedAt.getTime() ?? 0))
+      // due ones first, then never asked, then the longest since asked
+      .sort(
+        (a, b) =>
+          Number(isPast(b)) - Number(isPast(a)) ||
+          (results.get(a.id)?.checkedAt.getTime() ?? 0) - (results.get(b.id)?.checkedAt.getTime() ?? 0)
+      )
       .slice(0, MAX_CHECKS_PER_VISIT);
 
     // one at a time, to stay well inside platform rate limits
