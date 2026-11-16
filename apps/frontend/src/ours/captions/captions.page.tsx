@@ -5,6 +5,7 @@
 // until they approve it, and for now only on a Sandbox channel.
 import { FC, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { listOf } from '@gitroom/frontend/ours/results/results.hooks';
 import clsx from 'clsx';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
@@ -321,6 +322,21 @@ const WeekList: FC<{ week: CaptionWeek; onChanged: () => void }> = ({ week, onCh
           Demo mode: no AI service is connected, so these posts were written
           from simple templates instead of AI. They still use only details from
           your business profile.
+        </Notice>
+      )}
+      {week.preferences && (
+        <Notice tone={week.preferences.simulated ? 'demo' : 'plain'} testId="captions-learning-notice">
+          {week.preferences.favour.length > 0 &&
+            `This week leans towards ${listOf(week.preferences.favour.map((k) => `“${k.label}”`))} posts, which did better than your usual ones. `}
+          {week.preferences.avoid.length > 0 &&
+            `It has fewer ${listOf(week.preferences.avoid.map((k) => `“${k.label}”`))} posts, which did worse. `}
+          {week.preferences.simulated
+            ? 'These results are simulated Sandbox numbers, not real ones. '
+            : ''}
+          Every post still uses only details from your business profile.{' '}
+          <Link href="/results" className="underline">
+            See what worked
+          </Link>
         </Notice>
       )}
       {week.droppedCount > 0 && (

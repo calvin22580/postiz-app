@@ -369,8 +369,10 @@ const makeService = () => {
     claim: vi.fn(async (_org: string, metric: string) => ({ metric, period: '2026-11' })),
     giveBack: vi.fn(async () => undefined),
   };
-  const service = new CaptionService(repo as never, profiles as never, usage as never, integrations as never, posts as never, graphics as never, seasonal as never, plans as never);
-  return { service, repo, usage, posts, graphics, profiles, seasonal, plans };
+  // Milestone 8: no past results unless a test adds some
+  const performance = { writerPreferences: vi.fn(async (): Promise<any> => null) };
+  const service = new CaptionService(repo as never, profiles as never, usage as never, integrations as never, posts as never, graphics as never, seasonal as never, plans as never, performance as never);
+  return { service, repo, usage, posts, graphics, profiles, seasonal, plans, performance };
 };
 
 describe('CaptionService.runWriting', () => {

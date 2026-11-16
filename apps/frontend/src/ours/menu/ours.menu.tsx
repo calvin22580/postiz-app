@@ -46,6 +46,27 @@ export const oursFirstMenu = (
     path: '/captions',
   },
   {
+    name: t('ours_what_worked', 'What worked'),
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="21"
+        height="21"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <path
+          d="M3 17l5-5 4 4 8-8M15 8h5v5"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+    path: '/results',
+  },
+  {
     name: t('ours_plan_usage', 'Plan and usage'),
     icon: (
       <svg

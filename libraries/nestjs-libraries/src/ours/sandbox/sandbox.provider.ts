@@ -4,6 +4,7 @@ import { Logger } from '@nestjs/common';
 import { makeSecureId } from '@gitroom/nestjs-libraries/services/make.secure.id';
 import { SocialAbstract } from '@gitroom/nestjs-libraries/integrations/social.abstract';
 import {
+  AnalyticsData,
   AuthTokenDetails,
   PostDetails,
   PostResponse,
@@ -15,6 +16,7 @@ import dayjs from 'dayjs';
 import {
   SANDBOX_IDENTIFIER,
   sandboxDisplayName,
+  simulatedAnalytics,
 } from '@gitroom/nestjs-libraries/ours/sandbox/sandbox.config';
 
 export class SandboxProvider extends SocialAbstract implements SocialProvider {
@@ -115,5 +117,17 @@ export class SandboxProvider extends SocialAbstract implements SocialProvider {
         releaseURL: `${frontend}/sandbox/${post.id}`,
       };
     });
+  }
+
+  // Milestone 8: made-up results for a Sandbox post, so the "what worked"
+  // screen can be tried before any real platform is connected. Every label
+  // starts with "Simulated", which is how our results code (and anyone
+  // reading upstream's statistics window) can tell them from real ones.
+  async postAnalytics(
+    integrationId: string,
+    accessToken: string,
+    postId: string
+  ): Promise<AnalyticsData[]> {
+    return simulatedAnalytics(postId, dayjs().format('YYYY-MM-DD'));
   }
 }
