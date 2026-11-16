@@ -386,11 +386,12 @@ channel as deleted. Ours then erases the data, so the data deletion page is true
   webhooks, auto-post feeds, plugs, error logs and notifications are deleted or
   emptied; uploaded files and approved graphics are removed from storage; stored
   third-party keys and app tokens are hashed or cleared; the organisation is
-  renamed "Deleted organisation" and its API key cleared. Upstream already
+  renamed "Deleted organisation" and its API key cleared; tags, customer
+  names, video clippings and OAuth app secrets are emptied too. Upstream already
   hashes the user's details and the channels' tokens.
-- **Channel disconnected**: its tokens, page name, profile and picture are
-  hashed or cleared. Its internal id stays, so connecting the same page again
-  works as before.
+- **Channel disconnected**: its tokens, profile and picture are hashed or
+  cleared. Its name and internal id stay, so connecting the same page again
+  revives it cleanly; disconnecting it again erases it again.
 - Kept: our AI cost log, plan and usage counters (billing records, no customer
   content), and the emptied upstream rows other rows point at.
 - When: straight after upstream's delete route answers (a global interceptor,

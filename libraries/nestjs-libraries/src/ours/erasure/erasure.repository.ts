@@ -41,6 +41,11 @@ export class ErasureRepository {
       | 'oAuthAuthorization'
       | 'gitHub'
       | 'media'
+      | 'tags'
+      | 'customer'
+      | 'clipping'
+      | 'clippingClip'
+      | 'oAuthApp'
     >,
     private _ours: PrismaRepository<
       | 'oursBusinessProfile'
@@ -73,16 +78,19 @@ export class ErasureRepository {
       orderBy: [{ deletedAt: 'asc' }, { id: 'asc' }],
       skip,
       take: PAGE,
-      select: { id: true, organizationId: true },
+      select: { id: true, organizationId: true, deletedAt: true },
     });
   }
 
-  async alreadyErased(kind: ErasureKind, targetIds: string[]) {
+  // When each target was last erased. A channel can be connected again (the
+  // same row comes back) and disconnected again, so the caller compares this
+  // with the row's deletedAt.
+  async lastErased(kind: ErasureKind, targetIds: string[]) {
     const rows = await this._erasure.model.oursErasure.findMany({
       where: { kind, targetId: { in: targetIds } },
-      select: { targetId: true },
+      select: { targetId: true, erasedAt: true },
     });
-    return new Set(rows.map((row) => row.targetId));
+    return new Map(rows.map((row) => [row.targetId, row.erasedAt]));
   }
 
   recordErasure(kind: ErasureKind, orgId: string, targetId: string) {
@@ -97,7 +105,7 @@ export class ErasureRepository {
   // Files to remove from storage before their rows are scrubbed: the media
   // library and the graphics attached to our captions.
   async storedFiles(orgId: string) {
-    const [media, drafts] = await Promise.all([
+    const [media, drafts, clippings, clips] = await Promise.all([
       this._upstream.model.media.findMany({
         where: { organizationId: orgId, path: { not: '' } },
         select: { path: true, thumbnail: true },
@@ -106,25 +114,35 @@ export class ErasureRepository {
         where: { organizationId: orgId, graphicPath: { not: null } },
         select: { graphicPath: true },
       }),
+      this._upstream.model.clipping.findMany({
+        where: { organizationId: orgId, thumbnail: { not: null } },
+        select: { thumbnail: true },
+      }),
+      this._upstream.model.clippingClip.findMany({
+        where: { clipping: { organizationId: orgId } },
+        select: { path: true, thumbnail: true },
+      }),
     ]);
     // an approved graphic is also in the media library: list each file once
     const paths = [
       ...media.flatMap((item) => [item.path, item.thumbnail]),
       ...drafts.map((draft) => draft.graphicPath),
+      ...clippings.map((clipping) => clipping.thumbnail),
+      ...clips.flatMap((clip) => [clip.path, clip.thumbnail]),
     ].filter((path): path is string => !!path);
     return [...new Set(paths)];
   }
 
-  // A disconnected channel: its tokens and the page's name, picture and
-  // profile are platform data. internalId stays, so connecting the same page
-  // again updates this row (upstream's upsert) instead of clashing with it.
+  // A disconnected channel: its tokens, profile and picture are platform
+  // data. internalId and name stay: connecting the same page again revives
+  // this row through upstream's upsert, which sets new tokens but not the
+  // name. The refresh token is emptied, not hashed, so a reconnect that gets
+  // no new one is asked to reconnect rather than refreshing with garbage.
   async eraseChannel(orgId: string, channelId: string) {
     const channel = await this._upstream.model.integration.findFirst({
       where: { id: channelId, organizationId: orgId, deletedAt: { not: null } },
       select: {
-        name: true,
         token: true,
-        refreshToken: true,
         profile: true,
         customInstanceDetails: true,
       },
@@ -135,9 +153,8 @@ export class ErasureRepository {
     await this._upstream.model.integration.updateMany({
       where: { id: channelId, organizationId: orgId, deletedAt: { not: null } },
       data: {
-        name: hash(channel.name),
         token: hash(channel.token),
-        refreshToken: channel.refreshToken ? hash(channel.refreshToken) : null,
+        refreshToken: '',
         profile: channel.profile ? hash(channel.profile) : null,
         customInstanceDetails: channel.customInstanceDetails
           ? hash(channel.customInstanceDetails)
@@ -248,6 +265,42 @@ export class ErasureRepository {
         },
       });
     }
+    await this._upstream.model.tags.updateMany({
+      where: { orgId },
+      data: { name: 'deleted' },
+    });
+    // customer names are part of a unique key, so each gets its own hash
+    const customers = await this._upstream.model.customer.findMany({
+      where: { orgId },
+      select: { id: true, name: true },
+    });
+    for (const customer of customers) {
+      await this._upstream.model.customer.updateMany({
+        where: { id: customer.id, orgId },
+        data: { name: hash(customer.name) },
+      });
+    }
+    await this._upstream.model.clippingClip.updateMany({
+      where: { clipping: org },
+      data: { title: '', content: '', path: null, thumbnail: null, error: null },
+    });
+    await this._upstream.model.clipping.updateMany({
+      where: org,
+      data: { url: '', title: null, thumbnail: null, error: null },
+    });
+    await this._upstream.model.clipping.updateMany({
+      where: { ...org, deletedAt: null },
+      data: { deletedAt: now },
+    });
+    // without a secret the app can no longer sign anyone in
+    await this._upstream.model.oAuthApp.updateMany({
+      where: org,
+      data: { name: 'deleted', description: null, clientSecret: null },
+    });
+    await this._upstream.model.integration.updateMany({
+      where: org,
+      data: { additionalSettings: '[]' },
+    });
     await this._upstream.model.organization.updateMany({
       where: { id: orgId, deletedAt: { not: null } },
       data: { name: 'Deleted organisation', description: null, apiKey: null },

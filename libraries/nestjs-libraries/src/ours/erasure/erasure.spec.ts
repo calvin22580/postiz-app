@@ -13,12 +13,15 @@ import type { ErasureRepository } from './erasure.repository';
 const fakeRepository = (state: {
   orgs: string[];
   liveOrgs?: string[];
-  channels: { id: string; organizationId: string }[];
+  channels: { id: string; organizationId: string; deletedAt?: Date }[];
   erased?: string[];
   files?: Record<string, string[]>;
   failOrg?: string;
 }) => {
-  const erased = new Set(state.erased || []);
+  const erasedAt = new Map<string, Date>(
+    (state.erased || []).map((id) => [id, new Date('2026-11-01T00:00:00Z')])
+  );
+  const erased = { has: (id: string) => erasedAt.has(id), get size() { return erasedAt.size; }, ids: () => [...erasedAt.keys()] };
   const page = <T>(items: T[], skip: number) => items.slice(skip, skip + 2);
   return {
     erased,
@@ -32,12 +35,12 @@ const fakeRepository = (state: {
           skip
         )
       ),
-      alreadyErased: vi.fn(
+      lastErased: vi.fn(
         async (_kind: string, ids: string[]) =>
-          new Set(ids.filter((id) => erased.has(id)))
+          new Map(ids.filter((id) => erasedAt.has(id)).map((id) => [id, erasedAt.get(id)!]))
       ),
       recordErasure: vi.fn(async (_kind: string, _org: string, id: string) => {
-        erased.add(id);
+        erasedAt.set(id, new Date());
       }),
       isDeletedOrganisation: vi.fn(
         async (id: string) =>
@@ -78,7 +81,7 @@ describe('erasure sweep', () => {
       'o3',
     ]);
     expect(repo.eraseChannel).toHaveBeenCalledTimes(3);
-    expect([...erased].sort()).toEqual(['c1', 'c2', 'c3', 'o1', 'o2', 'o3']);
+    expect(erased.ids().sort()).toEqual(['c1', 'c2', 'c3', 'o1', 'o2', 'o3']);
   });
 
   it('skips what was already erased, so running again does nothing', async () => {
@@ -90,6 +93,22 @@ describe('erasure sweep', () => {
     await service(repo).sweep();
     expect(repo.eraseOrganisation).not.toHaveBeenCalled();
     expect(repo.eraseChannel).not.toHaveBeenCalled();
+  });
+
+  it('erases a channel again when it was reconnected and disconnected again', async () => {
+    const { repo } = fakeRepository({
+      orgs: [],
+      channels: [
+        // disconnected before the last erasure: nothing new
+        { id: 'c1', organizationId: 'o1', deletedAt: new Date('2026-10-30T00:00:00Z') },
+        // disconnected again after it: erase again
+        { id: 'c2', organizationId: 'o1', deletedAt: new Date('2026-11-10T00:00:00Z') },
+      ],
+      erased: ['c1', 'c2'],
+    });
+    await service(repo).sweep();
+    expect(repo.eraseChannel).toHaveBeenCalledTimes(1);
+    expect(repo.eraseChannel).toHaveBeenCalledWith('o1', 'c2');
   });
 
   it('never erases an organisation that is still in use', async () => {
@@ -165,7 +184,41 @@ describe('erasure sweep', () => {
     });
     const s = service(repo);
     await Promise.all([s.sweep(), s.sweep('o1'), s.sweep()]);
-    expect(repo.deletedChannels).toHaveBeenCalledTimes(3);
+    // the third joins the first, which had not started yet
+    expect(repo.deletedChannels).toHaveBeenCalledTimes(2);
     expect(maxActive).toBe(1);
+  });
+
+  it('joins a sweep that is already waiting instead of queueing more', async () => {
+    const { repo } = fakeRepository({ orgs: [], channels: [] });
+    let release!: () => void;
+    repo.deletedChannels.mockImplementationOnce(
+      () => new Promise((r) => (release = () => r([])))
+    );
+    const s = service(repo);
+    const first = s.sweep();
+    await new Promise((r) => setTimeout(r, 0));
+    const waiting = [s.sweep(), s.sweep(), s.sweep(), s.sweep('o1'), s.sweep('o1')];
+    release();
+    await Promise.all([first, ...waiting]);
+    // the running one, one waiting full sweep, one waiting sweep for o1
+    expect(repo.deletedChannels).toHaveBeenCalledTimes(3);
+  });
+
+  it('only removes files from our own cloud bucket', async () => {
+    process.env.STORAGE_PROVIDER = 'cloudflare';
+    process.env.CLOUDFLARE_BUCKET_URL = 'https://media.example.test';
+    try {
+      const { repo } = fakeRepository({
+        orgs: ['o1'],
+        channels: [],
+        files: { o1: ['https://media.example.test/a.png', 'https://elsewhere.test/a.png'] },
+      });
+      await service(repo).sweep();
+      expect(removeFile.mock.calls.map((c) => c[0])).toEqual(['https://media.example.test/a.png']);
+    } finally {
+      delete process.env.STORAGE_PROVIDER;
+      delete process.env.CLOUDFLARE_BUCKET_URL;
+    }
   });
 });

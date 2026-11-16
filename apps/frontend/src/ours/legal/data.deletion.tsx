@@ -37,8 +37,8 @@ export const DataDeletion: FC<{ facts: LegalFacts }> = ({ facts }) => {
           </li>
           <li>
             <strong>One connected account</strong>, such as your Facebook
-            Page: disconnect it in {name}. Its access tokens and page details
-            are deleted straight away.
+            Page: disconnect it in {name}. Its access tokens and profile
+            details are deleted straight away.
           </li>
         </List>
       </Section>

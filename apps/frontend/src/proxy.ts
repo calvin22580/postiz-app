@@ -169,7 +169,7 @@ export async function proxy(request: NextRequest) {
     // OURS (2026-11-16): typed addresses of hidden upstream screens go to ours
     const oursRedirect = hiddenScreenRedirect(nextUrl.pathname);
     if (oursRedirect) {
-      return NextResponse.redirect(new URL(oursRedirect, nextUrl.href));
+      return NextResponse.redirect(new URL(oursRedirect + nextUrl.search, nextUrl.href));
     }
     if (nextUrl.pathname === '/') {
       return NextResponse.redirect(

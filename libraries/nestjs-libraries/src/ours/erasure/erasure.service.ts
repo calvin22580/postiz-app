@@ -18,11 +18,19 @@ import { ErasureRepository } from '@gitroom/nestjs-libraries/ours/erasure/erasur
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// Cloud storage deletes by the last part of the address, so only files in our
+// own bucket are removed; local storage refuses anything outside its folder.
+export const isOurStoredFile = (path: string) =>
+  process.env.STORAGE_PROVIDER !== 'cloudflare' ||
+  (!!process.env.CLOUDFLARE_BUCKET_URL &&
+    path.startsWith(process.env.CLOUDFLARE_BUCKET_URL));
+
 @Injectable()
 export class ErasureService implements OnApplicationBootstrap, OnModuleDestroy {
   private _logger = new Logger(ErasureService.name);
   private _timer?: NodeJS.Timeout;
   private _running?: Promise<void>;
+  private _waiting = new Map<string, Promise<void>>();
 
   constructor(private _repository: ErasureRepository) {}
 
@@ -42,11 +50,19 @@ export class ErasureService implements OnApplicationBootstrap, OnModuleDestroy {
   }
 
   // Never throws. Runs one at a time in this process: a sweep asked for while
-  // another runs starts when that one ends.
+  // another runs starts when that one ends, and asking again for one that is
+  // already waiting joins it instead of queueing another.
   sweep(orgId?: string): Promise<void> {
-    const next = (this._running || Promise.resolve()).then(() =>
-      this.run(orgId)
-    );
+    const key = orgId || '*';
+    const waiting = this._waiting.get(key);
+    if (waiting) {
+      return waiting;
+    }
+    const next = (this._running || Promise.resolve()).then(() => {
+      this._waiting.delete(key);
+      return this.run(orgId);
+    });
+    this._waiting.set(key, next);
     this._running = next;
     return next;
   }
@@ -69,7 +85,7 @@ export class ErasureService implements OnApplicationBootstrap, OnModuleDestroy {
       if (!page.length) {
         break;
       }
-      const done = await this._repository.alreadyErased(
+      const done = await this._repository.lastErased(
         'organisation',
         page.map((org) => org.id)
       );
@@ -93,11 +109,16 @@ export class ErasureService implements OnApplicationBootstrap, OnModuleDestroy {
       if (!page.length) {
         break;
       }
-      const done = await this._repository.alreadyErased(
+      const done = await this._repository.lastErased(
         'channel',
         page.map((channel) => channel.id)
       );
-      for (const channel of page.filter((item) => !done.has(item.id))) {
+      // a channel connected again and disconnected again needs erasing again
+      const pending = page.filter((item) => {
+        const erasedAt = done.get(item.id);
+        return !erasedAt || (!!item.deletedAt && item.deletedAt > erasedAt);
+      });
+      for (const channel of pending) {
         try {
           if (
             await this._repository.eraseChannel(channel.organizationId, channel.id)
@@ -150,7 +171,7 @@ export class ErasureService implements OnApplicationBootstrap, OnModuleDestroy {
     }
     const storage = UploadFactory.createStorage();
     let failed = 0;
-    for (const file of files) {
+    for (const file of files.filter(isOurStoredFile)) {
       try {
         await storage.removeFile(file);
       } catch {

@@ -15,12 +15,12 @@ import { ErasureService } from '@gitroom/nestjs-libraries/ours/erasure/erasure.s
 
 // Deleting the signed-in account (Settings > Delete account).
 const DELETE_ACCOUNT = { method: 'POST', path: /\/user\/delete-account\/?$/ };
-// Disconnecting a channel: the app, the public API, and upstream's
-// enterprise route (which has no signed-in organisation).
+// Disconnecting a channel: the app and the public API. Upstream's enterprise
+// route is left to the daily sweep: it needs no sign-in and answers 200 even
+// when it deletes nothing, so it must not be able to start sweeps.
 const DELETE_CHANNEL = [
   { method: 'DELETE', path: /\/integrations\/?$/ },
   { method: 'DELETE', path: /\/public\/v1\/integrations\/[^/]+\/?$/ },
-  { method: 'POST', path: /\/enterprise\/delete-channel\/?$/ },
 ];
 
 const matches = (request: Request, route: { method: string; path: RegExp }) =>
@@ -44,6 +44,9 @@ export class ErasureInterceptor implements NestInterceptor {
     }
     // the organisation is read now: deleting an account signs the user out
     const orgId = deletesAccount ? undefined : request.org?.id;
+    if (deletesChannel && !orgId) {
+      return next.handle();
+    }
     return next.handle().pipe(
       tap(() => {
         this._erasureService.sweep(orgId);
