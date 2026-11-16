@@ -161,13 +161,13 @@ export class CaptionService {
       }
       await this.logUsages(orgId, output.usages);
 
-      const { captions, dropped } = groundCaptions(
+      const { captions, dropped, reasons } = groundCaptions(
         output.raw,
         facts,
         POSTING_DAYS.length
       );
       this._logger.log(
-        `Captions for org=${orgId}: kept ${captions.length}, dropped ${dropped} with details not in the profile`
+        `Captions for org=${orgId}: kept ${captions.length}, dropped ${dropped}${reasons.length ? ` (${reasons.join('; ')})` : ''}`
       );
       if (!captions.length) {
         throw new CaptionWriterError(

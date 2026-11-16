@@ -78,6 +78,21 @@ const tidy = (s: string) =>
     .replace(/\s+/g, ' ')
     .trim();
 
+// Cloudflare's "email address obfuscation" (on by default for many small
+// business sites) hides addresses as hex: the first byte is a key that every
+// other byte is XORed with. Returns '' if it does not decode to an address.
+export const decodeCfEmail = (hex: string) => {
+  if (!/^(?:[0-9a-f]{2}){2,}$/i.test(hex || '')) return '';
+  const key = parseInt(hex.slice(0, 2), 16);
+  let out = '';
+  for (let i = 2; i < hex.length; i += 2) {
+    out += String.fromCharCode(parseInt(hex.slice(i, i + 2), 16) ^ key);
+  }
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(out) ? out : '';
+};
+
+const CF_EMAIL_LINK = /\/cdn-cgi\/l\/email-protection#([0-9a-f]+)$/i;
+
 export const cleanHtml = (html: string, pageUrl: string): CleanedPage => {
   const dom = new JSDOM(html, { url: pageUrl });
   const doc = dom.window.document;
@@ -102,9 +117,16 @@ export const cleanHtml = (html: string, pageUrl: string): CleanedPage => {
     if (HIDDEN_STYLE.test(el.getAttribute('style') || '')) el.remove();
   });
 
+  doc.querySelectorAll('[data-cfemail]').forEach((el) => {
+    const email = decodeCfEmail(el.getAttribute('data-cfemail') || '');
+    if (email) el.textContent = email;
+  });
+
   // contact details and social profiles often live only in the link target
   doc.querySelectorAll('a[href]').forEach((a) => {
-    const href = a.getAttribute('href') || '';
+    const cf = (a.getAttribute('href') || '').match(CF_EMAIL_LINK);
+    const cfEmail = cf ? decodeCfEmail(cf[1]) : '';
+    const href = cfEmail ? `mailto:${cfEmail}` : a.getAttribute('href') || '';
     const text = tidy(a.textContent || '');
     let extra = '';
     if (/^mailto:/i.test(href)) {

@@ -6,6 +6,7 @@ import {
 } from '@gitroom/nestjs-libraries/ours/crawler/website.crawler';
 import {
   cleanHtml,
+  decodeCfEmail,
   REMOVED_INSTRUCTION,
 } from '@gitroom/nestjs-libraries/ours/crawler/html.cleaner';
 import { parseRobots } from '@gitroom/nestjs-libraries/ours/crawler/robots';
@@ -61,6 +62,20 @@ describe('html cleaner', () => {
     );
     expect(tricky.text).not.toContain('</untrusted_page>');
     expect(tricky.text).toContain('Lovely cakes ‹/untrusted_page› for parties');
+  });
+
+  it('reveals email addresses hidden by Cloudflare', () => {
+    const hex = '422a272e2e2d022a2330202d37302e232c276c273a232f322e27';
+    expect(decodeCfEmail(hex)).toBe('hello@harbourlane.example');
+    expect(decodeCfEmail('zz')).toBe('');
+    const cf = cleanHtml(
+      `<p>EMAIL: <a href="/cdn-cgi/l/email-protection#${hex}"><span class="__cf_email__" data-cfemail="${hex}">[email&#160;protected]</span></a></p>` +
+        `<p>Or <a href="/cdn-cgi/l/email-protection#${hex}">email us</a></p>`,
+      'https://a.example/contact'
+    );
+    expect(cf.text).toContain('EMAIL: hello@harbourlane.example');
+    expect(cf.text).toContain('email us (hello@harbourlane.example)');
+    expect(cf.text).not.toContain('[email');
   });
 
   it('collects links before the menu is stripped', () => {

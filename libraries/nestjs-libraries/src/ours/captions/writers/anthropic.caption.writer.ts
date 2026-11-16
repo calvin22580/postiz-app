@@ -2,6 +2,7 @@
 // profile values came from a website, so they are passed as untrusted data,
 // and the result is still checked by groundCaptions() afterwards.
 import Anthropic from '@anthropic-ai/sdk';
+import { Logger } from '@nestjs/common';
 import { CAPTION_PLATFORMS } from '@gitroom/nestjs-libraries/ours/captions/caption.plan';
 import {
   CaptionWriter,
@@ -78,6 +79,7 @@ type MessagesClient = Pick<Anthropic, 'beta'>;
 
 export class AnthropicCaptionWriter implements CaptionWriter {
   readonly name = 'anthropic' as const;
+  private _logger = new Logger(AnthropicCaptionWriter.name);
 
   constructor(
     private _client: MessagesClient = new Anthropic(),
@@ -115,6 +117,8 @@ export class AnthropicCaptionWriter implements CaptionWriter {
         throw new CaptionWriterError('The AI service is busy. Please try again in a few minutes.');
       }
       if (e instanceof Anthropic.APIError) {
+        // the owner sees a short message; the reason is only in the server log
+        this._logger.error(`AI call failed (${e.status ?? 'network'}): ${e.message}`);
         throw new CaptionWriterError(`The AI service returned an error (${e.status ?? 'network'}). Please try again.`);
       }
       throw e;
