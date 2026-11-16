@@ -42,7 +42,7 @@ const profile = (): ProfileFields => {
   return f;
 };
 
-const FIXED_LABELS = ['Our services', 'About us', 'Find us', 'Where', 'Open', 'Call'];
+const FIXED_LABELS = ['Our services', 'About us', 'Find us', 'Visit', 'Where', 'Open', 'Call', 'Email'];
 const profileValues = (f: ProfileFields) =>
   Object.values(f).flatMap((field) => field.claims.map((c) => c.value));
 
@@ -77,8 +77,8 @@ describe('graphic content', () => {
   it('falls back to a layout the profile can fill', () => {
     const f = profile();
     f.location = { claims: [] };
-    f.phone = { claims: [] };
     f.openingHours = { claims: [] };
+    // one way to get in touch isn't enough for a contact card
     expect(graphicContent('details', [], f)!.layout).toBe('card');
     const withContact = graphicContent('details', [], profile())!;
     expect(withContact.details).toEqual([
@@ -87,6 +87,11 @@ describe('graphic content', () => {
       { label: 'Call', value: '01632 960123' },
     ]);
     expect(withContact.headline).toBeNull();
+    // the full address replaces the town, and three rows at most
+    const full = profile();
+    full.address = { claims: [site('12 Harbour Lane, Exampletown, EX1 2AB')] };
+    full.email = { claims: [site('hello@harbourlane.example')] };
+    expect(graphicContent('details', [], full)!.details.map((d) => d.label)).toEqual(['Visit', 'Open', 'Call']);
   });
 
   it('draws nothing without a business name', () => {

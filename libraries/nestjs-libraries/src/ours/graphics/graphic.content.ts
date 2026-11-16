@@ -61,10 +61,15 @@ const HEADLINE_LABELS: Partial<Record<ProfileFieldKey, string>> = {
   whatTheyDo: 'About us',
 };
 const DETAIL_FIELDS: { field: ProfileFieldKey; label: string }[] = [
+  { field: 'address', label: 'Visit' },
   { field: 'location', label: 'Where' },
   { field: 'openingHours', label: 'Open' },
   { field: 'phone', label: 'Call' },
+  { field: 'email', label: 'Email' },
 ];
+// a contact card with fewer rows than this looks empty
+const MIN_DETAILS = 2;
+const MAX_DETAILS = 3;
 
 const first = (fields: ProfileFields, key: ProfileFieldKey) =>
   fields[key]?.claims?.[0]?.value?.trim() || '';
@@ -90,10 +95,18 @@ const pickHeadline = (facts: GraphicFact[], fields: ProfileFields) => {
   return null;
 };
 
-const contactDetails = (fields: ProfileFields) =>
-  DETAIL_FIELDS.map((d) => ({ label: d.label, value: first(fields, d.field) })).filter(
+// The full address when there is one, otherwise the town; then hours and
+// ways to get in touch.
+const contactDetails = (fields: ProfileFields) => {
+  const rows = DETAIL_FIELDS.map((d) => ({ field: d.field, label: d.label, value: first(fields, d.field) })).filter(
     (d) => fits(d.value, MAX_DETAIL_LENGTH)
   );
+  const hasAddress = rows.some((r) => r.field === 'address');
+  return rows
+    .filter((r) => !(hasAddress && r.field === 'location'))
+    .slice(0, MAX_DETAILS)
+    .map(({ label, value }) => ({ label, value }));
+};
 
 // One layout a day, the same on every platform, so a day's posts match.
 const ROTATION: GraphicLayout[] = ['statement', 'card', 'details', 'name', 'card'];
@@ -117,7 +130,7 @@ export const graphicContent = (
   const details = contactDetails(fields);
 
   let layout = wanted;
-  if (layout === 'details' && !details.length) layout = 'card';
+  if (layout === 'details' && details.length < MIN_DETAILS) layout = 'card';
   if ((layout === 'statement' || layout === 'card') && !headline) layout = 'name';
 
   return {

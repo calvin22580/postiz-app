@@ -108,9 +108,7 @@ export const CaptionGraphic: FC<{
           data-testid="caption-graphic-layout"
           className="h-[32px] rounded-[8px] border border-newBorder bg-newBgColorInner px-[8px] text-[13px]"
         >
-          <option value="auto">
-            Automatic{caption.graphic.choice === 'auto' && caption.graphic.layout ? ` (${labelOf(caption.graphic.layout)})` : ''}
-          </option>
+          <option value="auto">Automatic</option>
           {LAYOUTS.map((l) => (
             <option key={l.key} value={l.key}>
               {l.label}
@@ -119,8 +117,8 @@ export const CaptionGraphic: FC<{
           <option value="none">No graphic</option>
         </select>
         {size && hasGraphic && (
-          <span className="text-[12px] text-textItemBlur">
-            {size.width} × {size.height} px
+          <span className="text-[12px] text-textItemBlur" data-testid="caption-graphic-info">
+            {labelOf(caption.graphic.layout)}, {size.width} × {size.height} px
           </span>
         )}
       </label>

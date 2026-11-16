@@ -10,7 +10,7 @@ type Recorded = {
   content: string;
   state: string;
   publishDate: string;
-  image?: string | null;
+  image?: string | { path?: string }[] | null;
   integration?: { name: string; providerIdentifier: string };
 };
 
@@ -20,10 +20,10 @@ const toText = (html: string) => {
   return doc.body.textContent || '';
 };
 
-// upstream stores a post's media as a JSON list of { id, path }
-const imagesOf = (image?: string | null): string[] => {
+// a post's media: a list of { id, path }, or that list as JSON text
+const imagesOf = (image?: Recorded['image']): string[] => {
   try {
-    const list = JSON.parse(image || '[]');
+    const list = typeof image === 'string' ? JSON.parse(image || '[]') : image || [];
     return Array.isArray(list) ? list.map((m) => m?.path).filter((p) => typeof p === 'string') : [];
   } catch {
     return [];

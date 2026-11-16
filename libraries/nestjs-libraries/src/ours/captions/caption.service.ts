@@ -18,6 +18,7 @@ import { CreatePostDto } from '@gitroom/nestjs-libraries/dtos/posts/create.post.
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
 import { AiUsageService } from '@gitroom/nestjs-libraries/ours/ai/ai.usage.service';
 import { BusinessProfileService } from '@gitroom/nestjs-libraries/ours/profile/business.profile.service';
+import { ProfileFields } from '@gitroom/nestjs-libraries/ours/profile/business.profile.fields';
 import {
   CaptionRepository,
   StoredCaptionDraft,
@@ -50,6 +51,7 @@ import { GraphicService } from '@gitroom/nestjs-libraries/ours/graphics/graphic.
 import {
   automaticLayout,
   GRAPHIC_SIZES,
+  graphicContent,
   GraphicLayout,
   isGraphicLayout,
   NO_GRAPHIC,
@@ -109,7 +111,11 @@ export class CaptionService {
       week.status === OursCaptionWeekStatus.READY
         ? await this._captionRepository.getDrafts(orgId, week.id)
         : [];
-    return { week: this.present(week, drafts), nextWeekStart: nextWeek };
+    // graphics fall back to a layout the profile can fill, so show that one
+    const fields = drafts.length
+      ? ((await this._businessProfileService.getProfile(orgId)).profile?.fields as ProfileFields | undefined)
+      : undefined;
+    return { week: this.present(week, drafts, fields), nextWeekStart: nextWeek };
   }
 
   async startWriting(orgId: string) {
@@ -383,7 +389,12 @@ export class CaptionService {
     }
   }
 
-  private present(week: StoredCaptionWeek, drafts: StoredCaptionDraft[]) {
+  private present(week: StoredCaptionWeek, drafts: StoredCaptionDraft[], fields?: ProfileFields) {
+    const drawnLayout = (d: StoredCaptionDraft) => {
+      const wanted = this.graphicLayoutFor(d);
+      if (!wanted || !fields) return wanted;
+      return graphicContent(wanted, (d.facts || []) as { field: string; value: string }[], fields)?.layout || null;
+    };
     return {
       id: week.id,
       weekStart: week.weekStart,
@@ -405,7 +416,7 @@ export class CaptionService {
         approvedAt: d.approvedAt,
         graphic: {
           choice: d.graphicLayout || 'auto',
-          layout: this.graphicLayoutFor(d),
+          layout: drawnLayout(d),
           size: GRAPHIC_SIZES[d.platform as CaptionPlatform] || null,
           // the image attached to the scheduled post, once approved
           path: d.graphicPath,
