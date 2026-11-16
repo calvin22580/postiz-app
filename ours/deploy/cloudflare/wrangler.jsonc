@@ -41,7 +41,7 @@
     "RUN_CRON": "true",
     "TEMPORAL_TLS": "true",
     "STORAGE_PROVIDER": "cloudflare",
-    "CLOUDFLARE_BUCKETNAME": "tidepost-media",
+    "CLOUDFLARE_BUCKETNAME": "tidepost-media-eu",
     "CLOUDFLARE_REGION": "auto",
     "CLOUDFLARE_BUCKET_URL": "https://media.steadylamp.com",
     "ENCRYPTION_PROVIDER": "local",

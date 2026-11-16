@@ -9,7 +9,7 @@ visitor ─▶ Worker (src/index.ts) ─▶ Durable Object "app" ─▶ containe
                                                          orchestrator (Temporal worker)
                                                          redis (cache only, in memory)
 container ─▶ PlanetScale Postgres (London)   container ─▶ Temporal Cloud (London)
-container ─▶ R2 bucket tidepost-media (media.steadylamp.com)
+container ─▶ R2 bucket tidepost-media-eu (media.steadylamp.com)
 ```
 
 - **One container, on 24/7.** A cron trigger calls the Durable Object every minute. It starts the container if it isn't running (first deploy, crash, Cloudflare host restart). After a deploy, it replaces the container when the image has changed.
@@ -33,7 +33,7 @@ Plain settings are in `wrangler.jsonc` under `vars`. Secrets are set on the Work
 | `TEMPORAL_NAMESPACE` | Full namespace name, e.g. `tidepost.abc12` |
 | `TEMPORAL_API_KEY` | Temporal Cloud API key |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID (used for the R2 endpoint) |
-| `CLOUDFLARE_ACCESS_KEY` / `CLOUDFLARE_SECRET_ACCESS_KEY` | R2 API token, Object Read & Write on `tidepost-media` only |
+| `CLOUDFLARE_ACCESS_KEY` / `CLOUDFLARE_SECRET_ACCESS_KEY` | R2 API token, Object Read & Write on `tidepost-media-eu` only |
 
 Every string var and secret on the Worker is passed to the container as an environment variable, so a new app setting only needs `vars` or a new secret. No code change is needed.
 
