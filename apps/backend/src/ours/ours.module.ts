@@ -1,6 +1,7 @@
 // OURS: our fork's API routes. Registered with one line in app.module.ts.
 // Same auth as upstream's signed-in routes (AuthMiddleware sets the org).
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { AuthMiddleware } from '@gitroom/backend/services/auth/auth.middleware';
 import { BusinessProfileController } from '@gitroom/backend/ours/business.profile.controller';
 import { BusinessProfileService } from '@gitroom/nestjs-libraries/ours/profile/business.profile.service';
@@ -17,12 +18,17 @@ import { BrandKitRepository } from '@gitroom/nestjs-libraries/ours/graphics/bran
 import { SeasonalController } from '@gitroom/backend/ours/seasonal.controller';
 import { SeasonalService } from '@gitroom/nestjs-libraries/ours/seasonal/seasonal.service';
 import { SeasonalRepository } from '@gitroom/nestjs-libraries/ours/seasonal/seasonal.repository';
+import { PlanController } from '@gitroom/backend/ours/plan.controller';
+import { PlanService } from '@gitroom/nestjs-libraries/ours/plans/plan.service';
+import { PlanRepository } from '@gitroom/nestjs-libraries/ours/plans/plan.repository';
+import { ChannelLimitGuard } from '@gitroom/backend/ours/channel.limit.guard';
 
 const authenticatedController = [
   BusinessProfileController,
   CaptionsController,
   BrandKitController,
   SeasonalController,
+  PlanController,
 ];
 
 @Module({
@@ -40,6 +46,14 @@ const authenticatedController = [
     BrandKitRepository,
     SeasonalService,
     SeasonalRepository,
+    PlanService,
+    PlanRepository,
+    // Milestone 7: our plan's channel limit on upstream's "add a channel"
+    // routes (global, so upstream's modules need no change)
+    {
+      provide: APP_GUARD,
+      useClass: ChannelLimitGuard,
+    },
   ],
 })
 export class OursModule implements NestModule {

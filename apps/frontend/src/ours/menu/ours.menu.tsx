@@ -45,4 +45,25 @@ export const oursFirstMenu = (
     ),
     path: '/captions',
   },
+  {
+    name: t('ours_plan_usage', 'Plan and usage'),
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="21"
+        height="21"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <path
+          d="M4 20V10M10 20V4M16 20v-7M22 20H2"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+    path: '/plan',
+  },
 ];

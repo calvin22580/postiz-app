@@ -8,6 +8,7 @@ import {
   StoredBusinessProfile,
 } from '@gitroom/nestjs-libraries/ours/profile/business.profile.repository';
 import { AiUsageService } from '@gitroom/nestjs-libraries/ours/ai/ai.usage.service';
+import { PlanService, UsageTicket } from '@gitroom/nestjs-libraries/ours/plans/plan.service';
 import {
   CrawlError,
   WebsiteCrawler,
@@ -57,7 +58,8 @@ export class BusinessProfileService {
   constructor(
     private _businessProfileRepository: BusinessProfileRepository,
     private _aiUsageService: AiUsageService,
-    private _websiteCrawler: WebsiteCrawler
+    private _websiteCrawler: WebsiteCrawler,
+    private _planService: PlanService
   ) {}
 
   async getProfile(orgId: string) {
@@ -97,12 +99,17 @@ export class BusinessProfileService {
       return { profile: current };
     }
 
-    const started = await this._businessProfileRepository.startBuild(
-      orgId,
-      url.toString()
-    );
+    // Milestone 7: one website read from the plan's monthly allowance
+    const ticket = await this._planService.claim(orgId, 'profileBuilds');
+    let started;
+    try {
+      started = await this._businessProfileRepository.startBuild(orgId, url.toString());
+    } catch (e) {
+      await this._planService.giveBack(orgId, ticket);
+      throw e;
+    }
     // background: the request returns now, the screen polls for progress
-    this.runBuild(orgId, url, this.asFields(current?.fields)).catch((e) =>
+    this.runBuild(orgId, url, this.asFields(current?.fields), undefined, ticket).catch((e) =>
       this._logger.error(`Profile build crashed for org=${orgId}: ${e?.message}`)
     );
     return { profile: this.present(started) };
@@ -112,7 +119,8 @@ export class BusinessProfileService {
     orgId: string,
     url: URL,
     previous: ProfileFields | null,
-    extractor: ProfileExtractor = createProfileExtractor()
+    extractor: ProfileExtractor = createProfileExtractor(),
+    ticket?: UsageTicket
   ) {
     try {
       const crawl = await this._websiteCrawler.crawl(url, {
@@ -161,6 +169,8 @@ export class BusinessProfileService {
         extractor: extractor.name,
       });
     } catch (e) {
+      // a profile that wasn't built doesn't count towards the plan
+      await this._planService.giveBack(orgId, ticket);
       const known =
         e instanceof CrawlError ||
         e instanceof UnsafeUrlError ||

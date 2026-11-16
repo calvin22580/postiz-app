@@ -11,6 +11,7 @@ import {
   useBusinessProfile,
 } from '@gitroom/frontend/ours/profile/business.profile.hooks';
 import { ProfileFieldCard } from '@gitroom/frontend/ours/profile/profile.field';
+import { PlanMessage } from '@gitroom/frontend/ours/plans/plan.message';
 import type { ProfileFieldKey } from '@gitroom/nestjs-libraries/ours/profile/business.profile.fields';
 
 const GROUPS: {
@@ -127,7 +128,7 @@ const StartForm: FC<{
           className="rounded-[10px] border border-newBorder bg-newBgColor px-[16px] py-[12px] text-[15px]"
           data-testid="profile-error"
         >
-          {shown}
+          <PlanMessage text={shown} />
         </div>
       )}
       <p className="text-[14px] leading-[1.6] text-textItemBlur">
@@ -300,7 +301,7 @@ export const BusinessProfilePage: FC = () => {
       </div>
       {rebuildError && (
         <div role="alert" className="rounded-[10px] border border-newBorder px-[16px] py-[12px] text-[15px]">
-          {rebuildError}
+          <PlanMessage text={rebuildError} />
         </div>
       )}
       {profile.demo && (

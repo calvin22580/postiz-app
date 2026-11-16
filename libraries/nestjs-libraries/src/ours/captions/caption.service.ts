@@ -63,6 +63,7 @@ import {
   NO_GRAPHIC,
 } from '@gitroom/nestjs-libraries/ours/graphics/graphic.content';
 import { SeasonalService } from '@gitroom/nestjs-libraries/ours/seasonal/seasonal.service';
+import { PlanService, UsageTicket } from '@gitroom/nestjs-libraries/ours/plans/plan.service';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -120,7 +121,8 @@ export class CaptionService {
     private _integrationService: IntegrationService,
     private _postsService: PostsService,
     private _graphicService: GraphicService,
-    private _seasonalService: SeasonalService
+    private _seasonalService: SeasonalService,
+    private _planService: PlanService
   ) {}
 
   async getWeek(orgId: string) {
@@ -177,15 +179,25 @@ export class CaptionService {
       throw new HttpException('Next week’s captions are already written.', 400);
     }
 
-    const week = await this._captionRepository.claimWeek(orgId, weekStart, tz);
+    // Milestone 7: one week from the plan's monthly allowance
+    const ticket = await this._planService.claim(orgId, 'captionWeeks');
+    let week;
+    let seasonal: CaptionFact[];
+    try {
+      week = await this._captionRepository.claimWeek(orgId, weekStart, tz);
+      // Milestone 6: UK dates that fit this week, if the owner wants them
+      seasonal = week ? await this.seasonalFacts(orgId, weekStart) : [];
+    } catch (e) {
+      await this._planService.giveBack(orgId, ticket);
+      throw e;
+    }
     if (!week) {
       // another request started (or finished) this week first
+      await this._planService.giveBack(orgId, ticket);
       return this.getWeek(orgId);
     }
-    // Milestone 6: UK dates that fit this week, if the owner wants them
-    const seasonal = await this.seasonalFacts(orgId, weekStart);
     // background: the request returns now, the screen polls for progress
-    this.runWriting(orgId, week, [...facts, ...seasonal], toneFromProfile(profile.fields)).catch(
+    this.runWriting(orgId, week, [...facts, ...seasonal], toneFromProfile(profile.fields), undefined, ticket).catch(
       (e) =>
         this._logger.error(`Caption writing crashed for org=${orgId}: ${e?.message}`)
     );
@@ -197,7 +209,8 @@ export class CaptionService {
     week: Pick<StoredCaptionWeek, 'id' | 'weekStart' | 'timezone'>,
     facts: CaptionFact[],
     tone: string,
-    writer: CaptionWriter = createCaptionWriter()
+    writer: CaptionWriter = createCaptionWriter(),
+    ticket?: UsageTicket
   ) {
     try {
       let output;
@@ -245,6 +258,8 @@ export class CaptionService {
         this._logger.warn(`Caption week ${week.id} for org=${orgId} was no longer being written; results discarded`);
       }
     } catch (e) {
+      // a week that wasn't written doesn't count towards the plan
+      await this._planService.giveBack(orgId, ticket);
       const known = e instanceof CaptionWriterError;
       if (!known) {
         this._logger.error(`Caption writing failed for org=${orgId}: ${(e as Error)?.stack}`);
@@ -303,7 +318,10 @@ export class CaptionService {
         400
       );
     }
+    // Milestone 7: one scheduled post from the plan's monthly allowance
+    const ticket = await this._planService.claim(orgId, 'postsScheduled');
     if (!(await this._captionRepository.claimForApproval(orgId, draftId, channel.id, draft.text))) {
+      await this._planService.giveBack(orgId, ticket);
       throw new HttpException('This post was approved or changed a moment ago. Please check it and try again.', 409);
     }
 
@@ -363,6 +381,7 @@ export class CaptionService {
         await this._graphicService.removeFromMediaLibrary(orgId, mediaId);
       }
       await this._captionRepository.releaseApproval(orgId, draftId);
+      await this._planService.giveBack(orgId, ticket);
       throw new HttpException('We couldn’t schedule this caption. Please try again.', 400);
     }
     // the post exists now: never put the caption back to waiting, or a retry
@@ -441,7 +460,11 @@ export class CaptionService {
       ...factsFromProfile(fields),
       ...(week ? await this.seasonalFacts(orgId, week.weekStart) : []),
     ];
+    // Milestone 7: one rewrite from the plan's monthly allowance, on top of
+    // the per-post cap
+    const ticket = await this._planService.claim(orgId, 'rewrites');
     if (!(await this._captionRepository.claimRewrite(orgId, draftId, MAX_REWRITES))) {
+      await this._planService.giveBack(orgId, ticket);
       throw new HttpException(
         `This post has already been rewritten ${MAX_REWRITES} times. You can still edit it yourself.`,
         400
@@ -468,6 +491,7 @@ export class CaptionService {
         // nothing was billed (busy service, network, demo has no other
         // version), so the owner keeps this rewrite
         await this._captionRepository.giveBackRewrite(orgId, draftId).catch(() => undefined);
+        await this._planService.giveBack(orgId, ticket);
       }
       if (e instanceof CaptionWriterError) {
         throw new HttpException(e.message, 400);

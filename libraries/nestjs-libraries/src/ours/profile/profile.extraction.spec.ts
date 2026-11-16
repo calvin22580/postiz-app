@@ -202,7 +202,8 @@ describe('cost logging', () => {
       new AiUsageService(usageRepo as any),
       {
         crawl: () => crawlFixture(),
-      } as any
+      } as any,
+      { giveBack: vi.fn() } as any
     );
     const extractor = {
       name: 'anthropic' as const,
@@ -236,7 +237,8 @@ describe('cost logging', () => {
     const service = new BusinessProfileService(
       repo as any,
       new AiUsageService({ logUsage: vi.fn() } as any),
-      { crawl: () => crawlFixture() } as any
+      { crawl: () => crawlFixture() } as any,
+      { giveBack: vi.fn() } as any
     );
     const previous: any = {
       audience: { claims: [{ value: 'Local families', origin: 'owner', sources: [] }], ownerEdited: true },
@@ -244,5 +246,36 @@ describe('cost logging', () => {
     await service.runBuild('org-1', new URL(`${FIXTURE_ORIGIN}/`), previous, new DemoProfileExtractor());
     expect(saved.fields.audience.claims[0]).toEqual({ value: 'Local families', origin: 'owner', sources: [] });
     expect(saved.extractor).toBe('demo');
+  });
+
+  // Milestone 7: a website read that failed doesn't count towards the plan
+  it('gives the website read back when the build fails, and keeps it when it works', async () => {
+    const repo = {
+      updateProgress: vi.fn(async () => ({ id: 'p' })),
+      finishBuild: vi.fn(async () => ({})),
+      failBuild: vi.fn(),
+    };
+    const plans = { giveBack: vi.fn(async () => undefined) };
+    const ticket = { metric: 'profileBuilds' as const, period: '2026-11' };
+    const failing = new BusinessProfileService(
+      repo as any,
+      new AiUsageService({ logUsage: vi.fn() } as any),
+      { crawl: async () => { throw new Error('network down'); } } as any,
+      plans as any
+    );
+    await failing.runBuild('org-1', new URL(`${FIXTURE_ORIGIN}/`), null, new DemoProfileExtractor(), ticket);
+    expect(repo.failBuild).toHaveBeenCalled();
+    expect(plans.giveBack).toHaveBeenCalledWith('org-1', ticket);
+
+    plans.giveBack.mockClear();
+    const working = new BusinessProfileService(
+      repo as any,
+      new AiUsageService({ logUsage: vi.fn() } as any),
+      { crawl: () => crawlFixture() } as any,
+      plans as any
+    );
+    await working.runBuild('org-1', new URL(`${FIXTURE_ORIGIN}/`), null, new DemoProfileExtractor(), ticket);
+    expect(repo.finishBuild).toHaveBeenCalled();
+    expect(plans.giveBack).not.toHaveBeenCalled();
   });
 });

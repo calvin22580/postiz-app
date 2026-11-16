@@ -302,3 +302,44 @@ of 2028): copy the dates from the same sources into `uk.calendar.ts`, update
 they cross-check the dates against each other (Easter, Mothering Sunday,
 Pancake Day, weekdays). When the list runs out, the panel says how far it has
 been checked.
+
+## Plans and usage (Milestone 7)
+
+Screen: `/plan` ("Plan and usage" in the menu). Code:
+`libraries/nestjs-libraries/src/ours/plans/`, `apps/backend/src/ours/plan.controller.ts`,
+`apps/backend/src/ours/channel.limit.guard.ts`, `apps/frontend/src/ours/plans/`.
+
+- **Plans and limits** are in `plans.config.ts`. Every price and limit there is
+  a **placeholder** to tune. Starter £79, Growth £149, Pro £299 a month, plus a
+  free trial for new organisations.
+- **What's counted each month** (calendar month, `OURS_DEFAULT_TIMEZONE`):
+  weeks of posts written, posts scheduled (approvals), AI rewrites, website
+  reads for the profile. Connected channels (including disabled ones) are
+  counted as they stand. A week, website read or post that fails is given
+  back; an AI rewrite counts once it is written, even if it isn't kept. Graphics are drawn locally at no cost and come
+  with each scheduled post, so they have no separate limit.
+- **Fair use**: AI cost logged in `ours_ai_usage` is capped per plan
+  (`aiSpendUsd`). The owner sees a fair-use message, never the amount.
+- **Trial**: starts the first time an organisation is seen, `OURS_TRIAL_DAYS`
+  long (14). Its allowance covers the whole trial. When it ends, new AI work,
+  approvals and new channels stop until a plan is chosen; scheduled posts still go out.
+
+Settings (all optional):
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `OURS_BILLING_MODE` | `off` | `test`: admins switch plan on `/plan`, no payment, labelled "Test mode". `off`: the screen asks the owner to email us (`NEXT_PUBLIC_LEGAL_CONTACT_EMAIL`). |
+| `OURS_TRIAL_DAYS` | `14` | Length of the free trial. |
+| `OURS_CURRENCY` | `GBP` | Currency the prices are shown in. |
+| `OURS_VAT_REGISTERED` | `false` | `true` shows prices as "+ VAT" with the VAT-inclusive figure. |
+| `OURS_VAT_RATE` | `0.2` | VAT rate used when registered. |
+
+Do not set upstream's `STRIPE_PUBLISHABLE_KEY`: it turns on upstream's own
+billing screens and USD limits. A payment provider for our plans goes in
+`plan.payment.ts` with our own env names.
+
+To move a customer to a plan by hand while `OURS_BILLING_MODE=off`, set
+`plan` on their row in `ours_plan_subscription` (Prisma Studio) to `starter`,
+`growth` or `pro`.
+
+API: `GET /ours/plan`, `PUT /ours/plan` (`plan`).
