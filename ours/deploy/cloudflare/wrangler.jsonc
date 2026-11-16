@@ -1,0 +1,68 @@
+// OURS: Cloudflare deployment of the app (Worker + one container).
+// Secrets are NOT in this file: set them with `pnpm exec wrangler secret put <NAME>`
+// (list under "secrets.required" below). Full steps: README.md in this folder.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tidepost-app",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "observability": { "enabled": true },
+  "routes": [{ "pattern": "app.steadylamp.com", "custom_domain": true }],
+  "workers_dev": false,
+  "triggers": { "crons": ["* * * * *"] },
+  "containers": [
+    {
+      "class_name": "AppContainer",
+      "scheduling_policy": "durable_object",
+      "images": {
+        "base": {
+          "dockerfile": "./Dockerfile",
+          "build_context": "../../.."
+        }
+      }
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "APP", "class_name": "AppContainer" }]
+  },
+  "exports": {
+    "AppContainer": { "type": "durable-object", "storage": "sqlite" }
+  },
+  // Passed to the container as environment variables, with the secrets.
+  "vars": {
+    "NODE_ENV": "production",
+    "TZ": "UTC",
+    "MAIN_URL": "https://app.steadylamp.com",
+    "FRONTEND_URL": "https://app.steadylamp.com",
+    "NEXT_PUBLIC_BACKEND_URL": "https://app.steadylamp.com/api",
+    "BACKEND_INTERNAL_URL": "http://localhost:3000",
+    "REDIS_URL": "redis://localhost:6379",
+    "IS_GENERAL": "true",
+    "RUN_CRON": "true",
+    "TEMPORAL_TLS": "true",
+    "STORAGE_PROVIDER": "cloudflare",
+    "CLOUDFLARE_BUCKETNAME": "tidepost-media-eu",
+    "CLOUDFLARE_REGION": "auto",
+    "CLOUDFLARE_BUCKET_URL": "https://media.steadylamp.com",
+    "ENCRYPTION_PROVIDER": "local",
+    "DISABLE_REGISTRATION": "true",
+    "API_LIMIT": "30",
+    // Demo environment for platform app reviews: the Sandbox channel is on and
+    // always labelled; plans can be switched without payment ("Test mode").
+    "SANDBOX_CHANNEL_ENABLED": "true",
+    "OURS_BILLING_MODE": "test"
+  },
+  "secrets": {
+    "required": [
+      "JWT_SECRET",
+      "ENCRYPTION_KEY",
+      "DATABASE_URL",
+      "TEMPORAL_ADDRESS",
+      "TEMPORAL_NAMESPACE",
+      "TEMPORAL_API_KEY",
+      "CLOUDFLARE_ACCOUNT_ID",
+      "CLOUDFLARE_ACCESS_KEY",
+      "CLOUDFLARE_SECRET_ACCESS_KEY"
+    ]
+  }
+}

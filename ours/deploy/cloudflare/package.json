@@ -1,0 +1,21 @@
+{
+  "name": "ours-deploy-cloudflare",
+  "private": true,
+  "description": "OURS: Cloudflare Containers deployment of the app. Kept outside the pnpm workspace so upstream's package.json and lockfile stay untouched.",
+  "scripts": {
+    "types": "wrangler types",
+    "check": "wrangler types && tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "logs": "wrangler tail"
+  },
+  "devDependencies": {
+    "typescript": "5.5.4",
+    "wrangler": "4.162.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
+  }
+}

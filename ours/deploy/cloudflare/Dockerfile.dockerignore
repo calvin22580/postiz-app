@@ -1,0 +1,21 @@
+# OURS: build-context ignore file for ours/deploy/cloudflare/Dockerfile
+# (Docker reads <Dockerfile>.dockerignore next to the Dockerfile).
+# Same as upstream's .dockerignore, plus secrets and our test folders.
+**/node_modules
+node_modules
+dist
+.nx
+**/.next
+**/dist
+.devcontainer
+**/.git
+.git
+.github
+reports
+**/.env
+**/.env.*
+!**/.env.example
+**/.dev.vars
+**/.wrangler
+ours/e2e
+ours/deploy/cloudflare/node_modules

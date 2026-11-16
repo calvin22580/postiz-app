@@ -1,0 +1,57 @@
+# OURS: build the app image and deploy it to Cloudflare Containers.
+# Runs on GitHub's machines, so nobody needs Docker locally. Manual trigger only.
+# Needs repository secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
+# The app's own secrets live on the Cloudflare Worker, not here.
+# Details: ours/deploy/cloudflare/README.md
+name: "Deploy to Cloudflare (ours)"
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ours-deploy-cloudflare
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.repository == 'calvin22580/postiz-app'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      # The image is about 8 GB; the runner's default free space is too tight.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h /
+
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.4'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.6.1
+          run_install: false
+
+      - name: Install deploy tools
+        working-directory: ours/deploy/cloudflare
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check the Worker
+        working-directory: ours/deploy/cloudflare
+        run: pnpm run check
+
+      - name: Build, push and deploy
+        working-directory: ours/deploy/cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm run deploy

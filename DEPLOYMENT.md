@@ -2,6 +2,8 @@
 
 What Tidepost (placeholder brand) needs in production. **Nothing is deployed by this document.** It is based on upstream **v2.26.0** (`docker-compose.yaml`, `Dockerfile.dev`, `var/docker/nginx.conf`, `.env.example` and the env vars the code reads).
 
+**Live deployment (16/11/2026):** the review/demo site runs on Cloudflare Containers at `https://app.steadylamp.com`, with PlanetScale Postgres (London), Temporal Cloud (London) and R2. Setup, secrets and deploy steps: `ours/deploy/cloudflare/README.md`. The rest of this document is the general requirements list.
+
 Sizes marked *estimate* are ours, worked out from the compose file and build settings. They are not vendor figures. Check them against real load on a staging box.
 
 ## Services
