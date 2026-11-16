@@ -35,8 +35,15 @@ RUN sed -i 's/X-Forwarded-Proto \$scheme/X-Forwarded-Proto $http_x_forwarded_pro
  && grep -q 'X-Forwarded-Proto $http_x_forwarded_proto' /etc/nginx/nginx.conf
 COPY ours/deploy/cloudflare/start.sh /app/ours/deploy/cloudflare/start.sh
 
-RUN pnpm install
-RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm run build
+# Cloudflare rejects image layers with more than 100,000 hard links, and pnpm
+# hard-links every package from its store. Install by copying, drop the store
+# in the same layer, and break any hard links the build leaves behind.
+RUN pnpm install --package-import-method=copy \
+ && rm -rf "$(pnpm store path)" /root/.cache/pnpm \
+ && echo "hard-linked files after install: $(find /app /usr/local -xdev -type f -links +1 | wc -l)"
+RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm run build \
+ && find /app -xdev -type f -links +1 -exec sh -c 'for f; do cp -p "$f" "$f.unlink" && mv -f "$f.unlink" "$f"; done' sh {} + \
+ && echo "hard-linked files after build: $(find /app /usr/local -xdev -type f -links +1 | wc -l)"
 
 ENV NODE_ENV=production
 EXPOSE 5000
