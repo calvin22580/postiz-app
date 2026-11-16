@@ -1909,6 +1909,8 @@ enum OursCaptionWeekStatus {
 enum OursCaptionStatus {
   PENDING_APPROVAL
   APPROVED
+  // Milestone 5: the owner turned this caption down; it is never scheduled
+  REJECTED
 }
 
 model OursCaptionWeek {
@@ -1946,6 +1948,11 @@ model OursCaptionDraft {
   // "none" = no graphic) and the image attached when it was approved
   graphicLayout  String?
   graphicPath    String?
+  // Milestone 5: review. editedAt is set when the owner rewrote the text
+  // themselves; rewriteCount counts AI rewrites (capped, each one is billed)
+  editedAt       DateTime?
+  rejectedAt     DateTime?
+  rewriteCount   Int               @default(0)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 

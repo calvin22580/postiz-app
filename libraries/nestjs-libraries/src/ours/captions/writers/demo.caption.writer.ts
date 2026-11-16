@@ -2,9 +2,12 @@
 // set (local development, tests, demos). It fills fixed templates with values
 // from the business profile and adds no facts of its own, so its captions pass
 // the same checks. Weeks written with it are labelled as demos in the app.
+// Each idea has a few versions, so "rewrite" can offer a different one.
 import { CaptionFact } from '@gitroom/nestjs-libraries/ours/captions/caption.plan';
 import {
+  CaptionRewriteInput,
   CaptionWriter,
+  CaptionWriterError,
   CaptionWriterInput,
   CaptionWriterOutput,
   RawCaptionPlan,
@@ -14,98 +17,164 @@ type Captions = { facebook: string; instagram: string; linkedin: string };
 interface Idea {
   theme: string;
   facts: CaptionFact[];
-  captions: Captions;
+  // the first version is used for the week; the others for rewrites
+  versions: Captions[];
 }
 
 const sentence = (s: string) => (/[.!?]$/.test(s.trim()) ? s.trim() : `${s.trim()}.`);
 const hashtag = (s: string) =>
   `#${s.replace(/&/g, 'and').replace(/[^A-Za-z]+(.)?/g, (_, c) => (c ? c.toUpperCase() : '')).replace(/^./, (c) => c.toUpperCase())}`;
 
-export class DemoCaptionWriter implements CaptionWriter {
-  readonly name = 'demo' as const;
+const ideasFrom = (facts: CaptionFact[]): Idea[] => {
+  const all = (field: string) => facts.filter((f) => f.field === field);
+  const one = (field: string) => all(field)[0];
+  const name = one('businessName');
+  const tag = name ? hashtag(name.value) : '';
+  if (!name) {
+    return [];
+  }
 
-  async write(input: CaptionWriterInput): Promise<CaptionWriterOutput> {
-    const all = (field: string) => input.facts.filter((f) => f.field === field);
-    const one = (field: string) => all(field)[0];
-    const name = one('businessName');
-    const tag = name ? hashtag(name.value) : '';
-
-    const ideas: Idea[] = [];
-    const intro = one('whatTheyDo');
-    if (name && intro) {
-      ideas.push({
-        theme: 'Introducing the business',
-        facts: [name, intro],
-        captions: {
+  const ideas: Idea[] = [];
+  const intro = one('whatTheyDo');
+  if (intro) {
+    ideas.push({
+      theme: 'Introducing the business',
+      facts: [name, intro],
+      versions: [
+        {
           facebook: `Hello from ${name.value}! ${sentence(intro.value)} If you have any questions, just send us a message.`,
           instagram: `${sentence(intro.value)}\n\nSay hello in the comments, we would love to hear from you.\n\n${tag}`,
           linkedin: `A quick introduction to ${name.value}. ${sentence(intro.value)} We are always happy to talk to new customers and local businesses.`,
         },
-      });
-    }
+        {
+          facebook: `New here? Welcome! This is ${name.value}. ${sentence(intro.value)}`,
+          instagram: `Nice to meet you, we are ${name.value}.\n\n${sentence(intro.value)}\n\n${tag}`,
+          linkedin: `For anyone who has not come across ${name.value} yet: ${sentence(intro.value)} Do get in touch if you would like to know more.`,
+        },
+        {
+          facebook: `In case you were wondering what ${name.value} is all about: ${sentence(intro.value)} Send us a message any time.`,
+          instagram: `A little about us.\n\n${sentence(intro.value)}\n\nFollow along to see more from ${name.value}.\n\n${tag}`,
+          linkedin: `What we do at ${name.value}: ${sentence(intro.value)} We would be glad to hear from you.`,
+        },
+      ],
+    });
+  }
 
-    for (const service of all('services')) {
-      if (!name) break;
-      ideas.push({
-        theme: `Spotlight: ${service.value}`,
-        facts: [name, service],
-        captions: {
+  for (const service of all('services')) {
+    ideas.push({
+      theme: `Spotlight: ${service.value}`,
+      facts: [name, service],
+      versions: [
+        {
           facebook: `In the spotlight this week at ${name.value}: ${service.value}. Get in touch to find out more.`,
           instagram: `Spotlight on ${service.value}.\n\nAsk us anything about it in the comments or by message.\n\n${tag}`,
           linkedin: `Something you can come to ${name.value} for: ${service.value}. If this could help you or your business, we would be glad to hear from you.`,
         },
-      });
-    }
+        {
+          facebook: `From ${name.value}: ${service.value}. Send us a message and we will tell you all about it.`,
+          instagram: `${sentence(service.value)}\n\nOne of the things we love doing at ${name.value}. Questions? Drop us a message.\n\n${tag}`,
+          linkedin: `A reminder of something ${name.value} can help with: ${service.value}. Get in touch to talk it through.`,
+        },
+        {
+          facebook: `Asking about ${service.value}? ${name.value} can help. Just get in touch.`,
+          instagram: `Today we are talking about ${service.value}.\n\nMessage ${name.value} to find out more.\n\n${tag}`,
+          linkedin: `${sentence(service.value)} It is part of what ${name.value} does every day. We would be happy to tell you more.`,
+        },
+      ],
+    });
+  }
 
-    for (const highlight of all('highlights')) {
-      if (!name) break;
-      ideas.push({
-        theme: 'What sets us apart',
-        facts: [name, highlight],
-        captions: {
+  for (const highlight of all('highlights')) {
+    ideas.push({
+      theme: 'What sets us apart',
+      facts: [name, highlight],
+      versions: [
+        {
           facebook: `Something we are proud of at ${name.value}: ${sentence(highlight.value)}`,
           instagram: `${sentence(highlight.value)}\n\nThanks for supporting ${name.value}.\n\n${tag}`,
           linkedin: `A little about ${name.value}: ${sentence(highlight.value)}`,
         },
-      });
-    }
+        {
+          facebook: `Why ${name.value}? ${sentence(highlight.value)}`,
+          instagram: `What makes ${name.value} a bit different.\n\n${sentence(highlight.value)}\n\n${tag}`,
+          linkedin: `One thing that matters to us at ${name.value}: ${sentence(highlight.value)}`,
+        },
+      ],
+    });
+  }
 
-    const where = one('location') || one('serviceArea');
-    if (name && where) {
-      ideas.push({
-        theme: 'Where to find us',
-        facts: [name, where],
-        captions: {
+  const where = one('location') || one('serviceArea');
+  if (where) {
+    ideas.push({
+      theme: 'Where to find us',
+      facts: [name, where],
+      versions: [
+        {
           facebook: `${name.value} is here for you in ${where.value}. Pop in or get in touch.`,
           instagram: `Local and proud: ${name.value}, ${where.value}.\n\n${tag}`,
           linkedin: `${name.value} works with customers in ${where.value}. Get in touch if you are nearby.`,
         },
-      });
-    }
+        {
+          facebook: `Looking for us? You will find ${name.value} in ${where.value}. We would love to see you.`,
+          instagram: `Find us in ${where.value}.\n\nCome and say hello to ${name.value}.\n\n${tag}`,
+          linkedin: `Based in ${where.value}? ${name.value} is close by. We would be happy to hear from you.`,
+        },
+      ],
+    });
+  }
 
-    const contact = [one('phone'), one('email'), one('openingHours')].filter(
-      (f): f is CaptionFact => !!f
-    );
-    if (name && contact.length) {
-      const lines = contact
-        .map((f) =>
-          f.field === 'phone'
-            ? `Call us on ${f.value}`
-            : f.field === 'email'
-            ? `Email ${f.value}`
-            : sentence(f.value)
-        )
-        .join('\n');
-      ideas.push({
-        theme: 'How to get in touch',
-        facts: [name, ...contact],
-        captions: {
+  const contact = [one('phone'), one('email'), one('openingHours')].filter(
+    (f): f is CaptionFact => !!f
+  );
+  if (contact.length) {
+    const lines = contact
+      .map((f) =>
+        f.field === 'phone'
+          ? `Call us on ${f.value}`
+          : f.field === 'email'
+          ? `Email ${f.value}`
+          : sentence(f.value)
+      )
+      .join('\n');
+    ideas.push({
+      theme: 'How to get in touch',
+      facts: [name, ...contact],
+      versions: [
+        {
           facebook: `Want to get in touch with ${name.value}?\n${lines}`,
           instagram: `Here is how to reach ${name.value}:\n${lines}\n\n${tag}`,
           linkedin: `Planning ahead? Here is how to reach ${name.value}:\n${lines}`,
         },
-      });
-    }
+        {
+          facebook: `We are always happy to hear from you. Here is how to reach ${name.value}:\n${lines}`,
+          instagram: `Save this for later.\n${lines}\n\n${tag}`,
+          linkedin: `Getting in touch with ${name.value} is easy:\n${lines}`,
+        },
+      ],
+    });
+  }
+  return ideas;
+};
+
+const planFor = (day: number, idea: Idea, captions: Partial<Captions>): RawCaptionPlan => ({
+  posts: [
+    {
+      day,
+      theme: idea.theme,
+      captions: (Object.keys(captions) as (keyof Captions)[]).map((platform) => ({
+        platform,
+        text: captions[platform],
+        factIds: idea.facts.map((f) => f.id),
+      })),
+    },
+  ],
+});
+
+export class DemoCaptionWriter implements CaptionWriter {
+  readonly name = 'demo' as const;
+
+  async write(input: CaptionWriterInput): Promise<CaptionWriterOutput> {
+    const ideas = ideasFrom(input.facts);
 
     // Contact details make a good end to the week; fill the days in order.
     const last = ideas.length > input.days.length ? ideas.pop() : undefined;
@@ -113,16 +182,24 @@ export class DemoCaptionWriter implements CaptionWriter {
     if (last) picked.push(last);
 
     const raw: RawCaptionPlan = {
-      posts: picked.map((idea, day) => ({
-        day,
-        theme: idea.theme,
-        captions: (Object.keys(idea.captions) as (keyof Captions)[]).map((platform) => ({
-          platform,
-          text: idea.captions[platform],
-          factIds: idea.facts.map((f) => f.id),
-        })),
-      })),
+      posts: picked.flatMap((idea, day) => planFor(day, idea, idea.versions[0]).posts || []),
     };
     return { raw, usages: [] };
+  }
+
+  // Another version of the same idea. The demo writer can't follow the
+  // owner's note; the screen says so in demo mode.
+  async rewrite(input: CaptionRewriteInput): Promise<CaptionWriterOutput> {
+    const idea = ideasFrom(input.facts).find((i) => i.theme === input.theme);
+    const others = (idea?.versions || [])
+      .map((v) => v[input.platform])
+      .filter((text) => text.trim() !== input.current.trim());
+    if (!idea || !others.length) {
+      throw new CaptionWriterError(
+        'Demo mode has no other version of this post. Edit it yourself, or connect the AI service.'
+      );
+    }
+    const text = others[input.attempt % others.length];
+    return { raw: planFor(0, idea, { [input.platform]: text }), usages: [] };
   }
 }

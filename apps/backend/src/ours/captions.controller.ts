@@ -11,7 +11,11 @@ import {
   AuthorizationActions,
   Sections,
 } from '@gitroom/backend/services/auth/permissions/permission.exception.class';
-import { ApproveCaptionDto } from '@gitroom/nestjs-libraries/ours/captions/dtos/caption.dto';
+import {
+  ApproveCaptionDto,
+  EditCaptionDto,
+  RewriteCaptionDto,
+} from '@gitroom/nestjs-libraries/ours/captions/dtos/caption.dto';
 import { GraphicLayoutDto } from '@gitroom/nestjs-libraries/ours/graphics/dtos/brand.kit.dto';
 
 @ApiTags('Captions')
@@ -66,5 +70,35 @@ export class CaptionsController {
     @Body() body: GraphicLayoutDto
   ) {
     return this._captionService.setGraphicLayout(org.id, id, body.layout);
+  }
+
+  // Milestone 5: review. Edit, reject, bring back and rewrite only apply to
+  // a caption that is still waiting for approval (or rejected, to restore).
+  @Put('/:id/text')
+  editText(
+    @GetOrgFromRequest() org: Organization,
+    @Param('id') id: string,
+    @Body() body: EditCaptionDto
+  ) {
+    return this._captionService.editText(org.id, id, body.text);
+  }
+
+  @Post('/:id/reject')
+  reject(@GetOrgFromRequest() org: Organization, @Param('id') id: string) {
+    return this._captionService.reject(org.id, id);
+  }
+
+  @Post('/:id/restore')
+  restore(@GetOrgFromRequest() org: Organization, @Param('id') id: string) {
+    return this._captionService.restore(org.id, id);
+  }
+
+  @Post('/:id/rewrite')
+  rewrite(
+    @GetOrgFromRequest() org: Organization,
+    @Param('id') id: string,
+    @Body() body: RewriteCaptionDto
+  ) {
+    return this._captionService.rewrite(org.id, id, body.note);
   }
 }

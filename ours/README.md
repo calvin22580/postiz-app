@@ -202,6 +202,31 @@ failed. Each AI call's cost is logged under the feature `captions`.
 |----------|---------|---------|
 | `OURS_DEFAULT_TIMEZONE` | backend: caption posting times | `Europe/London` |
 
+### Reviewing the week (Milestone 5)
+
+The same screen is the review screen. While a post waits for approval the
+owner can:
+
+- **Edit** it in their own words (`PUT /ours/captions/:id/text`, platform
+  length limits). Owner wording is their own claim, so it is never removed,
+  but details the profile doesn't have (numbers, prices, links and so on, the
+  same check as step 3) are shown as "Check before approving".
+- **Rewrite** it (`POST /ours/captions/:id/rewrite`, optional note of up to
+  300 characters). One caption is written again from the profile as it is
+  now, and goes through the same check; if it fails, the current version is
+  kept. Each caption can be rewritten 5 times (`MAX_REWRITES`), counted before
+  the call is made. Each AI call is logged under the feature
+  `caption-rewrite`. In demo mode the writer picks another prepared version
+  and ignores the note, and the screen says so.
+- **Reject** it (`POST /ours/captions/:id/reject`): it is never scheduled, and
+  can be brought back (`/restore`).
+- **Approve all**: the screen calls the single approve endpoint once per
+  waiting post, so each one gets the same checks and plan limit.
+
+Filters show all, waiting, approved or rejected posts. An approved post no
+longer changes here (it is an upstream post by then). Approval is still
+Sandbox-only: see ARCHITECTURE.md "Approval before scheduling".
+
 ## Post graphics
 
 Every weekly post gets a graphic in the business's own colour and logo.

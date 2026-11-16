@@ -2,7 +2,10 @@
 // captions. Claude is used when ANTHROPIC_API_KEY is set; otherwise a
 // deterministic demo writer runs and the week is labelled as a demo.
 import { AiCallUsage } from '@gitroom/nestjs-libraries/ours/ai/ai.usage.service';
-import { CaptionFact } from '@gitroom/nestjs-libraries/ours/captions/caption.plan';
+import {
+  CaptionFact,
+  CaptionPlatform,
+} from '@gitroom/nestjs-libraries/ours/captions/caption.plan';
 
 export interface CaptionWriterInput {
   facts: CaptionFact[];
@@ -24,9 +27,27 @@ export interface CaptionWriterOutput {
   usages: AiCallUsage[];
 }
 
+// Milestone 5: one caption written again, because the owner asked for a
+// different version. The result is a plan with a single post (day 0) and is
+// checked by groundCaptions() like a full week.
+export interface CaptionRewriteInput {
+  facts: CaptionFact[];
+  tone: string;
+  day: string;
+  platform: CaptionPlatform;
+  theme: string;
+  // the version the owner wants replaced
+  current: string;
+  // what the owner would like changed, in their own words (optional)
+  note?: string;
+  // how many times this caption was rewritten before
+  attempt: number;
+}
+
 export interface CaptionWriter {
   readonly name: 'anthropic' | 'demo';
   write(input: CaptionWriterInput): Promise<CaptionWriterOutput>;
+  rewrite(input: CaptionRewriteInput): Promise<CaptionWriterOutput>;
 }
 
 export class CaptionWriterError extends Error {}

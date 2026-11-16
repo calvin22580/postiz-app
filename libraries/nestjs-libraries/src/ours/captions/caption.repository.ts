@@ -36,6 +36,9 @@ const DRAFT_SELECT = {
   approvedAt: true,
   graphicLayout: true,
   graphicPath: true,
+  editedAt: true,
+  rejectedAt: true,
+  rewriteCount: true,
 } satisfies Prisma.OursCaptionDraftSelect;
 
 export type StoredCaptionWeek = Prisma.OursCaptionWeekGetPayload<{
@@ -178,13 +181,16 @@ export class CaptionRepository {
     });
   }
 
-  // Only one approval can win: the update matches a draft still waiting.
-  async claimForApproval(orgId: string, id: string, integrationId: string) {
+  // Only one approval can win: the update matches a draft still waiting, with
+  // the text the post is built from (an edit or rewrite in between makes the
+  // claim fail rather than schedule the old wording).
+  async claimForApproval(orgId: string, id: string, integrationId: string, text: string) {
     const { count } = await this._draft.model.oursCaptionDraft.updateMany({
       where: {
         organizationId: orgId,
         id,
         status: OursCaptionStatus.PENDING_APPROVAL,
+        text,
       },
       data: {
         status: OursCaptionStatus.APPROVED,
@@ -223,6 +229,78 @@ export class CaptionRepository {
         integrationId: null,
         approvedAt: null,
       },
+    });
+  }
+
+  // Milestone 5: review. Every change below only applies while the caption is
+  // still waiting (or, for restore, rejected), so an approved caption, whose
+  // post already exists, can never change underneath it.
+  private async whileStatus(
+    orgId: string,
+    id: string,
+    status: OursCaptionStatus,
+    data: Prisma.OursCaptionDraftUpdateManyMutationInput
+  ) {
+    const { count } = await this._draft.model.oursCaptionDraft.updateMany({
+      where: { organizationId: orgId, id, status },
+      data,
+    });
+    return count === 1;
+  }
+
+  editText(orgId: string, id: string, text: string) {
+    return this.whileStatus(orgId, id, OursCaptionStatus.PENDING_APPROVAL, {
+      text,
+      editedAt: new Date(),
+    });
+  }
+
+  reject(orgId: string, id: string) {
+    return this.whileStatus(orgId, id, OursCaptionStatus.PENDING_APPROVAL, {
+      status: OursCaptionStatus.REJECTED,
+      rejectedAt: new Date(),
+    });
+  }
+
+  restore(orgId: string, id: string) {
+    return this.whileStatus(orgId, id, OursCaptionStatus.REJECTED, {
+      status: OursCaptionStatus.PENDING_APPROVAL,
+      rejectedAt: null,
+    });
+  }
+
+  // Takes one of the caption's AI rewrites before the (billed) call is made,
+  // so double clicks can't go past the limit. giveBackRewrite returns it when
+  // the call failed without being billed.
+  async claimRewrite(orgId: string, id: string, max: number) {
+    const { count } = await this._draft.model.oursCaptionDraft.updateMany({
+      where: {
+        organizationId: orgId,
+        id,
+        status: OursCaptionStatus.PENDING_APPROVAL,
+        rewriteCount: { lt: max },
+      },
+      data: { rewriteCount: { increment: 1 } },
+    });
+    return count === 1;
+  }
+
+  saveRewrite(
+    orgId: string,
+    id: string,
+    body: { text: string; facts: Prisma.InputJsonValue }
+  ) {
+    return this.whileStatus(orgId, id, OursCaptionStatus.PENDING_APPROVAL, {
+      text: body.text,
+      facts: body.facts,
+      editedAt: null,
+    });
+  }
+
+  giveBackRewrite(orgId: string, id: string) {
+    return this._draft.model.oursCaptionDraft.updateMany({
+      where: { organizationId: orgId, id, rewriteCount: { gt: 0 } },
+      data: { rewriteCount: { decrement: 1 } },
     });
   }
 }

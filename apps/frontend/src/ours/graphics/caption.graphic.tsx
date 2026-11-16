@@ -38,7 +38,8 @@ export const CaptionGraphic: FC<{
   const { data: preview, error } = useCaptionGraphic(
     caption.id,
     !approved && hasGraphic
-      ? `${caption.graphic.layout}-${caption.graphic.profileVersion}-${brandVersion}`
+      ? // facts change when the caption is rewritten, and so can the graphic
+        `${caption.graphic.layout}-${caption.graphic.profileVersion}-${brandVersion}-${caption.facts.map((f) => `${f.field}:${f.value}`).join(',')}`
       : null
   );
   const [saving, setSaving] = useState(false);
