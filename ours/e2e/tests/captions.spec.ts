@@ -4,13 +4,14 @@
 // OURS_CRAWLER_ALLOW_PRIVATE=true and no ANTHROPIC_API_KEY (demo writer, no
 // AI cost). See ours/README.md.
 import { expect, test } from '@playwright/test';
-import { BACKEND, signUp } from './helpers';
+import { BACKEND, setUkDates, signUp } from './helpers';
 import { startTestSite } from './fixtures/test.site';
 
 test('writes a week of captions from the profile and schedules only the approved one', async ({ page }) => {
   const site = await startTestSite();
   try {
     await signUp(page);
+    await setUkDates(page, { enabled: false });
 
     // the Sandbox channel, from the onboarding channel list
     await page.getByText('Sandbox (test only, never publishes)').first().click();

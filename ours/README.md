@@ -10,7 +10,7 @@ Everything in this fork that is ours rather than upstream Postiz. Read
 |------|------|
 | Fork tooling, dev stack, tests config | `ours/` |
 | Backend and orchestrator code | `libraries/nestjs-libraries/src/ours/` |
-| Frontend code | `apps/frontend/src/ours/` (brand, locale, developer-tools, sandbox, profile, captions, graphics) |
+| Frontend code | `apps/frontend/src/ours/` (brand, locale, developer-tools, sandbox, profile, captions, graphics, seasonal) |
 | Frontend routes | `apps/frontend/src/app/(app)/(site)/{sandbox,business-profile,captions}/` (new files only) |
 | Browser tests | `ours/e2e/` (standalone package, outside the pnpm workspace) |
 
@@ -259,3 +259,46 @@ How it works:
 |----------|---------|---------|
 | `OURS_GRAPHICS_FONT_DIR` | backend: where the graphic fonts are, if not found next to the source | found automatically |
 
+
+## UK dates in posts (Milestone 6)
+
+When a bank holiday or an occasion like Mother's Day is coming up, the weekly
+posts may mention it. Screen: the "UK dates in your posts" panel in
+`/captions`, and a "UK date: … Source: …" line on each post that uses one.
+Code: `libraries/nestjs-libraries/src/ours/seasonal/`,
+`apps/backend/src/ours/seasonal.controller.ts`, `apps/frontend/src/ours/seasonal/`.
+
+How it works:
+
+1. **The calendar** (`uk.calendar.ts`) is written by hand, never generated.
+   Bank holidays are copied from GOV.UK (`https://www.gov.uk/bank-holidays.json`)
+   per nation. Occasions (Black Friday, Small Business Saturday, Christmas,
+   Mothering Sunday, Pancake Day, Valentine's, Easter Sunday, Father's Day,
+   Halloween, Bonfire Night, and the national days of each nation) each carry
+   the page they were checked against. Remembrance, moon-sighted festivals,
+   school holidays and unofficial "awareness days" are left out on purpose
+   (see the file's header).
+2. **The owner's choices** (`ours_seasonal_settings`): their nation (England
+   until they choose; bank holidays differ), dates on or off, and dates they
+   skip (skipping applies every year).
+3. **Writing a week**: `SeasonalService.factsForWeek` picks the dates in that
+   week, plus ones coming up within their lead time (Mothering Sunday 14
+   days, a bank holiday 4), at most 3, nearest first. They go to the writer as
+   facts with the field `seasonal`, listed apart from the untrusted profile.
+4. **Checks** (`groundCaptions`): a caption can cite a date but still needs a
+   profile fact; a date's day and date only count for a caption that cites
+   it; offer words ("deal", "sale") are still dropped. The writer is told
+   never to say the business is open, closed or has something on for a date
+   unless the profile says so. Days GOV.UK marks without bunting (Good
+   Friday, Battle of the Boyne) are listed but never suggested.
+5. **Demo mode** adds one "Coming up: …" post for the nearest kept date.
+
+API: `GET /ours/seasonal`, `PUT /ours/seasonal/settings` (`nation`, `enabled`),
+`PUT /ours/seasonal/dates/:key` (`skip`).
+
+**Adding a year** (the occasions run to 31/12/2027, bank holidays to the end
+of 2028): copy the dates from the same sources into `uk.calendar.ts`, update
+`CALENDAR_CHECKED_ON` and `CALENDAR_COVERS_UNTIL`, and run our unit tests;
+they cross-check the dates against each other (Easter, Mothering Sunday,
+Pancake Day, weekdays). When the list runs out, the panel says how far it has
+been checked.

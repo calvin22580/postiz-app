@@ -14,11 +14,15 @@ import { WebsiteCrawler } from '@gitroom/nestjs-libraries/ours/crawler/website.c
 import { BrandKitController } from '@gitroom/backend/ours/brand.kit.controller';
 import { GraphicService } from '@gitroom/nestjs-libraries/ours/graphics/graphic.service';
 import { BrandKitRepository } from '@gitroom/nestjs-libraries/ours/graphics/brand.kit.repository';
+import { SeasonalController } from '@gitroom/backend/ours/seasonal.controller';
+import { SeasonalService } from '@gitroom/nestjs-libraries/ours/seasonal/seasonal.service';
+import { SeasonalRepository } from '@gitroom/nestjs-libraries/ours/seasonal/seasonal.repository';
 
 const authenticatedController = [
   BusinessProfileController,
   CaptionsController,
   BrandKitController,
+  SeasonalController,
 ];
 
 @Module({
@@ -34,6 +38,8 @@ const authenticatedController = [
     CaptionRepository,
     GraphicService,
     BrandKitRepository,
+    SeasonalService,
+    SeasonalRepository,
   ],
 })
 export class OursModule implements NestModule {

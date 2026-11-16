@@ -6,7 +6,7 @@
 // AI cost). See ours/README.md.
 import { expect, test } from '@playwright/test';
 import zlib from 'node:zlib';
-import { BACKEND, signUp } from './helpers';
+import { BACKEND, setUkDates, signUp } from './helpers';
 import { startTestSite } from './fixtures/test.site';
 
 // width and height from a PNG's header
@@ -49,6 +49,7 @@ test('weekly posts come with branded graphics, attached only when approved', asy
   const site = await startTestSite();
   try {
     await signUp(page);
+    await setUkDates(page, { enabled: false });
     await page.getByText('Sandbox (test only, never publishes)').first().click();
     await page.fill('input[name="name"]', 'Graphics Cafe');
     await page.getByRole('button', { name: 'Connect' }).click();

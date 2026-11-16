@@ -40,6 +40,9 @@ export const DEFAULT_TONE = 'friendly, clear and professional';
 export const captionTimezone = () =>
   process.env.OURS_DEFAULT_TIMEZONE || 'Europe/London';
 
+// A calendar date (YYYY-MM-DD) in words, for example "Friday 27 November 2026".
+export const longDate = (date: string) => dayjs(date).format('dddd D MMMM YYYY');
+
 // The Monday after today, in the given time zone, as YYYY-MM-DD.
 export const nextWeekStart = (tz: string, now: Date = new Date()) => {
   const local = dayjs(now).tz(tz);
@@ -59,11 +62,23 @@ export const scheduledFor = (
 };
 
 // A profile claim a caption is allowed to use. Owner-entered values count too.
+// Milestone 6: a UK date from our sourced calendar is a fact too, with the
+// field "seasonal" and the page the date was checked against.
+export const SEASONAL_FIELD = 'seasonal';
+
 export interface CaptionFact {
   id: string;
-  field: ProfileFieldKey;
+  field: ProfileFieldKey | typeof SEASONAL_FIELD;
   value: string;
+  // seasonal facts only: the date's name, its day (YYYY-MM-DD) and where it
+  // was checked
+  label?: string;
+  date?: string;
+  source?: { name: string; url: string };
 }
+
+export const isSeasonalFact = (f: Pick<CaptionFact, 'field'>) =>
+  f.field === SEASONAL_FIELD;
 
 // Contact and link fields are handy in captions; tone of voice is guidance,
 // not a fact to state.

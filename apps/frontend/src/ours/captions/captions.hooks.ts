@@ -12,7 +12,8 @@ export interface Caption {
   scheduledFor: string;
   theme: string;
   text: string;
-  facts: { field: string; value: string }[];
+  // a fact with the field "seasonal" is a UK date, with where it was checked
+  facts: { field: string; value: string; label?: string; source?: { name: string; url: string } }[];
   status: CaptionStatus;
   channelId: string | null;
   postId: string | null;

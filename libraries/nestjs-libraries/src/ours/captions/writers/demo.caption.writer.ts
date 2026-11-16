@@ -3,7 +3,10 @@
 // from the business profile and adds no facts of its own, so its captions pass
 // the same checks. Weeks written with it are labelled as demos in the app.
 // Each idea has a few versions, so "rewrite" can offer a different one.
-import { CaptionFact } from '@gitroom/nestjs-libraries/ours/captions/caption.plan';
+import {
+  CaptionFact,
+  isSeasonalFact,
+} from '@gitroom/nestjs-libraries/ours/captions/caption.plan';
 import {
   CaptionRewriteInput,
   CaptionWriter,
@@ -36,6 +39,31 @@ const ideasFrom = (facts: CaptionFact[]): Idea[] => {
 
   const ideas: Idea[] = [];
   const intro = one('whatTheyDo');
+
+  // Milestone 6: the nearest UK date, tied to what the business does. It
+  // never says the business is open or has anything on for the date.
+  const date = facts.find(isSeasonalFact);
+  const about = intro || one('services');
+  if (date?.label && about) {
+    const label = date.label.replace(/\s*\(.*?\)/g, '');
+    ideas.push({
+      theme: `Coming up: ${label}`,
+      facts: [name, about, date],
+      versions: [
+        {
+          facebook: `With ${label} coming up, a quick hello from ${name.value}. ${sentence(about.value)}`,
+          instagram: `${label} is on its way.\n\n${sentence(about.value)}\n\n${tag} ${hashtag(label.replace(/['’]/g, ''))}`,
+          linkedin: `${label} is coming up. A reminder of what ${name.value} does: ${sentence(about.value)}`,
+        },
+        {
+          facebook: `${label} is nearly here. From all of us at ${name.value}: ${sentence(about.value)}`,
+          instagram: `Thinking ahead to ${label}.\n\n${sentence(about.value)}\n\n${tag}`,
+          linkedin: `As ${label} approaches, a note from ${name.value}. ${sentence(about.value)}`,
+        },
+      ],
+    });
+  }
+
   if (intro) {
     ideas.push({
       theme: 'Introducing the business',

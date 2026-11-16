@@ -125,3 +125,9 @@ Milestone 5 (review screen) kept the Sandbox-only rule on purpose. Real channels
 - Every word on a graphic is a fixed label or a business profile value copied as it is. A value too long to fit is never shortened; a shorter fact or a simpler layout is used instead.
 - Previews are drawn on demand (`GET /ours/captions/:id/graphic`) from the current profile and brand kit, so nothing is stored until approval. On approval the PNG is saved through upstream's `UploadFactory` storage and `MediaService.saveFile` (the same path upstream's generated images take) and attached to the post's `image` list.
 
+
+## UK dates (Milestone 6)
+
+- The dates are data in our code (`libs/ours/seasonal/uk.calendar.ts`), each with a source URL, not fetched at run time: the cloud and production networks may not reach GOV.UK, and a hand-checked list can't change under us. Bank holidays were copied from GOV.UK's JSON feed; occasions from Office Holidays, PublicHolidays.com and Small Business Saturday UK, and cross-checked by unit tests (Easter-based and weekday-based rules).
+- Only the owner's choices are stored (`ours_seasonal_settings`: nation, on/off, skipped keys).
+- Dates reach the caption writer as facts with the field `seasonal`, so the existing grounding and the "Based on…" line keep working. A caption still needs a profile fact; a date's numbers only support a caption that cites it.

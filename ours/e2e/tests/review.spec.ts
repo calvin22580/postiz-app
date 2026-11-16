@@ -5,13 +5,14 @@
 // Needs the stack running with SANDBOX_CHANNEL_ENABLED=true,
 // OURS_CRAWLER_ALLOW_PRIVATE=true and no ANTHROPIC_API_KEY. See ours/README.md.
 import { expect, test } from '@playwright/test';
-import { BACKEND, signUp } from './helpers';
+import { BACKEND, setUkDates, signUp } from './helpers';
 import { startTestSite } from './fixtures/test.site';
 
 test('edit, rewrite, reject and approve all on the review screen', async ({ page }) => {
   const site = await startTestSite();
   try {
     await signUp(page);
+    await setUkDates(page, { enabled: false });
     await page.getByText('Sandbox (test only, never publishes)').first().click();
     await page.fill('input[name="name"]', 'Review Cafe');
     await page.getByRole('button', { name: 'Connect' }).click();

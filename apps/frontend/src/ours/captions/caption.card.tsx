@@ -82,6 +82,9 @@ export const CaptionCard: FC<{
   const approved = caption.status === 'APPROVED';
   const rejected = caption.status === 'REJECTED';
   const platform = PLATFORMS[caption.platform];
+  // Milestone 6: UK dates are shown apart from profile facts, with their source
+  const ukDates = caption.facts.filter((f) => f.field === 'seasonal');
+  const profileFacts = caption.facts.filter((f) => f.field !== 'seasonal');
   // editing and rewriting only exist while the post waits: if it is approved
   // (for example by "Approve all") or rejected meanwhile, the panels close
   const mode: Mode = caption.status === 'PENDING_APPROVAL' ? chosenMode : 'view';
@@ -245,10 +248,25 @@ export const CaptionCard: FC<{
               {caption.text}
             </p>
           )}
-          {caption.facts.length > 0 && mode !== 'edit' && (
+          {profileFacts.length > 0 && mode !== 'edit' && (
             <p className="text-[13px] leading-[1.5] text-textItemBlur">
               {caption.editedAt ? 'Original idea from your profile: ' : 'Based on your profile: '}
-              {caption.facts.map((f) => f.value).join(' · ')}
+              {profileFacts.map((f) => f.value).join(' · ')}
+            </p>
+          )}
+          {ukDates.length > 0 && mode !== 'edit' && (
+            <p className="text-[13px] leading-[1.5] text-textItemBlur" data-testid="caption-uk-date">
+              UK date: {ukDates.map((f, i) => (
+                <span key={f.value}>
+                  {i > 0 && ' · '}
+                  {f.value}{' '}
+                  {f.source && (
+                    <a href={f.source.url} target="_blank" rel="noopener noreferrer" className="underline">
+                      Source: {f.source.name}
+                    </a>
+                  )}
+                </span>
+              ))}
             </p>
           )}
           {caption.notInProfile.length > 0 && mode === 'view' && !approved && (

@@ -20,6 +20,7 @@ import {
 import { DemoCaptionWriter } from '@gitroom/nestjs-libraries/ours/captions/writers/demo.caption.writer';
 import {
   AnthropicCaptionWriter,
+  buildCaptionMessage,
   buildRewriteMessage,
   CAPTION_SYSTEM_PROMPT,
   captionSchema,
@@ -324,6 +325,7 @@ const makeService = () => {
     setPostId: vi.fn(async () => ({ count: 1 })),
     releaseApproval: vi.fn(async () => ({ count: 1 })),
     latestWeek: vi.fn(async () => null),
+    getWeek: vi.fn(async (): Promise<any> => null),
     getDrafts: vi.fn(async () => []),
     setGraphicLayout: vi.fn(async () => true),
     editText: vi.fn(async () => true),
@@ -360,8 +362,10 @@ const makeService = () => {
     saveToMediaLibrary: vi.fn(async () => ({ id: 'media-1', path: 'http://localhost:4200/uploads/2030/01/01/abc.png' })),
     removeFromMediaLibrary: vi.fn(async () => undefined),
   };
-  const service = new CaptionService(repo as never, profiles as never, usage as never, integrations as never, posts as never, graphics as never);
-  return { service, repo, usage, posts, graphics, profiles };
+  // Milestone 6: no UK dates unless a test adds some
+  const seasonal = { factsForWeek: vi.fn(async (): Promise<any[]> => []) };
+  const service = new CaptionService(repo as never, profiles as never, usage as never, integrations as never, posts as never, graphics as never, seasonal as never);
+  return { service, repo, usage, posts, graphics, profiles, seasonal };
 };
 
 describe('CaptionService.runWriting', () => {
@@ -821,5 +825,148 @@ describe('CaptionService review', () => {
 describe('captionToHtml', () => {
   it('escapes text and keeps line breaks as paragraphs', () => {
     expect(captionToHtml('a < b\n\nc')).toBe('<p>a &lt; b</p><p></p><p>c</p>');
+  });
+});
+
+// Milestone 6: UK dates reach the writer as sourced facts, but never stand in
+// for the business profile.
+describe('UK dates in captions', () => {
+  const BLACK_FRIDAY = {
+    id: 'seasonal.black-friday-2026-11-27',
+    field: 'seasonal' as const,
+    label: 'Black Friday',
+    date: '2026-11-27',
+    value: 'Black Friday: Friday 27 November 2026. A busy shopping day, on the day after Thanksgiving in the US.',
+    source: { name: 'PublicHolidays.com', url: 'https://publicholidays.com/black-friday/' },
+  };
+  const WITH_DATE = [...FACTS, BLACK_FRIDAY];
+  const plan = (text: string, factIds: string[]) => ({
+    posts: [{ day: 0, theme: 'Black Friday', captions: [{ platform: 'facebook', text, factIds }] }],
+  });
+
+  it('keeps a caption that cites a date and a profile fact, and lets it repeat the date', () => {
+    const { captions } = groundCaptions(
+      plan('Black Friday is on Friday 27 November. Harbour Lane Bakery is baking as always.', ['businessName.0', BLACK_FRIDAY.id]),
+      WITH_DATE,
+      5
+    );
+    expect(captions).toHaveLength(1);
+    expect(captions[0].facts.map((f) => f.id)).toContain(BLACK_FRIDAY.id);
+  });
+
+  it('drops a caption based only on a date', () => {
+    const { captions, reasons } = groundCaptions(plan('Black Friday is coming up this Friday, everyone!', [BLACK_FRIDAY.id]), WITH_DATE, 5);
+    expect(captions).toHaveLength(0);
+    expect(reasons[0]).toContain('no profile facts');
+  });
+
+  it('does not let a cited date’s numbers support anything else', () => {
+    for (const text of [
+      'Black Friday is on 27 November. Harbour Lane Bakery has been baking for 27 years.',
+      'Black Friday, Friday 27 November 2026: our 2026 best year at Harbour Lane Bakery.',
+    ]) {
+      const { captions } = groundCaptions(plan(text, ['businessName.0', BLACK_FRIDAY.id]), WITH_DATE, 5);
+      expect(captions).toHaveLength(0);
+    }
+    // the date written other ways is fine
+    for (const text of [
+      'See you this Friday, 27/11, for Black Friday. Harbour Lane Bakery is baking as always.',
+      'Harbour Lane Bakery wishes you a calm Black Friday on November 27th.',
+    ]) {
+      expect(groundCaptions(plan(text, ['businessName.0', BLACK_FRIDAY.id]), WITH_DATE, 5).captions).toHaveLength(1);
+    }
+  });
+
+  it('does not let a date’s numbers support a caption that doesn’t cite it', () => {
+    const { captions, reasons } = groundCaptions(
+      plan('Harbour Lane Bakery has 27 kinds of bread.', ['businessName.0']),
+      WITH_DATE,
+      5
+    );
+    expect(captions).toHaveLength(0);
+    expect(reasons[0]).toContain('27');
+  });
+
+  it('still drops offer words next to a date', () => {
+    const { captions } = groundCaptions(
+      plan('Black Friday deal at Harbour Lane Bakery this Friday 27 November.', ['businessName.0', BLACK_FRIDAY.id]),
+      WITH_DATE,
+      5
+    );
+    expect(captions).toHaveLength(0);
+  });
+
+  it('gives the AI the dates apart from the untrusted profile, with the posting dates', () => {
+    const message = buildCaptionMessage({
+      facts: WITH_DATE,
+      tone: 'warm',
+      days: [...POSTING_DAYS],
+      dates: ['2026-11-23', '2026-11-24', '2026-11-25', '2026-11-26', '2026-11-27'],
+    });
+    expect(message).toContain('4: Friday 27 November 2026');
+    const profile = message.slice(message.indexOf('<untrusted_business_profile>'), message.indexOf('</untrusted_business_profile>'));
+    expect(profile).not.toContain('Black Friday');
+    expect(message).toContain(`<uk_dates>\n<fact id="${BLACK_FRIDAY.id}" field="seasonal">`);
+    expect(CAPTION_SYSTEM_PROMPT).toContain('must still rely on at least one business profile fact');
+    expect(CAPTION_SYSTEM_PROMPT).toContain('open, closed, taking part');
+  });
+
+  it('demo writer adds one post for the nearest date, which passes the checks', async () => {
+    const out = await new DemoCaptionWriter().write({ facts: WITH_DATE, tone: 'warm', days: [...POSTING_DAYS] });
+    const { captions, dropped } = groundCaptions(out.raw, WITH_DATE, POSTING_DAYS.length);
+    expect(dropped).toBe(0);
+    const dated = captions.filter((c) => c.facts.some((f) => f.field === 'seasonal'));
+    expect(dated.map((c) => c.platform)).toEqual(['facebook', 'instagram', 'linkedin']);
+    expect(dated[0].theme).toBe('Coming up: Black Friday');
+    expect(dated.find((c) => c.platform === 'instagram')!.text).toContain('#BlackFriday');
+    // nothing about being open or having something on
+    expect(dated.map((c) => c.text).join(' ')).not.toMatch(/\bopen\b|deal|offer|sale/i);
+  });
+
+  it('saves a date with its source on the draft and passes posting dates to the writer', async () => {
+    const { service, repo } = makeService();
+    const writer = {
+      name: 'demo' as const,
+      write: vi.fn(async (input: any) => new DemoCaptionWriter().write(input)),
+      rewrite: vi.fn(),
+    };
+    await service.runWriting('org-1', { id: 'w1', weekStart: '2026-11-23', timezone: 'Europe/London' }, WITH_DATE, 'warm', writer);
+    expect(writer.write).toHaveBeenCalledWith(expect.objectContaining({ dates: ['2026-11-23', '2026-11-24', '2026-11-25', '2026-11-26', '2026-11-27'] }));
+    const [, , body] = repo.finishWeek.mock.calls[0] as unknown as [string, string, any];
+    const saved = body.drafts.flatMap((d: any) => d.facts).find((f: any) => f.field === 'seasonal');
+    expect(saved).toEqual(BLACK_FRIDAY);
+  });
+
+  it('rewrites with the dates of the draft’s own week', async () => {
+    const { service, repo, seasonal } = makeService();
+    seasonal.factsForWeek.mockResolvedValue([BLACK_FRIDAY]);
+    // Tuesday 08/01/2030 → the week of Monday 07/01/2030
+    repo.getWeek.mockResolvedValue({ id: 'w1', weekStart: '2030-01-07', timezone: 'Europe/London' });
+    repo.getDraft.mockResolvedValue({
+      id: 'd1',
+      weekId: 'w1',
+      status: 'PENDING_APPROVAL',
+      platform: 'facebook',
+      scheduledFor: new Date('2030-01-08T12:30:00Z'),
+      theme: 'Spotlight: Sourdough loaves',
+      text: 'Sourdough loaves at Harbour Lane Bakery.',
+      facts: [],
+      rewriteCount: 0,
+      editedAt: null,
+    });
+    const writer = { name: 'demo' as const, write: vi.fn(), rewrite: vi.fn(async (input: any) => new DemoCaptionWriter().rewrite(input)) };
+    await service.rewrite('org-1', 'd1', undefined, writer);
+    expect(repo.getWeek).toHaveBeenCalledWith('org-1', 'w1');
+    expect(seasonal.factsForWeek).toHaveBeenCalledWith('org-1', '2030-01-07');
+    expect(writer.rewrite).toHaveBeenCalledWith(expect.objectContaining({
+      date: '2030-01-08',
+      facts: expect.arrayContaining([BLACK_FRIDAY]),
+    }));
+  });
+
+  it('writes from the profile alone if dates can’t be read', async () => {
+    const { service, seasonal } = makeService();
+    seasonal.factsForWeek.mockRejectedValue(new Error('db down'));
+    await expect((service as any).seasonalFacts('org-1', '2026-11-23')).resolves.toEqual([]);
   });
 });
