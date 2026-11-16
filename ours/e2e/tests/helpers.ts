@@ -29,3 +29,15 @@ export const providerIdentifiers = async (
   const body = await res.json();
   return (body.social as { identifier: string }[]).map((p) => p.identifier);
 };
+
+// Milestone 6: UK dates depend on today's date, so tests that count posts
+// turn them off; seasonal.spec.ts tests them on their own.
+export const setUkDates = async (page: Page, body: { nation?: string; enabled?: boolean }) => {
+  const auth = (await page.context().cookies()).find((c) => c.name === 'auth')?.value;
+  const res = await page.request.put(`${BACKEND}/ours/seasonal/settings`, {
+    headers: { auth: auth!, 'content-type': 'application/json' },
+    data: body,
+  });
+  expect(res.ok()).toBeTruthy();
+  return res.json();
+};

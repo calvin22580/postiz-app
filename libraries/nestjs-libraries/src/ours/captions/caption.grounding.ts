@@ -2,13 +2,17 @@
 // caption is kept only if it is based on profile facts and every specific
 // detail in it (numbers, prices, emails, links, handles, offer or award words)
 // is in the business profile. Anything else is dropped, never saved.
+// Milestone 6: a caption may also cite a sourced UK date, but it still needs
+// at least one profile fact; a date alone isn't about the business.
 import {
   CAPTION_PLATFORMS,
   CaptionFact,
   CaptionPlatform,
   isCaptionPlatform,
+  isSeasonalFact,
 } from '@gitroom/nestjs-libraries/ours/captions/caption.plan';
 import { RawCaptionPlan } from '@gitroom/nestjs-libraries/ours/captions/writers/caption.writer';
+import dayjs from 'dayjs';
 
 export interface CheckedCaption {
   day: number;
@@ -100,6 +104,35 @@ export const unsupportedDetails = (text: string, facts: CaptionFact[]) => {
   return problems;
 };
 
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Milestone 6: the text with the names and dates of the UK dates it cites
+// taken out ("Black Friday", "Friday 27 November", "27/11"), so the rest can
+// be checked against the profile alone. A date's own numbers never support
+// anything else ("27 years of baking" still has to be in the profile).
+export const withoutCitedDates = (text: string, dates: CaptionFact[]) => {
+  let out = text;
+  for (const f of dates) {
+    const names = [f.label, f.label?.replace(/\s*\(.*?\)/g, '')].filter((n): n is string => !!n);
+    for (const name of names) {
+      out = out.replace(new RegExp(escapeRegExp(name), 'gi'), ' ');
+    }
+    if (!f.date) continue;
+    const d = dayjs(f.date);
+    const day = `0?${d.date()}(?:st|nd|rd|th)?`;
+    const month = d.format('MMMM');
+    const year = `(?:,?\\s+${d.year()})?`;
+    for (const re of [
+      `(?:${d.format('dddd')},?\\s+)?(?:the\\s+)?\\b${day}(?:\\s+of)?\\s+${month}${year}`,
+      `(?:${d.format('dddd')},?\\s+)?${month}\\s+${day}${year}`,
+      `\\b0?${d.date()}/0?${d.month() + 1}(?:/(?:${d.year()}|${d.format('YY')}))?\\b`,
+    ]) {
+      out = out.replace(new RegExp(re, 'gi'), ' ');
+    }
+  }
+  return out;
+};
+
 export const groundCaptions = (
   raw: RawCaptionPlan,
   facts: CaptionFact[],
@@ -123,7 +156,12 @@ export const groundCaptions = (
       const maxLength =
         CAPTION_PLATFORMS.find((p) => p.key === platform)?.maxLength || 0;
 
-      const problems = unsupportedDetails(text, facts);
+      // a UK date's name and date are allowed only where the caption cites
+      // it; everything else is checked against the profile alone
+      const problems = unsupportedDetails(
+        withoutCitedDates(text, used.filter(isSeasonalFact)),
+        facts.filter((f) => !isSeasonalFact(f))
+      );
       const reason = !(Number.isInteger(day) && day >= 0 && day < dayCount)
         ? 'bad day'
         : !isCaptionPlatform(platform)
@@ -132,7 +170,7 @@ export const groundCaptions = (
         ? 'duplicate'
         : text.length < 20 || text.length > maxLength
         ? 'length'
-        : !used.length
+        : !used.some((f) => !isSeasonalFact(f))
         ? 'no profile facts'
         : problems.length
         ? `not in profile: ${problems.join(', ')}`

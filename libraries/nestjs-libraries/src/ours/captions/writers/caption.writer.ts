@@ -11,6 +11,9 @@ export interface CaptionWriterInput {
   facts: CaptionFact[];
   tone: string;
   days: string[];
+  // Milestone 6: the date of each posting day (YYYY-MM-DD), so a caption can
+  // say "this Friday" about a UK date correctly
+  dates?: string[];
 }
 
 // What a writer returns before checking: unchecked captions.
@@ -34,6 +37,8 @@ export interface CaptionRewriteInput {
   facts: CaptionFact[];
   tone: string;
   day: string;
+  // the posting date (YYYY-MM-DD)
+  date?: string;
   platform: CaptionPlatform;
   theme: string;
   // the version the owner wants replaced

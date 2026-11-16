@@ -1973,3 +1973,19 @@ model OursBrandKit {
 
   @@map("ours_brand_kit")
 }
+
+// Milestone 6: which UK dates the owner wants in their posts. The dates
+// themselves live in code (libraries/.../ours/seasonal/uk.calendar.ts), each
+// with its source; this only stores the owner's choices.
+model OursSeasonalSettings {
+  id             String   @id @default(uuid())
+  organizationId String   @unique
+  nation         String
+  enabled        Boolean  @default(true)
+  // keys of dates the owner doesn't want suggested (every year)
+  skippedKeys    String[] @default([])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("ours_seasonal_settings")
+}

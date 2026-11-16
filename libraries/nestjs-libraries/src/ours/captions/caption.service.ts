@@ -31,6 +31,7 @@ import {
   captionTimezone,
   factsFromProfile,
   hasEnoughToWrite,
+  isSeasonalFact,
   nextWeekStart,
   POSTING_DAYS,
   scheduledFor,
@@ -39,6 +40,7 @@ import {
 import {
   groundCaptions,
   unsupportedDetails,
+  withoutCitedDates,
 } from '@gitroom/nestjs-libraries/ours/captions/caption.grounding';
 import {
   CaptionWriter,
@@ -60,6 +62,7 @@ import {
   isGraphicLayout,
   NO_GRAPHIC,
 } from '@gitroom/nestjs-libraries/ours/graphics/graphic.content';
+import { SeasonalService } from '@gitroom/nestjs-libraries/ours/seasonal/seasonal.service';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -91,6 +94,21 @@ export const captionToHtml = (text: string) =>
     .map((line) => `<p>${escapeHtml(line)}</p>`)
     .join('');
 
+// What a draft keeps of each fact it used: a UK date keeps its source, so the
+// screen can link to it.
+const storedFact = (f: CaptionFact) => ({
+  id: f.id,
+  field: f.field,
+  value: f.value,
+  ...(f.label ? { label: f.label } : {}),
+  ...(f.date ? { date: f.date } : {}),
+  ...(f.source ? { source: f.source } : {}),
+});
+
+// The posting days of a week as dates, for the writer (YYYY-MM-DD).
+const postingDates = (weekStart: string) =>
+  POSTING_DAYS.map((_, i) => dayjs(weekStart).add(i, 'day').format('YYYY-MM-DD'));
+
 @Injectable()
 export class CaptionService {
   private _logger = new Logger(CaptionService.name);
@@ -101,7 +119,8 @@ export class CaptionService {
     private _aiUsageService: AiUsageService,
     private _integrationService: IntegrationService,
     private _postsService: PostsService,
-    private _graphicService: GraphicService
+    private _graphicService: GraphicService,
+    private _seasonalService: SeasonalService
   ) {}
 
   async getWeek(orgId: string) {
@@ -163,8 +182,10 @@ export class CaptionService {
       // another request started (or finished) this week first
       return this.getWeek(orgId);
     }
+    // Milestone 6: UK dates that fit this week, if the owner wants them
+    const seasonal = await this.seasonalFacts(orgId, weekStart);
     // background: the request returns now, the screen polls for progress
-    this.runWriting(orgId, week, facts, toneFromProfile(profile.fields)).catch(
+    this.runWriting(orgId, week, [...facts, ...seasonal], toneFromProfile(profile.fields)).catch(
       (e) =>
         this._logger.error(`Caption writing crashed for org=${orgId}: ${e?.message}`)
     );
@@ -181,7 +202,12 @@ export class CaptionService {
     try {
       let output;
       try {
-        output = await writer.write({ facts, tone, days: [...POSTING_DAYS] });
+        output = await writer.write({
+          facts,
+          tone,
+          days: [...POSTING_DAYS],
+          dates: postingDates(week.weekStart),
+        });
       } catch (e) {
         if (e instanceof CaptionWriterWithUsageError) {
           await this.logUsages(orgId, e.usages);
@@ -212,7 +238,7 @@ export class CaptionService {
           scheduledFor: scheduledFor(week.weekStart, c.day, c.platform, week.timezone),
           theme: c.theme,
           text: c.text,
-          facts: c.facts.map((f) => ({ id: f.id, field: f.field, value: f.value })),
+          facts: c.facts.map(storedFact),
         })),
       });
       if (!saved) {
@@ -409,7 +435,12 @@ export class CaptionService {
       throw new HttpException('Your business profile is being updated. Try again when it is ready.', 400);
     }
     const fields = profile.fields as ProfileFields;
-    const facts = factsFromProfile(fields);
+    const week = await this._captionRepository.getWeek(orgId, draft.weekId);
+    const local = dayjs(draft.scheduledFor).tz(week?.timezone || captionTimezone());
+    const facts = [
+      ...factsFromProfile(fields),
+      ...(week ? await this.seasonalFacts(orgId, week.weekStart) : []),
+    ];
     if (!(await this._captionRepository.claimRewrite(orgId, draftId, MAX_REWRITES))) {
       throw new HttpException(
         `This post has already been rewritten ${MAX_REWRITES} times. You can still edit it yourself.`,
@@ -422,7 +453,8 @@ export class CaptionService {
       output = await writer.rewrite({
         facts,
         tone: toneFromProfile(fields),
-        day: dayjs(draft.scheduledFor).tz(captionTimezone()).format('dddd'),
+        day: local.format('dddd'),
+        date: local.format('YYYY-MM-DD'),
         platform: draft.platform as CaptionPlatform,
         theme: draft.theme,
         current: draft.text,
@@ -458,7 +490,7 @@ export class CaptionService {
     }
     const saved = await this._captionRepository.saveRewrite(orgId, draftId, {
       text: fresh.text,
-      facts: fresh.facts.map((f) => ({ id: f.id, field: f.field, value: f.value })),
+      facts: fresh.facts.map(storedFact),
     });
     if (!saved) {
       throw new HttpException('This post was approved or rejected while we were writing, so it was left as it is.', 409);
@@ -536,6 +568,17 @@ export class CaptionService {
     return this.getWeek(orgId);
   }
 
+  // UK dates never stop captions being written: if they can't be read, the
+  // week is written from the profile alone.
+  private async seasonalFacts(orgId: string, weekStart: string) {
+    try {
+      return await this._seasonalService.factsForWeek(orgId, weekStart);
+    } catch (e) {
+      this._logger.error(`Could not read UK dates for org=${orgId}: ${(e as Error)?.message}`);
+      return [];
+    }
+  }
+
   private async logUsages(
     orgId: string,
     usages: Parameters<AiUsageService['logCall']>[2][],
@@ -577,7 +620,7 @@ export class CaptionService {
         scheduledFor: d.scheduledFor,
         theme: d.theme,
         text: d.text,
-        facts: (d.facts || []) as { field: string; value: string }[],
+        facts: (d.facts || []) as Pick<CaptionFact, 'field' | 'value' | 'label' | 'source'>[],
         status: d.status,
         channelId: d.integrationId,
         postId: d.postId,
@@ -589,7 +632,12 @@ export class CaptionService {
         // details in the owner's own words that the profile doesn't have:
         // shown as a reminder to check, never removed
         notInProfile:
-          d.editedAt && fields ? unsupportedDetails(d.text, profileFacts) : [],
+          d.editedAt && fields
+            ? unsupportedDetails(
+                withoutCitedDates(d.text, ((d.facts || []) as unknown as CaptionFact[]).filter(isSeasonalFact)),
+                profileFacts
+              )
+            : [],
         graphic: {
           choice: d.graphicLayout || 'auto',
           layout: drawnLayout(d),

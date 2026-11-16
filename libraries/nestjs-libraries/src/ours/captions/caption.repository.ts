@@ -64,6 +64,13 @@ export class CaptionRepository {
     });
   }
 
+  getWeek(orgId: string, id: string) {
+    return this._week.model.oursCaptionWeek.findFirst({
+      where: { organizationId: orgId, id },
+      select: WEEK_SELECT,
+    });
+  }
+
   getDrafts(orgId: string, weekId: string) {
     return this._draft.model.oursCaptionDraft.findMany({
       where: { organizationId: orgId, weekId },

@@ -20,6 +20,7 @@ import {
 } from '@gitroom/frontend/ours/profile/business.profile.hooks';
 import { useBrandKit } from '@gitroom/frontend/ours/graphics/graphics.hooks';
 import { BrandKitPanel } from '@gitroom/frontend/ours/graphics/brand.kit.panel';
+import { UkDatesPanel } from '@gitroom/frontend/ours/seasonal/uk.dates.panel';
 import {
   CaptionCard,
   PLATFORMS,
@@ -324,6 +325,7 @@ const WeekList: FC<{ week: CaptionWeek; onChanged: () => void }> = ({ week, onCh
         </Notice>
       )}
       <BrandKitPanel />
+      <UkDatesPanel />
       <ChannelBar channelId={channelId} setChannelId={setChannelId} />
       <ReviewBar
         week={week}
@@ -507,6 +509,9 @@ export const CaptionsPage: FC = () => {
       )}
 
       {week?.status === 'READY' && <WeekList week={week} onChanged={() => mutate()} />}
+
+      {/* before the first week, so the owner can set their nation first */}
+      {!week && <UkDatesPanel />}
     </Shell>
   );
 };
