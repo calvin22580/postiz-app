@@ -1989,3 +1989,37 @@ model OursSeasonalSettings {
 
   @@map("ours_seasonal_settings")
 }
+
+// Milestone 7: plans and usage. Prices and limits live in code
+// (libraries/.../ours/plans/plans.config.ts); this only stores which plan an
+// organisation is on, and how much of each monthly allowance it has used.
+// Separate from upstream's Subscription model, which stays untouched.
+model OursPlanSubscription {
+  id              String    @id @default(uuid())
+  organizationId  String    @unique
+  // a key from plans.config.ts, or "trial"
+  plan            String
+  trialEndsAt     DateTime?
+  // who takes payment: "none" until a payment provider is connected
+  paymentProvider String    @default("none")
+  externalId      String?
+  startedAt       DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("ours_plan_subscription")
+}
+
+model OursUsageCounter {
+  id             String   @id @default(uuid())
+  organizationId String
+  // the calendar month in the business's time zone, YYYY-MM
+  period         String
+  metric         String
+  used           Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, period, metric])
+  @@map("ours_usage_counter")
+}

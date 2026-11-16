@@ -21,6 +21,7 @@ import {
 import { useBrandKit } from '@gitroom/frontend/ours/graphics/graphics.hooks';
 import { BrandKitPanel } from '@gitroom/frontend/ours/graphics/brand.kit.panel';
 import { UkDatesPanel } from '@gitroom/frontend/ours/seasonal/uk.dates.panel';
+import { PlanMessage } from '@gitroom/frontend/ours/plans/plan.message';
 import {
   CaptionCard,
   PLATFORMS,
@@ -147,10 +148,12 @@ const ApproveAll: FC<{
   const toCheck = waiting.filter((c) => c.notInProfile.length > 0).length;
   const [progress, setProgress] = useState<number | null>(null);
   const [result, setResult] = useState<{ ok: number; failed: { caption: Caption; reason: string }[] } | null>(null);
+  const [limitReached, setLimitReached] = useState<{ reason: string; notTried: number } | null>(null);
 
   const run = async () => {
     setConfirming(false);
     setResult(null);
+    setLimitReached(null);
     const failed: { caption: Caption; reason: string }[] = [];
     let ok = 0;
     for (const [i, caption] of waiting.entries()) {
@@ -162,7 +165,14 @@ const ApproveAll: FC<{
       if (res.ok) {
         ok++;
       } else {
-        failed.push({ caption, reason: (await readError(res)) || 'We couldn’t schedule it.' });
+        const reason = (await readError(res)) || 'We couldn’t schedule it.';
+        failed.push({ caption, reason });
+        // Milestone 7: the plan has no scheduled posts left, so the rest
+        // would fail the same way; stop and say so once
+        if (res.status === 403) {
+          setLimitReached({ reason, notTried: waiting.length - i - 1 });
+          break;
+        }
       }
     }
     setProgress(null);
@@ -204,13 +214,19 @@ const ApproveAll: FC<{
       {result && (
         <div role="status" className="text-[14px] leading-[1.6]" data-testid="captions-approve-all-result">
           {result.ok > 0 && `Approved and scheduled ${result.ok} ${result.ok === 1 ? 'post' : 'posts'}. `}
-          {result.failed.length > 0 && (
+          {limitReached ? (
+            <span data-testid="captions-approve-all-limit">
+              <PlanMessage text={limitReached.reason} />
+              {` ${limitReached.notTried + 1} ${limitReached.notTried === 0 ? 'post is' : 'posts are'} still waiting for you.`}
+            </span>
+          ) : result.failed.length > 0 && (
             <>
               {result.failed.length} couldn’t be scheduled:
               <ul className="list-disc pl-[20px]">
                 {result.failed.map(({ caption, reason }) => (
                   <li key={caption.id}>
-                    {newDayjs(caption.scheduledFor).format('dddd')} {PLATFORMS[caption.platform].label}: {reason}
+                    {newDayjs(caption.scheduledFor).format('dddd')} {PLATFORMS[caption.platform].label}:{' '}
+                    <PlanMessage text={reason} />
                   </li>
                 ))}
               </ul>
@@ -480,7 +496,9 @@ export const CaptionsPage: FC = () => {
 
       {startError && (
         <div role="alert" data-testid="captions-error">
-          <Notice>{startError}</Notice>
+          <Notice>
+            <PlanMessage text={startError} />
+          </Notice>
         </div>
       )}
 

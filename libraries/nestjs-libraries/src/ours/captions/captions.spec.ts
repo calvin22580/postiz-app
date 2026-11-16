@@ -364,8 +364,13 @@ const makeService = () => {
   };
   // Milestone 6: no UK dates unless a test adds some
   const seasonal = { factsForWeek: vi.fn(async (): Promise<any[]> => []) };
-  const service = new CaptionService(repo as never, profiles as never, usage as never, integrations as never, posts as never, graphics as never, seasonal as never);
-  return { service, repo, usage, posts, graphics, profiles, seasonal };
+  // Milestone 7: every allowance has room unless a test says otherwise
+  const plans = {
+    claim: vi.fn(async (_org: string, metric: string) => ({ metric, period: '2026-11' })),
+    giveBack: vi.fn(async () => undefined),
+  };
+  const service = new CaptionService(repo as never, profiles as never, usage as never, integrations as never, posts as never, graphics as never, seasonal as never, plans as never);
+  return { service, repo, usage, posts, graphics, profiles, seasonal, plans };
 };
 
 describe('CaptionService.runWriting', () => {
@@ -819,6 +824,104 @@ describe('CaptionService review', () => {
     const [, , saved] = repo.saveRewrite.mock.calls[0] as unknown as [string, string, { text: string }];
     expect(saved.text).not.toBe(draft().text);
     expect(saved.text).toContain('Sourdough loaves');
+  });
+});
+
+describe('CaptionService plan allowances (Milestone 7)', () => {
+  const waiting = (over: Record<string, unknown> = {}) => ({
+    id: 'd1',
+    status: 'PENDING_APPROVAL',
+    platform: 'facebook',
+    scheduledFor: new Date('2030-01-08T12:30:00Z'),
+    theme: 'Spotlight: Sourdough loaves',
+    text: 'In the spotlight this week at Harbour Lane Bakery: Sourdough loaves.',
+    facts: [],
+    rewriteCount: 0,
+    ...over,
+  });
+  const refused = () => Object.assign(new Error('You’ve used all 25 scheduled posts included in your Starter plan this month.'), { status: 403 });
+  beforeEach(() => {
+    process.env.SANDBOX_CHANNEL_ENABLED = 'true';
+  });
+  afterEach(() => {
+    delete process.env.SANDBOX_CHANNEL_ENABLED;
+  });
+
+  it('takes a scheduled post from the allowance on approval, and gives it back if scheduling fails', async () => {
+    const { service, repo, posts, plans } = makeService();
+    repo.getDraft.mockResolvedValue(waiting());
+    await service.approve('org-1', 'd1', 'sbx');
+    expect(plans.claim).toHaveBeenCalledWith('org-1', 'postsScheduled');
+    expect(plans.giveBack).not.toHaveBeenCalled();
+
+    posts.createPost.mockRejectedValueOnce(new Error('db down'));
+    await expect(service.approve('org-1', 'd1', 'sbx')).rejects.toThrow('couldn’t schedule');
+    expect(plans.giveBack).toHaveBeenCalledWith('org-1', { metric: 'postsScheduled', period: '2026-11' });
+
+    repo.claimForApproval.mockResolvedValueOnce(false);
+    await expect(service.approve('org-1', 'd1', 'sbx')).rejects.toThrow('changed a moment ago');
+    expect(plans.giveBack).toHaveBeenCalledTimes(2);
+  });
+
+  it('schedules nothing when the plan has no posts left', async () => {
+    const { service, repo, posts, plans } = makeService();
+    repo.getDraft.mockResolvedValue(waiting());
+    plans.claim.mockRejectedValueOnce(refused());
+    await expect(service.approve('org-1', 'd1', 'sbx')).rejects.toThrow('25 scheduled posts');
+    expect(repo.claimForApproval).not.toHaveBeenCalled();
+    expect(posts.createPost).not.toHaveBeenCalled();
+  });
+
+  it('checks the plan before an AI rewrite, and gives it back when nothing was billed', async () => {
+    const { service, repo, plans } = makeService();
+    repo.getDraft.mockResolvedValue(waiting());
+    const writer = { name: 'anthropic' as const, write: vi.fn(), rewrite: vi.fn() };
+    plans.claim.mockRejectedValueOnce(refused());
+    await expect(service.rewrite('org-1', 'd1', undefined, writer)).rejects.toThrow('Starter plan');
+    expect(writer.rewrite).not.toHaveBeenCalled();
+    expect(repo.claimRewrite).not.toHaveBeenCalled();
+
+    // the post's own cap of 5 is reached: the monthly unit goes back
+    repo.claimRewrite.mockResolvedValueOnce(false);
+    await expect(service.rewrite('org-1', 'd1', undefined, writer)).rejects.toThrow(`rewritten ${MAX_REWRITES} times`);
+    expect(plans.giveBack).toHaveBeenCalledTimes(1);
+
+    writer.rewrite.mockRejectedValueOnce(new CaptionWriterError('The AI service is busy. Please try again in a few minutes.'));
+    await expect(service.rewrite('org-1', 'd1', undefined, writer)).rejects.toThrow('busy');
+    expect(plans.giveBack).toHaveBeenCalledTimes(2);
+    expect(plans.claim).toHaveBeenCalledWith('org-1', 'rewrites');
+  });
+
+  it('gives a week back when writing it failed, never when it worked', async () => {
+    const { service, plans } = makeService();
+    const week = { id: 'w1', weekStart: '2026-11-16', timezone: 'Europe/London' };
+    const ticket = { metric: 'captionWeeks' as const, period: '2026-11' };
+    const failing = { name: 'anthropic' as const, write: vi.fn(async () => { throw new Error('boom'); }), rewrite: vi.fn() };
+    await service.runWriting('org-1', week, FACTS, 'warm', failing, ticket);
+    expect(plans.giveBack).toHaveBeenCalledWith('org-1', ticket);
+    plans.giveBack.mockClear();
+    await service.runWriting('org-1', week, FACTS, 'warm', new DemoCaptionWriter(), ticket);
+    expect(plans.giveBack).not.toHaveBeenCalled();
+  });
+
+  it('starts no week when the plan has none left, and gives one back if another request won', async () => {
+    const { service, repo, plans } = makeService();
+    const claimWeek = vi.fn(async () => null);
+    Object.assign(repo, { claimWeek });
+    plans.claim.mockRejectedValueOnce(refused());
+    await expect(service.startWriting('org-1')).rejects.toThrow('Starter plan');
+    expect(claimWeek).not.toHaveBeenCalled();
+
+    await service.startWriting('org-1');
+    expect(plans.claim).toHaveBeenLastCalledWith('org-1', 'captionWeeks');
+    expect(claimWeek).toHaveBeenCalledTimes(1);
+    expect(plans.giveBack).toHaveBeenCalledWith('org-1', { metric: 'captionWeeks', period: '2026-11' });
+
+    // the database fails after the week was taken from the allowance
+    plans.giveBack.mockClear();
+    claimWeek.mockRejectedValueOnce(new Error('db down'));
+    await expect(service.startWriting('org-1')).rejects.toThrow('db down');
+    expect(plans.giveBack).toHaveBeenCalledTimes(1);
   });
 });
 

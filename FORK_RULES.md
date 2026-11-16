@@ -90,6 +90,6 @@ Run from the repo root unless stated. Details in `ours/README.md`.
 - Create the database tables: `pnpm run prisma-db-push`
 - Run the app without the browser extension: `pnpm run --filter ./apps/orchestrator --filter ./apps/backend --filter ./apps/frontend --parallel dev` (upstream's `pnpm run dev` also works, and builds the extension too).
 - Our unit tests: `pnpm exec vitest run --config ours/vitest.config.mts`
-- Our browser tests (stack running, `SANDBOX_CHANNEL_ENABLED=true`, `OURS_CRAWLER_ALLOW_PRIVATE=true`, no `ANTHROPIC_API_KEY`): `cd ours/e2e && pnpm install --ignore-workspace && pnpm exec playwright test`. To use an already-installed Chromium, set `E2E_CHROMIUM_PATH`.
+- Our browser tests (stack running, `SANDBOX_CHANNEL_ENABLED=true`, `OURS_BILLING_MODE=test`, `OURS_CRAWLER_ALLOW_PRIVATE=true`, no `ANTHROPIC_API_KEY`): `cd ours/e2e && pnpm install --ignore-workspace && pnpm exec playwright test`. To use an already-installed Chromium, set `E2E_CHROMIUM_PATH`.
 - Sandbox-off browser test: start the stack with `SANDBOX_CHANNEL_ENABLED=false` in front of the run command, then `cd ours/e2e && E2E_SANDBOX_EXPECTED=off pnpm exec playwright test sandbox-disabled`
 - Upstream's `pnpm test` currently fails before running anything (its jest config needs `@nx/jest`, which upstream does not install) and upstream ships no test files.

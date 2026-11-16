@@ -8,6 +8,7 @@ import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
 import type { Caption, CaptionWeek } from '@gitroom/frontend/ours/captions/captions.hooks';
 import { readError } from '@gitroom/frontend/ours/profile/business.profile.hooks';
+import { PlanMessage } from '@gitroom/frontend/ours/plans/plan.message';
 import { CaptionGraphic } from '@gitroom/frontend/ours/graphics/caption.graphic';
 
 export const PLATFORMS: Record<Caption['platform'], { label: string }> = {
@@ -203,7 +204,7 @@ export const CaptionCard: FC<{
         </div>
         {error && (
           <div role="alert" className="text-[14px]">
-            {error}
+            <PlanMessage text={error} />
           </div>
         )}
       </article>
@@ -320,7 +321,7 @@ export const CaptionCard: FC<{
 
       {error && (
         <div role="alert" className="text-[14px]" data-testid="caption-error">
-          {error}
+          <PlanMessage text={error} />
         </div>
       )}
 
