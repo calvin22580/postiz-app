@@ -8,6 +8,7 @@ import {
   headerName,
   languages,
 } from '@gitroom/react/translation/i18n.config';
+import { hiddenScreenRedirect } from '@gitroom/frontend/ours/developer-tools/developer.tools'; // OURS (2026-11-16): hidden upstream screens
 acceptLanguage.languages(languages);
 
 // This function can be marked `async` if using `await` inside
@@ -164,6 +165,11 @@ export async function proxy(request: NextRequest) {
         });
       }
       return redirect;
+    }
+    // OURS (2026-11-16): typed addresses of hidden upstream screens go to ours
+    const oursRedirect = hiddenScreenRedirect(nextUrl.pathname);
+    if (oursRedirect) {
+      return NextResponse.redirect(new URL(oursRedirect + nextUrl.search, nextUrl.href));
     }
     if (nextUrl.pathname === '/') {
       return NextResponse.redirect(

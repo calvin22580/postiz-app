@@ -1,7 +1,7 @@
 // OURS: our fork's API routes. Registered with one line in app.module.ts.
 // Same auth as upstream's signed-in routes (AuthMiddleware sets the org).
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthMiddleware } from '@gitroom/backend/services/auth/auth.middleware';
 import { BusinessProfileController } from '@gitroom/backend/ours/business.profile.controller';
 import { BusinessProfileService } from '@gitroom/nestjs-libraries/ours/profile/business.profile.service';
@@ -26,6 +26,9 @@ import { PerformanceController } from '@gitroom/backend/ours/performance.control
 import { PerformanceService } from '@gitroom/nestjs-libraries/ours/performance/performance.service';
 import { PerformanceRepository } from '@gitroom/nestjs-libraries/ours/performance/performance.repository';
 import { DirectPostingGuard } from '@gitroom/backend/ours/direct.posting.guard';
+import { ErasureService } from '@gitroom/nestjs-libraries/ours/erasure/erasure.service';
+import { ErasureRepository } from '@gitroom/nestjs-libraries/ours/erasure/erasure.repository';
+import { ErasureInterceptor } from '@gitroom/backend/ours/erasure.interceptor';
 
 const authenticatedController = [
   BusinessProfileController,
@@ -55,6 +58,8 @@ const authenticatedController = [
     PlanRepository,
     PerformanceService,
     PerformanceRepository,
+    ErasureService,
+    ErasureRepository,
     // Milestone 7: our plan's channel limit on upstream's "add a channel"
     // routes (global, so upstream's modules need no change)
     {
@@ -66,6 +71,12 @@ const authenticatedController = [
     {
       provide: APP_GUARD,
       useClass: DirectPostingGuard,
+    },
+    // Pre-launch: erase the data upstream only marks as deleted, straight
+    // after an account is deleted or a channel disconnected
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ErasureInterceptor,
     },
   ],
 })

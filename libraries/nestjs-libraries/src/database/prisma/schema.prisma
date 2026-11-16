@@ -2051,3 +2051,21 @@ model OursPostPerformance {
   @@index([organizationId])
   @@map("ours_post_performance")
 }
+
+// Pre-launch (16/11/2026): which deleted organisations and disconnected
+// channels have had their data erased (see ours/erasure). Upstream only marks
+// them deleted; this records that our erasure ran, so it runs once each and a
+// failed one is retried on the next sweep.
+model OursErasure {
+  id             String   @id @default(uuid())
+  organizationId String
+  // "organisation" or "channel"
+  kind           String
+  // the Organization or Integration id
+  targetId       String
+  erasedAt       DateTime @default(now())
+
+  @@unique([kind, targetId])
+  @@index([organizationId])
+  @@map("ours_erasure")
+}

@@ -111,6 +111,12 @@ connectors, so customers do not see them:
   revoke apps they have authorised.
 - Onboarding: the "Connect Agents" step (onboarding goes Connect Channels, then Watch Tutorial)
 - Billing page header: the "Developers" link
+- Settings: the "Webhooks" tab (sends post data to any address; a developer feature)
+- Left menu and typed addresses: upstream's "Agent" (`/agents`, needs an OpenAI
+  key and can't schedule since M8) goes to the calendar, "Analytics"
+  (`/analytics`) to "What worked", "Billing" (`/billing`, upstream's USD Stripe
+  screen) to "Plan and usage", and the "Affiliate" link (upstream's own
+  programme) is gone. The redirects are in `proxy.ts`, so a bookmark lands on our screen.
 
 Set `NEXT_PUBLIC_SHOW_DEVELOPER_TOOLS=true` to show them again. Nothing is
 deleted, and the backend public API, MCP server and OAuth apps are unchanged
@@ -368,3 +374,33 @@ Screen: `/results` ("What worked" in the menu). Code:
 | `OURS_ALLOW_DIRECT_POSTING` | `false` | `true` lets the public API, CLI and MCP/agent schedule posts directly again (skipping approval). Leave off for customers. |
 
 API: `GET /ours/performance`.
+
+## Deleting data (pre-launch)
+
+Upstream only marks a deleted account's organisation and a disconnected
+channel as deleted. Ours then erases the data, so the data deletion page is true:
+
+- **Account deleted** (Settings > Global Settings > Delete Account): our
+  business profile, captions, weeks, brand kit, UK date choices and post
+  results are deleted; upstream's post text, comments, signatures, sets,
+  webhooks, auto-post feeds, plugs, error logs and notifications are deleted or
+  emptied; uploaded files and approved graphics are removed from storage; stored
+  third-party keys and app tokens are hashed or cleared; the organisation is
+  renamed "Deleted organisation" and its API key cleared; tags, customer
+  names, video clippings and OAuth app secrets are emptied too. Upstream already
+  hashes the user's details and the channels' tokens.
+- **Channel disconnected**: its tokens, profile and picture are hashed or
+  cleared. Its name and internal id stay, so connecting the same page again
+  revives it cleanly; disconnecting it again erases it again.
+- Kept: our AI cost log, plan and usage counters (billing records, no customer
+  content), and the emptied upstream rows other rows point at.
+- When: straight after upstream's delete route answers (a global interceptor,
+  no upstream edit), when the backend starts, and once a day. Each organisation
+  and channel is erased once (`ours_erasure`) and a failed one is retried.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `OURS_ERASURE_SWEEP` | on | `false` turns off the start-up and daily sweep (the erasure straight after a delete still runs). |
+
+The browser test `prelaunch.spec.ts` checks the database directly, at
+`E2E_DATABASE_URL` (default: the local dev database).

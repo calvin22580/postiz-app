@@ -35,7 +35,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <html>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <BrandStyle /> {/* OURS (2026-11-15): brand colour tokens */}
+        {/* OURS (2026-11-15): brand colour tokens; no text node beside it (hydration warning, fixed 2026-11-16) */}
+        <BrandStyle />
         {!!process.env.DATAFAST_WEBSITE_ID && (
           <Script
             data-website-id={process.env.DATAFAST_WEBSITE_ID}

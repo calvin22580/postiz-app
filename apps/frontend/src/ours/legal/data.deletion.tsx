@@ -28,6 +28,21 @@ export const DataDeletion: FC<{ facts: LegalFacts }> = ({ facts }) => {
         and LinkedIn. You do not need to give a reason.
       </p>
 
+      <Section id="yourself" title="Delete it yourself">
+        <List>
+          <li>
+            <strong>Your whole account:</strong> sign in, open Settings, then
+            Global Settings, and choose Delete Account. Everything listed under
+            &quot;What we delete&quot; is deleted straight away.
+          </li>
+          <li>
+            <strong>One connected account</strong>, such as your Facebook
+            Page: disconnect it in {name}. Its access tokens and profile
+            details are deleted straight away.
+          </li>
+        </List>
+      </Section>
+
       <Section id="request" title="Ask us to delete your data">
         <Steps>
           <li>
