@@ -57,7 +57,7 @@ Needs Docker running and a Wrangler login (`pnpm exec wrangler login`) on an acc
 
 ```bash
 cd ours/deploy/cloudflare
-pnpm install --ignore-workspace
+pnpm install                                 # uses this folder's own pnpm-workspace.yaml (pnpm 11 build approvals)
 pnpm exec wrangler secret put JWT_SECRET   # repeat for each secret above (first time only)
 pnpm run deploy                             # builds the image (needs about 4 GB RAM for Docker), pushes, deploys
 ```
