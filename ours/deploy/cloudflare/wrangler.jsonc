@@ -43,7 +43,7 @@
     "STORAGE_PROVIDER": "cloudflare",
     "CLOUDFLARE_BUCKETNAME": "tidepost-media",
     "CLOUDFLARE_REGION": "auto",
-    "CLOUDFLARE_BUCKET_URL": "https://media.steadylamp.com/",
+    "CLOUDFLARE_BUCKET_URL": "https://media.steadylamp.com",
     "ENCRYPTION_PROVIDER": "local",
     "DISABLE_REGISTRATION": "true",
     "API_LIMIT": "30",

@@ -13,9 +13,11 @@ container ─▶ R2 bucket tidepost-media (media.steadylamp.com)
 ```
 
 - **One container, on 24/7.** A cron trigger calls the Durable Object every minute. It starts the container if it isn't running (first deploy, crash, Cloudflare host restart). After a deploy, it replaces the container when the image has changed.
-- **Nothing important lives on the container's disk.** The disk is wiped on every restart. Data lives in Postgres, scheduled posts in Temporal Cloud, and media in R2. Redis is a cache.
+- **Nothing important lives on the container's disk.** The disk is wiped on every restart. Data lives in Postgres, scheduled posts in Temporal Cloud, and media in R2.
 - **Cold start:** about 2 to 5 minutes, covering the schema push and three Node apps. Until it's ready, visitors see a "Just a moment" page that refreshes itself.
 - **Size:** 1 vCPU, 4 GiB memory, 16 GB disk (`INSTANCE` in `src/index.ts`).
+- **Redis** holds a cache and short-lived upload sessions in memory. A restart only interrupts uploads that are in progress.
+- **Upstream sync:** the Dockerfile copies a fixed list of root files rather than everything, so a stray `.env` can never reach the image. When an upstream release changes `Dockerfile.dev` or adds a root file its build needs, update `Dockerfile` here to match.
 - **Upstream files:** none changed. `Dockerfile` here is our own copy of upstream's `Dockerfile.dev` steps. It adds Redis, copies only the folders the build needs, and rewrites one header in the copied `nginx.conf` at build time.
 
 ## Settings
@@ -36,6 +38,18 @@ Plain settings are in `wrangler.jsonc` under `vars`. Secrets are set on the Work
 Every string var and secret on the Worker is passed to the container as an environment variable, so a new app setting only needs `vars` or a new secret. No code change is needed.
 
 This environment is a **demo for platform app reviews**: `SANDBOX_CHANNEL_ENABLED=true` (always labelled), `OURS_BILLING_MODE=test`, `DISABLE_REGISTRATION=true`. There are no Facebook, Instagram or LinkedIn keys until approvals land, and no `ANTHROPIC_API_KEY` yet (AI features use their demo fallbacks).
+
+## One-time Temporal Cloud setup
+
+With `TEMPORAL_TLS=true`, upstream skips creating its search attributes (`temporal.register.ts`), and Temporal Cloud rejects post workflows without them. Add them once to the namespace, as Keyword attributes:
+
+```bash
+brew install temporalio/brew/tcld
+tcld --api-key "$TEMPORAL_API_KEY" namespace search-attributes add \
+  -n "$TEMPORAL_NAMESPACE" --sa "organizationId=Keyword" --sa "postId=Keyword"
+```
+
+Or add them in the Temporal Cloud web UI (Namespace → Search Attributes).
 
 ## Deploy
 

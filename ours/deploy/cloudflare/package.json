@@ -4,7 +4,7 @@
   "description": "OURS: Cloudflare Containers deployment of the app. Kept outside the pnpm workspace so upstream's package.json and lockfile stay untouched.",
   "scripts": {
     "types": "wrangler types",
-    "check": "tsc --noEmit",
+    "check": "wrangler types && tsc --noEmit",
     "deploy": "wrangler deploy",
     "logs": "wrangler tail"
   },

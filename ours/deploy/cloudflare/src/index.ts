@@ -28,15 +28,18 @@ type Env = {
 export class AppContainer extends DurableObject<Env> {
   private starting?: Promise<void>;
   private ready = false;
+  // Bumped when a container is replaced, so a start-up check for the old one stops.
+  private generation = 0;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     const container = ctx.container;
     if (container?.running) {
-      // A restarted Durable Object loses the timeout; set it again.
+      // A restarted Durable Object loses the timeout and the exit watch; set them again.
       void ctx.blockConcurrencyWhile(() =>
         container.setInactivityTimeout(INACTIVITY_TIMEOUT_MS)
       );
+      this.watch();
     }
   }
 
@@ -78,6 +81,7 @@ export class AppContainer extends DurableObject<Env> {
     if (container.running && startedWith && startedWith !== current) {
       console.log('New image deployed, replacing the running container');
       this.ready = false;
+      this.generation++;
       this.starting = undefined;
       await container.destroy();
     }
@@ -92,13 +96,19 @@ export class AppContainer extends DurableObject<Env> {
     if (this.ready && container.running) {
       return Promise.resolve();
     }
-    this.starting ??= this.startAndWait().finally(() => {
-      this.starting = undefined;
-    });
+    if (!this.starting) {
+      const generation = this.generation;
+      const starting: Promise<void> = this.startAndWait(generation).finally(() => {
+        if (this.starting === starting) {
+          this.starting = undefined;
+        }
+      });
+      this.starting = starting;
+    }
     return this.starting;
   }
 
-  private async startAndWait(): Promise<void> {
+  private async startAndWait(generation: number): Promise<void> {
     const container = this.ctx.container!;
     this.ready = false;
     if (!container.running) {
@@ -118,6 +128,9 @@ export class AppContainer extends DurableObject<Env> {
     const port = container.getTcpPort(PORT);
     const deadline = Date.now() + READY_TIMEOUT_MS;
     while (Date.now() < deadline) {
+      if (generation !== this.generation) {
+        throw new Error('Container was replaced during start-up');
+      }
       if ((await answers(port, '/')) && (await answers(port, '/api/'))) {
         this.ready = true;
         return;
@@ -128,13 +141,16 @@ export class AppContainer extends DurableObject<Env> {
   }
 
   private watch(): void {
+    const generation = this.generation;
     this.ctx.waitUntil(
       this.ctx.container!
         .monitor()
         .then(() => console.log('Container exited'))
         .catch((err: unknown) => console.error('Container stopped with an error', err))
         .finally(() => {
-          this.ready = false;
+          if (generation === this.generation) {
+            this.ready = false;
+          }
         })
     );
   }
