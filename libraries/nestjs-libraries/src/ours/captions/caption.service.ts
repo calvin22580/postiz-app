@@ -25,6 +25,7 @@ import {
   StoredCaptionWeek,
 } from '@gitroom/nestjs-libraries/ours/captions/caption.repository';
 import {
+  CAPTION_PLATFORMS,
   CaptionFact,
   CaptionPlatform,
   captionTimezone,
@@ -35,7 +36,10 @@ import {
   scheduledFor,
   toneFromProfile,
 } from '@gitroom/nestjs-libraries/ours/captions/caption.plan';
-import { groundCaptions } from '@gitroom/nestjs-libraries/ours/captions/caption.grounding';
+import {
+  groundCaptions,
+  unsupportedDetails,
+} from '@gitroom/nestjs-libraries/ours/captions/caption.grounding';
 import {
   CaptionWriter,
   CaptionWriterError,
@@ -61,12 +65,19 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 export const CAPTIONS_FEATURE = 'captions';
+export const CAPTION_REWRITE_FEATURE = 'caption-rewrite';
+// Each AI rewrite is a billed call, so a caption can be rewritten a few times
+// only; after that the owner can still edit it themselves.
+export const MAX_REWRITES = 5;
 const STALE_AFTER_MS = 10 * 60 * 1000;
 // Leave the scheduler a little time to pick a post up.
 const MIN_LEAD_MS = 5 * 60 * 1000;
 
+export const captionWriterName = (): CaptionWriter['name'] =>
+  process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'demo';
+
 export const createCaptionWriter = (): CaptionWriter =>
-  process.env.ANTHROPIC_API_KEY
+  captionWriterName() === 'anthropic'
     ? new AnthropicCaptionWriter()
     : new DemoCaptionWriter();
 
@@ -337,6 +348,131 @@ export class CaptionService {
     return this.getWeek(orgId);
   }
 
+  // Milestone 5: the owner rewrites a caption in their own words. It is their
+  // claim about their own business, so it is not dropped like AI text, but
+  // the screen points out details the profile doesn't have (see present()).
+  async editText(orgId: string, draftId: string, text: string) {
+    const draft = await this.waitingDraft(orgId, draftId);
+    const clean = text.replace(/\r\n/g, '\n').trim();
+    const maxLength =
+      CAPTION_PLATFORMS.find((p) => p.key === draft.platform)?.maxLength || 0;
+    if (!clean) {
+      throw new HttpException('Write something for this post, or reject it.', 400);
+    }
+    if (clean.length > maxLength) {
+      throw new HttpException(
+        `This post is too long. Keep it under ${maxLength} characters.`,
+        400
+      );
+    }
+    if (!(await this._captionRepository.editText(orgId, draftId, clean))) {
+      throw new HttpException('This post can only be changed while it is waiting for your approval.', 400);
+    }
+    return this.getWeek(orgId);
+  }
+
+  // A rejected caption is never scheduled. It stays on the screen, so the
+  // owner can bring it back.
+  async reject(orgId: string, draftId: string) {
+    await this.waitingDraft(orgId, draftId);
+    if (!(await this._captionRepository.reject(orgId, draftId))) {
+      throw new HttpException('This post can only be rejected while it is waiting for your approval.', 400);
+    }
+    return this.getWeek(orgId);
+  }
+
+  async restore(orgId: string, draftId: string) {
+    if (!(await this._captionRepository.getDraft(orgId, draftId))) {
+      throw new HttpException('Caption not found', 404);
+    }
+    if (!(await this._captionRepository.restore(orgId, draftId))) {
+      throw new HttpException('Only a rejected post can be brought back.', 400);
+    }
+    return this.getWeek(orgId);
+  }
+
+  // A new version of one caption, from the profile as it is now. The new text
+  // goes through the same checks as the week; if it fails them the current
+  // version is kept. Every call is logged against the organisation.
+  async rewrite(
+    orgId: string,
+    draftId: string,
+    note?: string,
+    writer: CaptionWriter = createCaptionWriter()
+  ) {
+    const draft = await this.waitingDraft(orgId, draftId);
+    const { profile } = await this._businessProfileService.getProfile(orgId);
+    if (!profile || profile.status !== 'READY') {
+      throw new HttpException('Your business profile is being updated. Try again when it is ready.', 400);
+    }
+    const fields = profile.fields as ProfileFields;
+    const facts = factsFromProfile(fields);
+    if (!(await this._captionRepository.claimRewrite(orgId, draftId, MAX_REWRITES))) {
+      throw new HttpException(
+        `This post has already been rewritten ${MAX_REWRITES} times. You can still edit it yourself.`,
+        400
+      );
+    }
+
+    let output;
+    try {
+      output = await writer.rewrite({
+        facts,
+        tone: toneFromProfile(fields),
+        day: dayjs(draft.scheduledFor).tz(captionTimezone()).format('dddd'),
+        platform: draft.platform as CaptionPlatform,
+        theme: draft.theme,
+        current: draft.text,
+        note,
+        attempt: draft.rewriteCount,
+      });
+    } catch (e) {
+      if (e instanceof CaptionWriterWithUsageError) {
+        await this.logUsages(orgId, e.usages, CAPTION_REWRITE_FEATURE);
+      }
+      if (e instanceof CaptionWriterError) {
+        throw new HttpException(e.message, 400);
+      }
+      this._logger.error(`Caption rewrite failed for org=${orgId} draft=${draftId}: ${(e as Error)?.stack}`);
+      throw new HttpException('Something went wrong while writing a new version. Please try again.', 400);
+    }
+    await this.logUsages(orgId, output.usages, CAPTION_REWRITE_FEATURE);
+
+    const { captions, reasons } = groundCaptions(output.raw, facts, 1);
+    const fresh = captions.find((c) => c.platform === draft.platform);
+    if (!fresh || fresh.text === draft.text) {
+      this._logger.log(
+        `Caption rewrite for org=${orgId} draft=${draftId} not kept${reasons.length ? ` (${reasons.join('; ')})` : ''}`
+      );
+      throw new HttpException(
+        'We couldn’t write a new version we were sure about, so we kept the current one. Try again, or edit it yourself.',
+        400
+      );
+    }
+    const saved = await this._captionRepository.saveRewrite(orgId, draftId, {
+      text: fresh.text,
+      facts: fresh.facts.map((f) => ({ id: f.id, field: f.field, value: f.value })),
+    });
+    if (!saved) {
+      throw new HttpException('This post was approved or rejected while we were writing, so it was left as it is.', 409);
+    }
+    return this.getWeek(orgId);
+  }
+
+  private async waitingDraft(orgId: string, draftId: string) {
+    const draft = await this._captionRepository.getDraft(orgId, draftId);
+    if (!draft) {
+      throw new HttpException('Caption not found', 404);
+    }
+    if (draft.status === OursCaptionStatus.APPROVED) {
+      throw new HttpException('This post is already approved and scheduled.', 400);
+    }
+    if (draft.status === OursCaptionStatus.REJECTED) {
+      throw new HttpException('Bring this post back first.', 400);
+    }
+    return draft;
+  }
+
   // The layout a caption's graphic uses: the owner's choice, or one a day,
   // rotating through the layouts. Null means no graphic.
   graphicLayoutFor(draft: Pick<StoredCaptionDraft, 'graphicLayout' | 'scheduledFor'>): GraphicLayout | null {
@@ -392,10 +528,11 @@ export class CaptionService {
 
   private async logUsages(
     orgId: string,
-    usages: Parameters<AiUsageService['logCall']>[2][]
+    usages: Parameters<AiUsageService['logCall']>[2][],
+    feature = CAPTIONS_FEATURE
   ) {
     for (const usage of usages) {
-      await this._aiUsageService.logCall(orgId, CAPTIONS_FEATURE, usage);
+      await this._aiUsageService.logCall(orgId, feature, usage);
     }
   }
 
@@ -405,6 +542,7 @@ export class CaptionService {
     profile?: { fields: unknown; updatedAt: Date | string } | null
   ) {
     const fields = profile?.fields as ProfileFields | undefined;
+    const profileFacts = fields ? factsFromProfile(fields) : [];
     const drawnLayout = (d: StoredCaptionDraft) => {
       const wanted = this.graphicLayoutFor(d);
       if (!wanted || !fields) return null;
@@ -418,6 +556,9 @@ export class CaptionService {
       errorMessage: week.errorMessage,
       demo: week.writer === 'demo',
       droppedCount: week.droppedCount,
+      // rewrites come from the demo writer when no AI service is connected
+      demoRewrites: captionWriterName() === 'demo',
+      maxRewrites: MAX_REWRITES,
       captions: drafts.map((d) => ({
         id: d.id,
         platform: d.platform,
@@ -429,6 +570,13 @@ export class CaptionService {
         channelId: d.integrationId,
         postId: d.postId,
         approvedAt: d.approvedAt,
+        editedAt: d.editedAt,
+        rejectedAt: d.rejectedAt,
+        rewritesLeft: Math.max(0, MAX_REWRITES - d.rewriteCount),
+        // details in the owner's own words that the profile doesn't have:
+        // shown as a reminder to check, never removed
+        notInProfile:
+          d.editedAt && fields ? unsupportedDetails(d.text, profileFacts) : [],
         graphic: {
           choice: d.graphicLayout || 'auto',
           layout: drawnLayout(d),

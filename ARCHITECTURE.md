@@ -114,7 +114,9 @@ Milestone 4 added `OursBrandKit` (one per organisation: brand colour, and the ow
 
 ## Approval before scheduling (Milestone 3)
 
-Captions live in our own tables until the owner approves one. Approval calls upstream's `PostsService.createPost` (type `schedule`) for that single caption, so the normal scheduler and workflows take over from there. Until the review screen (Milestone 5), approval only accepts a Sandbox channel, and nothing else in our code creates posts.
+Captions live in our own tables until the owner approves one. Approval calls upstream's `PostsService.createPost` (type `schedule`) for that single caption, so the normal scheduler and workflows take over from there. Approval only accepts a Sandbox channel, and nothing else in our code creates posts.
+
+Milestone 5 (review screen) kept the Sandbox-only rule on purpose. Real channels need per-provider post settings (for example Instagram's post type, which also needs an image) that can't be tested until our developer apps are approved, so a switch to turn them on now would switch on untested code. The rule lives in one place, `CaptionService.getChannels`; when real channels arrive, add them there behind an explicit environment variable that is off by default. A caption is either waiting, approved (it has an upstream post and no longer changes in our tables) or rejected (never scheduled, can be brought back). Edits, rewrites and rejections only apply while a caption is waiting, enforced in the repository's `where` clause, so they can't race an approval.
 
 ## Post graphics (Milestone 4)
 

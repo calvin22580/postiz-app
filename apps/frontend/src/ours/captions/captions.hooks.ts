@@ -4,6 +4,7 @@ import useSWR from 'swr';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 
 export type CaptionWeekStatus = 'WRITING' | 'READY' | 'FAILED';
+export type CaptionStatus = 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
 
 export interface Caption {
   id: string;
@@ -12,10 +13,17 @@ export interface Caption {
   theme: string;
   text: string;
   facts: { field: string; value: string }[];
-  status: 'PENDING_APPROVAL' | 'APPROVED';
+  status: CaptionStatus;
   channelId: string | null;
   postId: string | null;
   approvedAt: string | null;
+  // set when the owner rewrote the text themselves
+  editedAt: string | null;
+  rejectedAt: string | null;
+  // AI rewrites still allowed for this caption
+  rewritesLeft: number;
+  // details in the owner's own wording that the profile doesn't have
+  notInProfile: string[];
   graphic: {
     // what the owner chose: automatic, a layout, or no graphic
     choice: string;
@@ -36,6 +44,9 @@ export interface CaptionWeek {
   errorMessage: string | null;
   demo: boolean;
   droppedCount: number;
+  // rewrites use prepared versions, not AI, when no AI service is connected
+  demoRewrites: boolean;
+  maxRewrites: number;
   captions: Caption[];
 }
 

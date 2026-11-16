@@ -1,7 +1,8 @@
 'use client';
-// OURS: "Your posts for next week". Captions written from the business
-// profile, grouped by day. Each one waits for the owner's approval; nothing is
-// scheduled until they approve it, and for now only on a Sandbox channel.
+// OURS: "Your posts for next week", the review screen. Captions written from
+// the business profile, grouped by day. Each one waits for the owner, who can
+// approve, edit, rewrite or reject it (Milestone 5). Nothing is scheduled
+// until they approve it, and for now only on a Sandbox channel.
 import { FC, useEffect, useState } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
@@ -19,13 +20,20 @@ import {
 } from '@gitroom/frontend/ours/profile/business.profile.hooks';
 import { useBrandKit } from '@gitroom/frontend/ours/graphics/graphics.hooks';
 import { BrandKitPanel } from '@gitroom/frontend/ours/graphics/brand.kit.panel';
-import { CaptionGraphic } from '@gitroom/frontend/ours/graphics/caption.graphic';
+import {
+  CaptionCard,
+  PLATFORMS,
+  PrimarySmallButton,
+  SecondaryButton,
+} from '@gitroom/frontend/ours/captions/caption.card';
 
-const PLATFORMS: Record<Caption['platform'], string> = {
-  facebook: 'Facebook',
-  instagram: 'Instagram',
-  linkedin: 'LinkedIn',
-};
+type Filter = 'all' | Caption['status'];
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'PENDING_APPROVAL', label: 'Waiting' },
+  { key: 'APPROVED', label: 'Approved' },
+  { key: 'REJECTED', label: 'Rejected' },
+];
 
 // weekStart is a calendar date (YYYY-MM-DD), not an instant
 const formatDay = (date: string) => newDayjs(date).format('dddd DD/MM/YYYY');
@@ -79,104 +87,6 @@ const LoadingState = () => (
   </div>
 );
 
-const CaptionCard: FC<{
-  caption: Caption;
-  channelId: string | null;
-  channelName: string | null;
-  brandVersion: string;
-  onApproved: () => void;
-}> = ({ caption, channelId, channelName, brandVersion, onApproved }) => {
-  const fetch = useFetch();
-  const [approving, setApproving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const approved = caption.status === 'APPROVED';
-
-  const approve = async () => {
-    setApproving(true);
-    setError(null);
-    const res = await fetch(`/ours/captions/${caption.id}/approve`, {
-      method: 'POST',
-      body: JSON.stringify({ integrationId: channelId }),
-    });
-    setApproving(false);
-    if (!res.ok) {
-      setError((await readError(res)) || 'We couldn’t approve this post. Please try again.');
-      return;
-    }
-    onApproved();
-  };
-
-  return (
-    <article
-      className="flex flex-col gap-[14px] rounded-[14px] border border-newBorder bg-newBgColor p-[20px]"
-      data-testid="caption-card"
-      data-platform={caption.platform}
-    >
-      <div className="flex items-center justify-between gap-[12px]">
-        <div className="flex items-center gap-[10px]">
-          <img
-            src={`/icons/platforms/${caption.platform}.png`}
-            alt=""
-            className="h-[24px] w-[24px] rounded-full"
-          />
-          <span className="text-[15px] font-[600]">{PLATFORMS[caption.platform]}</span>
-          <span className="text-[14px] text-textItemBlur">
-            {newDayjs(caption.scheduledFor).format('HH:mm')}
-          </span>
-        </div>
-        <span
-          data-testid="caption-status"
-          className={clsx(
-            'rounded-full px-[10px] py-[3px] text-[13px]',
-            approved ? 'border border-btnPrimary text-btnPrimary' : 'border border-newBorder text-textItemBlur'
-          )}
-        >
-          {approved ? 'Approved and scheduled' : 'Waiting for your approval'}
-        </span>
-      </div>
-      <div className="flex gap-[20px] mobile:flex-col">
-        <CaptionGraphic caption={caption} brandVersion={brandVersion} onChanged={onApproved} />
-        <div className="flex flex-1 flex-col gap-[14px] min-w-0">
-          <p className="whitespace-pre-wrap text-[15px] leading-[1.6]" data-testid="caption-text">
-            {caption.text}
-          </p>
-          {caption.facts.length > 0 && (
-            <p className="text-[13px] leading-[1.5] text-textItemBlur">
-              Based on your profile: {caption.facts.map((f) => f.value).join(' · ')}
-            </p>
-          )}
-        </div>
-      </div>
-      {error && (
-        <div role="alert" className="text-[14px]">
-          {error}
-        </div>
-      )}
-      {approved ? (
-        <p className="text-[13px] text-textItemBlur">
-          Scheduled on a Sandbox channel (test only). It will not be published to any real account.
-        </p>
-      ) : (
-        channelId && (
-          <div>
-            <button
-              type="button"
-              onClick={approve}
-              disabled={approving}
-              className={clsx(
-                'h-[38px] px-[16px] rounded-[8px] bg-btnPrimary text-white text-[14px] font-[500]',
-                approving && 'opacity-60'
-              )}
-            >
-              {approving ? 'Scheduling…' : `Approve and schedule on ${channelName}`}
-            </button>
-          </div>
-        )
-      )}
-    </article>
-  );
-};
-
 const ChannelBar: FC<{
   channelId: string | null;
   setChannelId: (id: string) => void;
@@ -223,6 +133,137 @@ const ChannelBar: FC<{
   );
 };
 
+// Approving everything at once goes through the same approve call, one post
+// at a time, so each one is checked (and counted) exactly like a single click.
+const ApproveAll: FC<{
+  waiting: Caption[];
+  channelId: string;
+  channelName: string | null;
+  onChanged: () => void;
+}> = ({ waiting, channelId, channelName, onChanged }) => {
+  const fetch = useFetch();
+  const [confirming, setConfirming] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
+  const [result, setResult] = useState<{ ok: number; failed: { caption: Caption; reason: string }[] } | null>(null);
+
+  const run = async () => {
+    setConfirming(false);
+    setResult(null);
+    const failed: { caption: Caption; reason: string }[] = [];
+    let ok = 0;
+    for (const [i, caption] of waiting.entries()) {
+      setProgress(i + 1);
+      const res = await fetch(`/ours/captions/${caption.id}/approve`, {
+        method: 'POST',
+        body: JSON.stringify({ integrationId: channelId }),
+      });
+      if (res.ok) {
+        ok++;
+      } else {
+        failed.push({ caption, reason: (await readError(res)) || 'We couldn’t schedule it.' });
+      }
+    }
+    setProgress(null);
+    setResult({ ok, failed });
+    onChanged();
+  };
+
+  if (!waiting.length && progress === null && !result) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col gap-[10px]">
+      {progress !== null ? (
+        <span className="text-[14px]" aria-live="polite" data-testid="captions-approve-all-progress">
+          Approving {progress} of {waiting.length}…
+        </span>
+      ) : confirming ? (
+        <div className="flex flex-wrap items-center gap-[10px]" data-testid="captions-approve-all-confirm">
+          <span className="text-[14px]">
+            Schedule {waiting.length} {waiting.length === 1 ? 'post' : 'posts'} on {channelName}?
+          </span>
+          <PrimarySmallButton testId="captions-approve-all-yes" onClick={run}>
+            Yes, approve {waiting.length === 1 ? 'it' : 'all'}
+          </PrimarySmallButton>
+          <SecondaryButton onClick={() => setConfirming(false)}>Cancel</SecondaryButton>
+        </div>
+      ) : (
+        waiting.length > 0 && (
+          <div>
+            <PrimarySmallButton testId="captions-approve-all" onClick={() => setConfirming(true)}>
+              Approve all {waiting.length} waiting
+            </PrimarySmallButton>
+          </div>
+        )
+      )}
+      {result && (
+        <div role="status" className="text-[14px] leading-[1.6]" data-testid="captions-approve-all-result">
+          {result.ok > 0 && `Approved and scheduled ${result.ok} ${result.ok === 1 ? 'post' : 'posts'}. `}
+          {result.failed.length > 0 && (
+            <>
+              {result.failed.length} couldn’t be scheduled:
+              <ul className="list-disc pl-[20px]">
+                {result.failed.map(({ caption, reason }) => (
+                  <li key={caption.id}>
+                    {newDayjs(caption.scheduledFor).format('dddd')} {PLATFORMS[caption.platform].label}: {reason}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ReviewBar: FC<{
+  week: CaptionWeek;
+  filter: Filter;
+  setFilter: (f: Filter) => void;
+  channelId: string | null;
+  channelName: string | null;
+  onChanged: () => void;
+}> = ({ week, filter, setFilter, channelId, channelName, onChanged }) => {
+  const count = (status: Filter) =>
+    status === 'all' ? week.captions.length : week.captions.filter((c) => c.status === status).length;
+  const waiting = week.captions.filter(
+    // a post whose time has passed can't be scheduled any more
+    (c) => c.status === 'PENDING_APPROVAL' && new Date(c.scheduledFor).getTime() > Date.now() + 5 * 60 * 1000
+  );
+  return (
+    <div
+      className="flex flex-col gap-[14px] rounded-[14px] border border-newBorder bg-newBgColor p-[16px]"
+      data-testid="captions-review-bar"
+    >
+      <div role="tablist" aria-label="Show posts" className="flex flex-wrap gap-[8px]">
+        {FILTERS.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            role="tab"
+            aria-selected={filter === f.key}
+            data-testid={`captions-filter-${f.key}`}
+            onClick={() => setFilter(f.key)}
+            className={clsx(
+              'h-[34px] px-[14px] rounded-full border text-[14px]',
+              filter === f.key
+                ? 'border-btnPrimary bg-btnPrimary text-white'
+                : 'border-newBorder hover:bg-newBgColorInner'
+            )}
+          >
+            {f.label} <span className={clsx(filter === f.key ? 'opacity-80' : 'text-textItemBlur')}>{count(f.key)}</span>
+          </button>
+        ))}
+      </div>
+      {channelId && (
+        <ApproveAll waiting={waiting} channelId={channelId} channelName={channelName} onChanged={onChanged} />
+      )}
+    </div>
+  );
+};
+
 const WeekList: FC<{ week: CaptionWeek; onChanged: () => void }> = ({ week, onChanged }) => {
   const { data: channels } = useCaptionChannels();
   const { data: brandKit } = useBrandKit();
@@ -232,6 +273,7 @@ const WeekList: FC<{ week: CaptionWeek; onChanged: () => void }> = ({ week, onCh
     if (!channelId && channels?.channels.length) setChannelId(channels.channels[0].id);
   }, [channels, channelId]);
   const channelName = channels?.channels.find((c) => c.id === channelId)?.name || null;
+  const [filter, setFilter] = useState<Filter>('all');
 
   const days = week.captions.reduce((all, c) => {
     const key = newDayjs(c.scheduledFor).format('YYYY-MM-DD');
@@ -239,13 +281,19 @@ const WeekList: FC<{ week: CaptionWeek; onChanged: () => void }> = ({ week, onCh
     return all;
   }, {} as Record<string, Caption[]>);
   const waiting = week.captions.filter((c) => c.status === 'PENDING_APPROVAL').length;
+  const approvedCount = week.captions.filter((c) => c.status === 'APPROVED').length;
+  const shown = Object.entries(days)
+    .map(([day, captions]) => [day, captions.filter((c) => filter === 'all' || c.status === filter)] as const)
+    .filter(([, captions]) => captions.length);
 
   return (
     <>
       <p className="text-[15px] leading-[1.6] text-textItemBlur" data-testid="captions-summary">
         {waiting
           ? `${waiting} of ${week.captions.length} posts are waiting for your approval.`
-          : `All ${week.captions.length} posts are approved.`}{' '}
+          : approvedCount === week.captions.length
+          ? `All ${week.captions.length} posts are approved.`
+          : `Nothing is waiting for you. ${approvedCount} of ${week.captions.length} posts are approved.`}{' '}
         Nothing is posted until you approve it.
       </p>
       {week.demo && (
@@ -274,7 +322,24 @@ const WeekList: FC<{ week: CaptionWeek; onChanged: () => void }> = ({ week, onCh
       )}
       <BrandKitPanel />
       <ChannelBar channelId={channelId} setChannelId={setChannelId} />
-      {Object.entries(days).map(([day, captions]) => (
+      <ReviewBar
+        week={week}
+        filter={filter}
+        setFilter={setFilter}
+        channelId={channelId}
+        channelName={channelName}
+        onChanged={onChanged}
+      />
+      {!shown.length && (
+        <p className="text-[15px] text-textItemBlur" data-testid="captions-filter-empty">
+          {filter === 'REJECTED'
+            ? 'You haven’t rejected any posts.'
+            : filter === 'APPROVED'
+            ? 'You haven’t approved any posts yet.'
+            : 'Nothing is waiting for your approval.'}
+        </p>
+      )}
+      {shown.map(([day, captions]) => (
         <section key={day} className="flex flex-col gap-[12px]" data-testid="caption-day">
           <div className="flex flex-col gap-[2px]">
             <h2 className="text-[18px] font-[600]">{formatDay(day)}</h2>
@@ -286,10 +351,11 @@ const WeekList: FC<{ week: CaptionWeek; onChanged: () => void }> = ({ week, onCh
             <CaptionCard
               key={c.id}
               caption={c}
+              week={week}
               channelId={channelId}
               channelName={channelName}
               brandVersion={brandVersion}
-              onApproved={onChanged}
+              onChanged={onChanged}
             />
           ))}
         </section>
