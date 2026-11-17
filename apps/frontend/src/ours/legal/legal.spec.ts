@@ -12,6 +12,7 @@ import {
 import { PrivacyPolicy } from '@gitroom/frontend/ours/legal/privacy.policy';
 import { TermsOfService } from '@gitroom/frontend/ours/legal/terms.of.service';
 import { DataDeletion } from '@gitroom/frontend/ours/legal/data.deletion';
+import { About } from '@gitroom/frontend/ours/legal/about';
 
 const complete: Record<string, string> = {
   NEXT_PUBLIC_LEGAL_COMPANY_NUMBER: '01234567',
@@ -86,7 +87,7 @@ describe('legal pages', () => {
     expect(html).toContain('ico.org.uk/make-a-complaint');
   });
 
-  it('every page links to the other two and never names upstream', () => {
+  it('every page links to every public page and never names upstream', () => {
     for (const page of pages) {
       const html = render(page, legalFacts({}));
       for (const path of Object.values(legalPaths)) {
@@ -95,5 +96,28 @@ describe('legal pages', () => {
       // the repository URL (postiz-app) is fine; the product name is not
       expect(html).not.toMatch(/\bPostiz\b/);
     }
+  });
+});
+
+describe('about page', () => {
+  it('is a plain public page that links to the legal pages and log-in', () => {
+    const html = render(About, legalFacts({}));
+    // the website address given to Meta and LinkedIn: not a draft legal page
+    expect(html).not.toContain('data-testid="legal-draft"');
+    expect(html).not.toContain('[FILL IN');
+    for (const path of Object.values(legalPaths)) {
+      expect(html).toContain(`href="${path}"`);
+    }
+    expect(html).toContain('href="/auth/login"');
+    expect(html).toContain('mailto:support@steadylamp.com');
+    expect(html).not.toMatch(/\bPostiz\b/);
+  });
+
+  it('says what each connected platform is used for', () => {
+    const html = render(About, legalFacts({}));
+    for (const platform of ['Facebook Page', 'Instagram professional account', 'LinkedIn Page']) {
+      expect(html).toContain(platform);
+    }
+    expect(html).toContain('Nothing is published until the business owner has');
   });
 });

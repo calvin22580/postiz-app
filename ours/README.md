@@ -49,8 +49,11 @@ How it works, without editing upstream screens one by one:
 
 ## Legal pages
 
-Public pages, no sign-in needed: `/privacy.html`, `/terms.html` and
-`/data-deletion.html` (the URL to give Meta as "Data deletion instructions").
+Public pages, no sign-in needed: `/about.html` (what the service does and what
+each platform is used for; the website URL for the Meta and LinkedIn apps),
+`/privacy.html`, `/terms.html` and `/data-deletion.html` (the URL to give Meta
+as "Data deletion instructions"). The log-in and sign-up panel links to all four.
+Meta and LinkedIn setup and review pack: `ours/docs/platform-review/`.
 Top-level paths ending in `.html` are skipped by upstream's proxy, so every
 visitor and crawler reaches them without an upstream change.
 
