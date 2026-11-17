@@ -33,12 +33,9 @@ describe('legal facts', () => {
     expect(facts.companyName).toBe('Steady Lamp Ltd');
     expect(facts.contactEmail).toBe('support@steadylamp.com');
     expect(facts.reviewed).toBe(false);
-    expect(missingFacts(facts)).toEqual([
-      'companyNumber',
-      'registeredAddress',
-      'icoNumber',
-      'lastUpdated',
-    ]);
+    expect(facts.companyNumber).toBe('17533499');
+    expect(facts.registeredAddress).toBe('128 City Road, London, EC1V 2NX');
+    expect(missingFacts(facts)).toEqual(['icoNumber', 'lastUpdated']);
   });
 
   it('takes every value from the environment when set', () => {
@@ -60,7 +57,7 @@ describe('legal pages', () => {
       expect(html).toContain('[FILL IN: date published (DD/MM/YYYY)]');
     }
     expect(render(PrivacyPolicy, legalFacts({}))).toContain(
-      '[FILL IN: company number]'
+      '[FILL IN: ICO registration number]'
     );
   });
 

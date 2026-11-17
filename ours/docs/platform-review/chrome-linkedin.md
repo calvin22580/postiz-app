@@ -10,7 +10,7 @@ Important: LinkedIn does not let us re-apply with the same app after a rejection
 You are setting up a LinkedIn developer app for Tidepost, a social media scheduling service run by Steady Lamp Ltd (UK). Calvin is logged in. Work in a new tab. Rules:
 - Do NOT submit any access request form (Community Management API, Standard tier) without showing Calvin the filled-in form and getting a "yes" in chat. A rejection means starting again with a new app.
 - Never type a secret into chat. Copy the client secret only into the Cloudflare form in step 6.
-- If anything asks for a detail not given here (registered address, company number, phone), stop and ask Calvin.
+- If anything asks for a detail not given here (phone, or anything else not listed), stop and ask Calvin.
 - If a screen differs from these steps, do the closest equivalent and tell Calvin.
 
 Values:
@@ -39,7 +39,7 @@ Auth tab → OAuth 2.0 settings → Authorized redirect URLs → add both URLs a
 STEP 5. Products (this is a fact-finding step: report exactly what happens)
 Products tab:
 a. Find "Community Management API" → Request access. Open the form and FILL IT IN but DO NOT SUBMIT. Use:
-   - Legal name: Steady Lamp Ltd. Registered address: ask Calvin. Business email: support@steadylamp.com (verify it if asked; Calvin may need to click an email link). Website: https://steadylamp.com. Privacy policy: https://app.steadylamp.com/privacy.html
+   - Legal name: Steady Lamp Ltd. Registered address: 128 City Road, London, EC1V 2NX. Business email: support@steadylamp.com (verify it if asked; Calvin may need to click an email link). Website: https://steadylamp.com. Privacy policy: https://app.steadylamp.com/privacy.html
    - Use cases: Page Management and Page Analytics only.
    - Use case description (paste exactly):
      "Tidepost is a social media service for UK small businesses (1–20 staff), run by Steady Lamp Ltd. A business owner connects their company's LinkedIn Page through LinkedIn's OAuth flow. Tidepost drafts posts from the business's own website, the owner approves, edits or rejects each one, and approved posts are published to the LinkedIn Page at the planned time. Nothing is published without the owner's explicit approval. We then show the owner how each published post performed (impressions, reactions, comments and shares counts) so they can see what works. We use rw_organization_admin to list the Pages the member administers so they can choose one, and to read Page and post analytics; w_organization_social to publish approved posts as the Page; r_organization_social to read the published posts' social action counts. We do not message members, scrape profiles, target ads or sell or share LinkedIn data."

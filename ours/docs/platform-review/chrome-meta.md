@@ -10,11 +10,11 @@ Download `assets/app-icon-1024.png` from this folder first (GitHub → the file 
 You are setting up Meta developer apps for Tidepost, a social media scheduling service run by Steady Lamp Ltd (UK). Calvin is logged in. Work in a new tab. Follow these rules:
 - Do NOT submit anything for App Review, do NOT click Publish / Go Live, and do NOT start Business Verification without asking Calvin first in chat.
 - Never type a secret into chat or a note. Copy App IDs and secrets only into the Cloudflare form in step 5.
-- If a field asks for something not given here (phone number, company number, address), stop and ask Calvin.
+- If a field asks for something not given here (phone number, or anything else not listed), stop and ask Calvin.
 - If a screen looks different from these steps, do the closest equivalent and tell Calvin what you did.
 
 Values:
-- Business portfolio: Steady Lamp Ltd (create it if it doesn't exist, ask Calvin first)
+- Business portfolio: Steady Lamp Ltd (create it if it doesn't exist, ask Calvin first). Company number 17533499, registered office 128 City Road, London, EC1V 2NX
 - Contact email: support@steadylamp.com
 - App domain: app.steadylamp.com
 - Website / Site URL: https://app.steadylamp.com/about.html
