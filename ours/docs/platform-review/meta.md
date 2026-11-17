@@ -31,6 +31,24 @@ We use **one app, `Tidepost`** (Business type), with "Manage everything on your 
 
 A second app, "Tidepost Business" (App ID 1428592625924097), was created before this was found. Calvin's decision: leave it unused, don't delete it, and don't submit it for review.
 
+## Status (17/11/2026, from Calvin's Claude in Chrome report)
+
+| Item | State |
+|---|---|
+| App | `Tidepost`, App ID `1614622909955028` (not secret), Business type, unpublished (Development mode). Calvin is Administrator |
+| Business portfolio | Steady Lamp Ltd, portfolio ID `896366080169225`, **not verified** (Meta says it is eligible). Legal name, address, phone and website on the portfolio are blank; support@steadylamp.com pending confirmation |
+| Pages permissions | business_management, pages_show_list, public_profile, pages_manage_posts, pages_manage_engagement, pages_read_engagement, read_insights |
+| Instagram permissions ("API setup with Facebook login") | instagram_basic, instagram_content_publish, instagram_manage_comments, instagram_manage_insights, pages_show_list, pages_read_engagement, business_management. No messaging permissions |
+| Facebook Login for Business | Client OAuth on, Web OAuth on, Enforce HTTPS on, Strict Mode on, Login from devices off, JS SDK login off |
+| Redirect URIs | `https://app.steadylamp.com/integrations/social/facebook`, `https://app.steadylamp.com/integrations/social/instagram` |
+| Basic settings | App domain, privacy, terms, data deletion, Site URL and category set as in `settings.md`. **Icon not uploaded yet** |
+| Worker secrets | `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET` on Worker `tidepost-app` (Calvin added them). The Worker passes every string var and secret into the container, and the per-minute keep-alive restarts the container when a secret changes (`ours/deploy/cloudflare/src/index.ts`). Both the `facebook` and `instagram` providers read these two names. `INSTAGRAM_APP_*` deliberately not set |
+| Business Verification, Tech Provider, App Review | Not started. Meta says the Tech Provider choice can't be undone |
+
+Notes from the report:
+- Meta now labels "API setup with Facebook login" for Instagram as **legacy**. It still works; new features go only to "Unified login". Our `instagram` provider uses the Facebook Login flow, so nothing changes now, but watch for a deprecation date.
+- "Tidepost" is a placeholder name. Rename under App settings → Basic before going live if the brand changes. App names can't contain Instagram, Insta, Gram, FB or similar.
+
 ## Permissions and justification text
 
 The code checks that **every** permission in its list was granted (`checkScopes`), so ask for all of them, exactly these, at Advanced Access. Paste the text into each permission's "How will your app use this permission?" box. Each one describes what the app really does today.
