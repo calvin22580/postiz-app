@@ -4,7 +4,8 @@
 //   Durable Object.
 // - A cron trigger runs every minute and calls keepAlive(), so the container
 //   stays on 24/7 (the background worker and cron jobs live inside it), is
-//   restarted if it crashed, and is replaced when a new image is deployed.
+//   restarted if it crashed, and is replaced when a new image is deployed or
+//   a var or secret changes (for example after rotating a key).
 // - All string vars and secrets on this Worker are passed to the container as
 //   environment variables. Secrets are set with `wrangler secret put`, never in
 //   the repo. See README.md in this folder.
@@ -76,10 +77,10 @@ export class AppContainer extends DurableObject<Env> {
   // Called every minute by the cron trigger.
   async keepAlive(): Promise<void> {
     const container = this.ctx.container!;
-    const current = container.images.base;
-    const startedWith = await this.ctx.storage.get<string>('image');
-    if (container.running && startedWith && startedWith !== current) {
-      console.log('New image deployed, replacing the running container');
+    const current = await fingerprint(container.images.base, containerEnv(this.env));
+    const startedWith = await this.ctx.storage.get<string>('fingerprint');
+    if (container.running && startedWith !== current) {
+      console.log('New image or settings deployed, replacing the running container');
       this.ready = false;
       this.generation++;
       this.starting = undefined;
@@ -113,13 +114,14 @@ export class AppContainer extends DurableObject<Env> {
     this.ready = false;
     if (!container.running) {
       const image = container.images.base;
+      const env = containerEnv(this.env);
       container.start({
         image,
         instance: INSTANCE,
         enableInternet: true,
-        env: containerEnv(this.env),
+        env,
       });
-      await this.ctx.storage.put('image', image);
+      await this.ctx.storage.put('fingerprint', await fingerprint(image, env));
       this.watch();
     }
     await container.setInactivityTimeout(INACTIVITY_TIMEOUT_MS);
@@ -177,6 +179,15 @@ function containerEnv(env: Env): Record<string, string> {
     }
   }
   return out;
+}
+
+// A hash of the image and every value passed to the container, so a changed
+// secret restarts the container without the secret itself being stored.
+async function fingerprint(image: string, env: Record<string, string>): Promise<string> {
+  const sorted = Object.keys(env).sort().map((key) => [key, env[key]]);
+  const data = new TextEncoder().encode(JSON.stringify([image, sorted]));
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 function holdingPage(failed: boolean): Response {

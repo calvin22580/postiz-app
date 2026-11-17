@@ -12,7 +12,7 @@ container ─▶ PlanetScale Postgres (London)   container ─▶ Temporal Cloud
 container ─▶ R2 bucket tidepost-media-eu (media.steadylamp.com)
 ```
 
-- **One container, on 24/7.** A cron trigger calls the Durable Object every minute. It starts the container if it isn't running (first deploy, crash, Cloudflare host restart). After a deploy, it replaces the container when the image has changed.
+- **One container, on 24/7.** A cron trigger calls the Durable Object every minute. It starts the container if it isn't running (first deploy, crash, Cloudflare host restart). After a deploy, it replaces the container when the image or any var or secret has changed, so a rotated key takes effect within a minute or two.
 - **Nothing important lives on the container's disk.** The disk is wiped on every restart. Data lives in Postgres, scheduled posts in Temporal Cloud, and media in R2.
 - **Cold start:** about 2 to 5 minutes, covering the schema push and three Node apps. Until it's ready, visitors see a "Just a moment" page that refreshes itself.
 - **Size:** 1 vCPU, 4 GiB memory, 16 GB disk (`INSTANCE` in `src/index.ts`).
