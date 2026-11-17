@@ -24,7 +24,7 @@ Meta wants one screencast per permission showing "the end-to-end user experience
 7. Choose the Page. It appears in the left sidebar with its name and picture. Caption: "The Page is connected. Only its ID, name and picture are stored".
 
 ## Video 2: Publishing to the Page with a first comment
-**Attach to:** `pages_manage_posts`, `pages_manage_engagement`
+**Attach to:** `pages_manage_posts`, `pages_manage_engagement`, `pages_read_user_content` (dependency)
 
 1. Start logged in, Page already connected. Caption: "The owner writes a post and approves it".
 2. Click "Create Post". Select the Facebook Page avatar.
