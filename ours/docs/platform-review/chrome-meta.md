@@ -7,7 +7,7 @@
 ---
 
 ```text
-You are setting up Meta developer apps for Tidepost, a social media scheduling service run by Steady Lamp Ltd (UK). Work in a new tab. Follow these rules:
+You are setting up a Meta developer app for Tidepost, a social media scheduling service run by Steady Lamp Ltd (UK). Work in a new tab. Follow these rules:
 - Do NOT submit anything for App Review, do NOT click Publish / Go Live, and do NOT start Business Verification without asking Calvin first in chat.
 - Never type a secret into chat or a note. Copy App IDs and secrets only into the Cloudflare form in step 5.
 - If a field asks for something not given here (phone number, or anything else not listed), stop and ask Calvin.
@@ -38,15 +38,7 @@ f. Facebook Login for Business → Settings: Client OAuth login ON, Web OAuth lo
    Save.
 g. App roles: confirm Calvin's Facebook account is an Administrator.
 
-STEP 2. App 2, name "Tidepost for Instagram"
-a. Create app. Name "Tidepost for Instagram", same email, same business portfolio.
-b. Use case "Manage messaging and content on Instagram", choose "API setup with Instagram login".
-c. Permissions: instagram_business_basic, instagram_business_content_publish, instagram_business_manage_comments, instagram_business_manage_insights. Remove instagram_business_manage_messages if allowed; if not, leave it but tell Calvin.
-d. Instagram → API setup with Instagram login → Set up business login → Business login settings → OAuth redirect URIs:
-   https://app.steadylamp.com/integrations/social/instagram-standalone
-   (check the saved value has no trailing slash). Deauthorise / data deletion URLs if asked: https://app.steadylamp.com/data-deletion.html
-e. App settings → Basic: same domain, URLs, category and icon as App 1.
-f. On the "API setup with Instagram login" page, note where the Instagram app ID and Instagram app secret are (these are different from the Meta app ID).
+STEP 2. Do nothing with "Tidepost Business" (App ID 1428592625924097). Meta no longer offers Instagram login for new apps. Leave that app unused and do not delete it.
 
 STEP 3. Tech Provider
 In App 1's dashboard, find "Become a Tech Provider" / Access verification. Read Calvin the questions and requirements. Do not submit; Calvin decides.
@@ -58,9 +50,7 @@ STEP 5. Secrets into Cloudflare (no chat)
 dash.cloudflare.com → Workers & Pages → the Worker serving app.steadylamp.com (ask Calvin if unsure which) → Settings → Variables and Secrets → Add, type "Secret", for each:
    FACEBOOK_APP_ID = App 1 App ID (App settings → Basic)
    FACEBOOK_APP_SECRET = App 1 App secret
-   INSTAGRAM_APP_ID = App 2 Instagram app ID (from step 2f)
-   INSTAGRAM_APP_SECRET = App 2 Instagram app secret
 Deploy/save. Do not show the values in chat.
 
-STEP 6. Report to Calvin in chat (no secrets): both app names and App IDs (IDs are not secret), which permissions each app has and anything that could not be added or removed, the redirect URIs as saved, Business Verification status and what it needs, the Tech Provider requirements, and anything that looked different from these steps. Calvin will paste this report back to Claude.
+STEP 6. Report to Calvin in chat (no secrets): the Tidepost App ID (not secret), which permissions it has and anything that could not be added or removed, the redirect URIs as saved, Business Verification status and what it needs, the Tech Provider requirements, and anything that looked different from these steps. Calvin will paste this report back to Claude.
 ```

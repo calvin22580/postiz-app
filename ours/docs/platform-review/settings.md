@@ -24,15 +24,14 @@ Copied from the code (`{FRONTEND_URL}/integrations/social/{identifier}`).
 
 | App | Where in the dashboard | Add exactly |
 |---|---|---|
-| Meta app 1 (Facebook and Instagram via Facebook Login) | Facebook Login for Business → Settings → Valid OAuth Redirect URIs | `https://app.steadylamp.com/integrations/social/facebook` and `https://app.steadylamp.com/integrations/social/instagram` |
-| Meta app 2 (Instagram via Instagram Login) | Instagram → API setup with Instagram login → Set up business login → Business login settings → OAuth redirect URIs | `https://app.steadylamp.com/integrations/social/instagram-standalone` |
+| Meta app `Tidepost` (Facebook and Instagram via Facebook Login) | Facebook Login for Business → Settings → Valid OAuth Redirect URIs | `https://app.steadylamp.com/integrations/social/facebook` and `https://app.steadylamp.com/integrations/social/instagram` |
 | LinkedIn app | Auth → OAuth 2.0 settings → Authorized redirect URLs for your app | `https://app.steadylamp.com/integrations/social/linkedin-page` and `https://app.steadylamp.com/integrations/social/linkedin` |
 
 On Meta app 1, also set (Facebook Login for Business → Settings): Client OAuth login **on**, Web OAuth login **on**, Enforce HTTPS **on**, Use Strict Mode for redirect URIs **on**, Login from devices **off**, Login with the JavaScript SDK **off**.
 
-**Reconnect URLs.** When a customer reconnects a channel, Facebook, Instagram and personal LinkedIn send `…?refresh=<id>` on the end. Meta's strict mode and LinkedIn both match redirect URIs exactly. Test a reconnect after the first connect. If it fails, that is a code issue to fix in our files, not something to register (the id changes per channel).
+Instagram (Standalone) is not used: Meta no longer offers Instagram Login to new apps (see `meta.md`), so there is no `INSTAGRAM_APP_ID`/`INSTAGRAM_APP_SECRET` and no `instagram-standalone` redirect URI.
 
-Meta's docs warn the Instagram dashboard may add a trailing slash. Check the saved value has none.
+**Reconnect URLs.** When a customer reconnects a channel, Facebook, Instagram and personal LinkedIn send `…?refresh=<id>` on the end. Meta's strict mode and LinkedIn both match redirect URIs exactly. Test a reconnect after the first connect. If it fails, that is a code issue to fix in our files, not something to register (the id changes per channel).
 
 ## Secrets for the live site
 
@@ -40,10 +39,8 @@ Put these on the Cloudflare Worker that serves app.steadylamp.com (Workers & Pag
 
 | Secret | Comes from |
 |---|---|
-| `FACEBOOK_APP_ID` | Meta app 1 → App settings → Basic → App ID |
-| `FACEBOOK_APP_SECRET` | Meta app 1 → App settings → Basic → App secret |
-| `INSTAGRAM_APP_ID` | Meta app 2 → Instagram → API setup with Instagram login → **Instagram app ID** (not the Meta app ID) |
-| `INSTAGRAM_APP_SECRET` | Same page → **Instagram app secret** |
+| `FACEBOOK_APP_ID` | Meta app `Tidepost` → App settings → Basic → App ID |
+| `FACEBOOK_APP_SECRET` | Meta app `Tidepost` → App settings → Basic → App secret |
 | `LINKEDIN_CLIENT_ID` | LinkedIn app → Auth → Client ID |
 | `LINKEDIN_CLIENT_SECRET` | LinkedIn app → Auth → Primary Client Secret |
 

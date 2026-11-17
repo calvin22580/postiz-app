@@ -19,25 +19,23 @@ Sources, checked 16/11/2026:
 - The Instagram login button must be visible in the app and screencast and follow Meta's brand guidelines. Our "Add Channel" screen shows each platform's own logo and name.
 - Annual Data Use Checkup once approved.
 
-## Two Meta apps
+## One Meta app (Instagram Login is not available)
 
-Meta allows one Instagram setup per app ("If you want to implement both setups, create an app for each setup"). Our code has two Instagram channels with separate credentials (`FACEBOOK_APP_*` and `INSTAGRAM_APP_*`), so it already fits two apps.
+**17/11/2026:** Meta no longer offers "API setup with Instagram login" for newly created apps. Claude in Chrome saw "API setup with Instagram login is not available for newer apps" on the second app. New apps only get the unified login, which runs through Facebook Login for Business. So there is no separate Instagram app ID or secret, and upstream's **Instagram (Standalone)** channel (`instagram-standalone`, `INSTAGRAM_APP_*`) can't be used.
 
-| | App 1: `Tidepost` | App 2: `Tidepost for Instagram` |
-|---|---|---|
-| Type | Business | Business |
-| Use cases | "Manage everything on your Page" and "Manage messaging and content on Instagram" → **API setup with Facebook Login** | "Manage messaging and content on Instagram" → **API setup with Instagram Login** |
-| Channels it powers | Facebook Page (`facebook`), Instagram (Facebook Business) (`instagram`) | Instagram (Standalone) (`instagram-standalone`) |
-| Who it's for | Businesses whose Instagram is linked to a Facebook Page | Instagram professional accounts with no Facebook Page |
-| Priority | **Submit first** | Submit second. Same flow, smaller review |
+We use **one app, `Tidepost`** (Business type), with "Manage everything on your Page" and "Manage messaging and content on Instagram" → **API setup with Facebook Login**. It powers:
+- the Facebook Page channel (`facebook`);
+- the Instagram (Facebook Business) channel (`instagram`).
 
-Both apps sit in the same Steady Lamp Ltd business portfolio, so Business Verification is done once.
+**Limitation:** customers need an Instagram professional account **linked to a Facebook Page**. An Instagram account with no Page can't be connected. The Instagram (Standalone) channel is hidden from the add-channel screen on the live site (`HIDDEN_PROVIDERS`).
+
+A second app, "Tidepost Business" (App ID 1428592625924097), was created before this was found. Calvin's decision: leave it unused, don't delete it, and don't submit it for review.
 
 ## Permissions and justification text
 
 The code checks that **every** permission in its list was granted (`checkScopes`), so ask for all of them, exactly these, at Advanced Access. Paste the text into each permission's "How will your app use this permission?" box. Each one describes what the app really does today.
 
-### App 1: Facebook Page channel (`facebook.provider.ts`)
+### Facebook Page channel (`facebook.provider.ts`)
 
 **`pages_show_list`**
 > Tidepost is a social media scheduling service for small businesses. After the business owner logs in with Facebook from our "Add Channel" screen, we use pages_show_list to list the Facebook Pages they manage, so they can choose which Page Tidepost should publish to. We store only the chosen Page's ID, name and picture. The owner can disconnect the Page at any time, which deletes its tokens and details.
@@ -57,7 +55,7 @@ The code checks that **every** permission in its list was granted (`checkScopes`
 **`read_insights`**
 > We read post-level insights (reach and impressions) for posts published through Tidepost, and show them to the business owner on our "What worked" screen and in each post's Statistics window. This helps them see which kinds of posts work for their business. Insights are only shown to members of that business's Tidepost account and are deleted when the Page is disconnected or the account is closed.
 
-### App 1: Instagram (Facebook Business) channel (`instagram.provider.ts`)
+### Instagram (Facebook Business) channel (`instagram.provider.ts`)
 
 **`instagram_basic`**
 > After the business owner logs in with Facebook from our "Add Channel" screen and picks "Instagram (Facebook Business)", we use instagram_basic to read the Instagram professional account linked to their Facebook Page (username, name and profile picture), so they can confirm it is the right account. We store only that account's ID, username and picture.
@@ -73,22 +71,6 @@ The code checks that **every** permission in its list was granted (`checkScopes`
 
 **`pages_show_list`, `pages_read_engagement`, `business_management`** (needed by the Instagram channel too)
 > An Instagram professional account is reached through the Facebook Page it is linked to. We use pages_show_list and business_management to find the Pages the owner manages (directly or through their business portfolio), and pages_read_engagement to read the linked Instagram account from that Page. We do not publish to the Page through this channel.
-
-### App 2: Instagram (Standalone) channel (`instagram.standalone.provider.ts`)
-
-**`instagram_business_basic`**
-> The business owner connects their Instagram professional account with "Log in with Instagram" from our "Add Channel" screen ("Instagram (Standalone)"). We use instagram_business_basic to read the account's ID, username and profile picture so they can confirm it is the right account, and to keep the connection refreshed. No Facebook Page is needed.
-
-**`instagram_business_content_publish`**
-> The core of our product. The owner approves each Instagram post in Tidepost (photo, carousel, Reel or Story with a caption), and at the scheduled time we publish it to their account. Nothing is ever published without the owner's explicit approval.
-
-**`instagram_business_manage_comments`**
-> When writing a post, the owner can add a first comment with "Add comment" in the editor. Right after the approved post is published, we post that comment on it. We do not reply to, hide or delete other people's comments.
-
-**`instagram_business_manage_insights`**
-> We read insights (reach, likes, comments, saves) for posts published through Tidepost and show them to the owner on our "What worked" screen and in each post's Statistics window.
-
-**Do not submit `instagram_business_manage_messages`.** Meta's Instagram Login setup may add it by default. We don't use messaging. If it can be removed, remove it. If it can't, leave it at Standard Access and don't request Advanced Access for it.
 
 ## Allowed usage confirmations
 
@@ -127,12 +109,6 @@ Replace `<password>` with the test password from the password manager when pasti
 > A "Sandbox" channel is also connected to the test account. It is a simulated channel for demonstrations and never publishes anywhere; you can ignore it.
 >
 > The "Weekly posts" screen is how owners normally get posts: it drafts a week of posts from their business profile, they approve each one, and approved posts are scheduled to their connected channels in the same way as above.
-
-For App 2, use the same text with steps 11–13 replaced by:
-
-> 1. Log in with the test login. Click "Add Channel", then "Instagram (Standalone)". Log in with Instagram (instagram_business_basic) and allow access.
-> 2. Click "Create Post", select the Instagram avatar, add a photo and a caption, click "Add comment" and type a comment, then "Post now" (instagram_business_content_publish, instagram_business_manage_comments).
-> 3. Open the post in the calendar and click "Statistics", or open "What worked" (instagram_business_manage_insights).
 
 **Before submitting, check every label above against the live app** (menu names can change with the brand). The screencast scripts use the same steps.
 
