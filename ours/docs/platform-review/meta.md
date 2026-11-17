@@ -143,9 +143,9 @@ Meta asks these during App Review and Data Use Checkup. "Platform Data" means an
 | Question | Answer |
 |---|---|
 | Will any data processors or service providers have access to Platform Data? | **Yes** |
-| Processor: Cloudflare, Inc. | Category: "IT solutions and services, including cloud storage and processing" (app hosting in Cloudflare Containers, media storage in Cloudflare R2). Countries: **[FILL IN: confirm from Cloudflare; Containers run with `CLOUDFLARE_REGION=auto`, R2 bucket is Western Europe (WEUR)]** |
+| Processor: Cloudflare, Inc. | Category: "IT solutions and services, including cloud storage and processing" (app hosting in Cloudflare Containers, media storage in Cloudflare R2). Countries: app servers run in the Cloudflare data centre nearest the request (normally Europe; tick United Kingdom and the EU countries Cloudflare lists), R2 bucket in Western Europe (WEUR) |
 | Processor: PlanetScale, Inc. | Category: "IT solutions and services, including cloud storage and processing" (Postgres database holding tokens, Page/account details and insights). Country: **United Kingdom** (London, eu-west-2). **[CHECK]** whether PlanetScale staff can access it remotely from other countries (e.g. United States) |
-| Processor: Temporal Technologies, Inc. | Category: "IT solutions and services, including cloud storage and processing" (job scheduling; post IDs and integration IDs pass through workflow inputs). Country: **[FILL IN: Temporal Cloud namespace region]** |
+| Processor: Temporal Technologies, Inc. | Category: "IT solutions and services, including cloud storage and processing" (job scheduling; post IDs and integration IDs pass through workflow inputs). Country: **United Kingdom** (AWS eu-west-2, London), 1-day retention |
 | Processor: Anthropic | **[CHECK, likely No]** We send business profile and caption text to Anthropic, not Meta Platform Data. M8 passes only our own categories (e.g. "service spotlight did better") derived from results, never raw insights or IDs. If you are unsure, list Anthropic, category "Other: AI text generation", country United States |
 | Responsible entity (controls the Platform Data) | **Steady Lamp Ltd**, United Kingdom |
 | National security requests in the past 12 months? | **No** |

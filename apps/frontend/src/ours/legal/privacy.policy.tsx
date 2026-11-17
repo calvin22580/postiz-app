@@ -8,7 +8,6 @@ import { LegalFacts, legalPaths } from '@gitroom/frontend/ours/legal/legal';
 import {
   Email,
   Fact,
-  FillIn,
   LegalPage,
   List,
   Section,
@@ -321,9 +320,19 @@ export const PrivacyPolicy: FC<{ facts: LegalFacts }> = ({ facts }) => {
           head={['Provider', 'What they do for us', 'Where']}
           rows={[
             [
-              <FillIn label="hosting provider" />,
-              'Runs our servers and database',
-              <FillIn label="hosting region" />,
+              'Cloudflare, Inc. (Containers)',
+              'Runs our application servers',
+              "Cloudflare's network, in the data centre nearest the request (normally in Europe)",
+            ],
+            [
+              'PlanetScale, Inc.',
+              'Runs our database',
+              'United Kingdom (London)',
+            ],
+            [
+              'Temporal Technologies, Inc. (Temporal Cloud)',
+              'Schedules publishing jobs; keeps job records for 1 day',
+              'United Kingdom (London)',
             ],
             [
               'Anthropic, PBC',
@@ -333,15 +342,14 @@ export const PrivacyPolicy: FC<{ facts: LegalFacts }> = ({ facts }) => {
             [
               'Cloudflare, Inc. (R2 storage)',
               'Stores the images and media you upload',
-              <FillIn label="R2 storage location" />,
-            ],
-            [
-              <FillIn label="email delivery provider" />,
-              'Sends service emails',
-              <FillIn label="email provider region" />,
+              'Western Europe',
             ],
           ]}
         />
+        <p>
+          We do not use an email delivery provider yet. We will add it to this
+          list before we start sending service emails.
+        </p>
         <p>We also share personal data:</p>
         <List>
           <li>
@@ -409,8 +417,8 @@ export const PrivacyPolicy: FC<{ facts: LegalFacts }> = ({ facts }) => {
             [
               'Backups',
               <>
-                Overwritten on a rolling basis within{' '}
-                <FillIn label="backup retention period, e.g. 35 days" />
+                Database backups are overwritten on a rolling basis within 2
+                days
               </>,
             ],
           ]}
@@ -506,9 +514,7 @@ export const PrivacyPolicy: FC<{ facts: LegalFacts }> = ({ facts }) => {
           your social media accounts are stored encrypted. Access
           to our systems is limited to the people who need it to run the
           service. Our support staff can view your account when that is
-          needed to help you or to keep the service safe. Our database and file storage are encrypted at rest{' '}
-          <FillIn label="confirm encryption at rest with the hosting provider" />
-          . If a breach puts your data at risk, we will tell you and the ICO
+          needed to help you or to keep the service safe. Our database and file storage are encrypted at rest (AES). If a breach puts your data at risk, we will tell you and the ICO
           where the law requires it.
         </p>
       </Section>
