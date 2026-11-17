@@ -1,6 +1,6 @@
 # Meta screencast scripts
 
-Meta wants one screencast per permission showing "the end-to-end user experience for that specific permission", showing "only how your app uses that permission", UI in English, with captions explaining anything that isn't obvious. Meta lets one video be attached to several permissions, so we record **four videos for App 1** and **two for App 2**, and attach each to the permissions it covers.
+Meta wants one screencast per permission showing "the end-to-end user experience for that specific permission", showing "only how your app uses that permission", UI in English, with captions explaining anything that isn't obvious. Meta lets one video be attached to several permissions, so we record **four videos**, and attach each to the permissions it covers.
 
 ## Before recording
 
@@ -12,7 +12,7 @@ Meta wants one screencast per permission showing "the end-to-end user experience
 - Add captions afterwards (iMovie titles, or any editor), one short line per step, as below. Captions are in quotes.
 - Keep each video under 5 minutes. No passwords visible: type them before starting, or blur.
 
-## App 1, video 1: Connecting a Facebook Page
+## Video 1: Connecting a Facebook Page
 **Attach to:** `pages_show_list`, `business_management`
 
 1. Start on https://app.steadylamp.com/auth/login. Caption: "Tidepost: a small business owner logs in".
@@ -23,7 +23,7 @@ Meta wants one screencast per permission showing "the end-to-end user experience
 6. Back in Tidepost, the list of Pages appears. Caption: "pages_show_list: Pages the owner manages. Pages owned through a business portfolio are found with business_management". If possible, show a Page that comes from a business portfolio.
 7. Choose the Page. It appears in the left sidebar with its name and picture. Caption: "The Page is connected. Only its ID, name and picture are stored".
 
-## App 1, video 2: Publishing to the Page with a first comment
+## Video 2: Publishing to the Page with a first comment
 **Attach to:** `pages_manage_posts`, `pages_manage_engagement`
 
 1. Start logged in, Page already connected. Caption: "The owner writes a post and approves it".
@@ -35,7 +35,7 @@ Meta wants one screencast per permission showing "the end-to-end user experience
 7. Open the Page on facebook.com in the same window. Show the post and the comment underneath, posted as the Page. Caption: "The post and first comment are live on the Page".
 8. (Optional, 20 seconds) Open "Weekly posts", show a drafted post, click Approve. Caption: "Normally posts come from the weekly plan. Nothing is published until the owner approves it".
 
-## App 1, video 3: Showing results
+## Video 3: Showing results
 **Attach to:** `pages_read_engagement`, `read_insights`
 
 Record at least an hour after video 2 (insights take time; the app rechecks after an hour).
@@ -44,7 +44,7 @@ Record at least an hour after video 2 (insights take time; the app rechecks afte
 2. Open the published post in the calendar ("Preview"), click "Statistics". Caption: "read_insights and pages_read_engagement: reach and engagement for this post".
 3. Click "What worked" in the left menu. Show the latest results with reach and interactions for the Facebook post. Caption: "Results are shown only to this business's account".
 
-## App 1, video 4: Instagram via Facebook Login
+## Video 4: Instagram via Facebook Login
 **Attach to:** `instagram_basic`, `instagram_content_publish`, `instagram_manage_comments`, `instagram_manage_insights` (and again to `pages_show_list`, `pages_read_engagement`, `business_management` as the Instagram dependency)
 
 1. Start logged in. Click "Add Channel", then "Instagram (Facebook Business)". Caption: "The owner connects the Instagram account linked to their Page".
@@ -53,18 +53,6 @@ Record at least an hour after video 2 (insights take time; the app rechecks afte
 4. Click "Post now". Caption: "instagram_content_publish and instagram_manage_comments: the approved post and its first comment".
 5. Open the account on instagram.com, show the post and comment.
 6. (After an hour, can be a cut) Back in Tidepost: post "Statistics", then "What worked". Caption: "instagram_manage_insights: results for this post".
-
-## App 2, video 1: Connecting Instagram with Instagram Login
-**Attach to:** `instagram_business_basic`
-
-1. Logged in. "Add Channel", then "Instagram (Standalone)". Caption: "Log in with Instagram: no Facebook Page needed". Make sure the Instagram logo and name are visible on the button (brand guideline check).
-2. Instagram login and permissions screen, allow.
-3. The account appears in the sidebar with username and picture. Caption: "instagram_business_basic: the account's ID, username and picture".
-
-## App 2, video 2: Publishing and results
-**Attach to:** `instagram_business_content_publish`, `instagram_business_manage_comments`, `instagram_business_manage_insights`
-
-Same as App 1 video 4, steps 3 to 6, using the "Instagram (Standalone)" channel and its permission names in the captions.
 
 ## Narration (optional)
 

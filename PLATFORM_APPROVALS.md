@@ -6,7 +6,9 @@ What we need to apply for so Tidepost (placeholder brand) can publish to Faceboo
 - **Scopes, callback URLs and env var names** are copied from the code. File references point at `libraries/nestjs-libraries/src/integrations/social/`.
 - Anything marked **UNVERIFIED** is not in the code and could not be confirmed against an official page. Check it before relying on it.
 
-> **16/11/2026:** the hands-on setup and review pack (settings, permission justifications, reviewer instructions, screencast scripts, data handling answers and Chrome prompts) is in [`ours/docs/platform-review/`](ours/docs/platform-review/README.md). It wins where it differs from this file. In particular, Meta allows only one Instagram setup per app, so the two Instagram channels need **two Meta apps**, not one (section 2's recommendation below is out of date).
+> **16/11/2026:** the hands-on setup and review pack (settings, permission justifications, reviewer instructions, screencast scripts, data handling answers and Chrome prompts) is in [`ours/docs/platform-review/`](ours/docs/platform-review/README.md). It wins where it differs from this file.
+>
+> **17/11/2026: Instagram (Standalone) is not available to us.** Meta no longer offers "API setup with Instagram login" for new apps (only the unified login through Facebook Login for Business), so there is no Instagram app ID or secret for `instagram-standalone`. We use one Meta app for Facebook and for Instagram via a linked Facebook Page (section 2a). Customers need an Instagram professional account linked to a Page. Section 2b and the "apply for both" recommendation below are out of date.
 
 Throughout, `FRONTEND_URL` means the public URL customers use for the app, for example `https://app.tidepost.example`. Callback URLs are built from it, so it must be the final production domain before you register the URLs.
 

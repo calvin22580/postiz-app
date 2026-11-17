@@ -71,7 +71,7 @@ Setting `EMAIL_PROVIDER` turns on account activation by email.
 | Variable | Platform |
 |---|---|
 | `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` | Facebook Pages and Instagram (Facebook Business) |
-| `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET` | Instagram (Standalone). **Not in upstream `.env.example`**, but read by `instagram.standalone.provider.ts` |
+| `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET` | Instagram (Standalone). **Not used by us:** Meta no longer offers Instagram Login to new apps (17/11/2026), so this channel is hidden with `HIDDEN_PROVIDERS`. **Not in upstream `.env.example`**, but read by `instagram.standalone.provider.ts` |
 | `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` | LinkedIn and LinkedIn Page |
 | `HIDDEN_PROVIDERS` | Comma-separated identifiers to hide from the add-channel screen. Use it to show only the platforms we support, e.g. everything except `facebook,instagram,instagram-standalone,linkedin,linkedin-page` and the Sandbox |
 

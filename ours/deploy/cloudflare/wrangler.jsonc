@@ -50,7 +50,11 @@
     // Demo environment for platform app reviews: the Sandbox channel is on and
     // always labelled; plans can be switched without payment ("Test mode").
     "SANDBOX_CHANNEL_ENABLED": "true",
-    "OURS_BILLING_MODE": "test"
+    "OURS_BILLING_MODE": "test",
+    // Meta no longer offers Instagram Login to new apps (17/11/2026), so the
+    // Instagram (Standalone) channel can't work for us. Instagram goes through
+    // a linked Facebook Page instead. See ours/docs/platform-review/meta.md.
+    "HIDDEN_PROVIDERS": "instagram-standalone"
   },
   "secrets": {
     "required": [

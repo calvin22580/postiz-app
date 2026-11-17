@@ -80,7 +80,7 @@ export const About: FC<{ facts: LegalFacts }> = ({ facts }) => {
               'List the Pages you manage so you can choose one, publish the posts you approved to it, add a first comment if you wrote one, and show you reach and engagement for those posts.',
             ],
             [
-              'Instagram professional account',
+              'Instagram professional account (linked to a Facebook Page)',
               'Publish the posts you approved, add a first comment if you wrote one, and show you reach and engagement for those posts.',
             ],
             [
