@@ -3,7 +3,7 @@ import { brandName, rebrandText } from '@gitroom/nestjs-libraries/ours/brand/bra
 
 describe('backend rebrand', () => {
   it('uses the env brand name, with a default', () => {
-    expect(brandName({})).toBe('Tidepost');
+    expect(brandName({})).toBe('Kanosena');
     expect(brandName({ NEXT_PUBLIC_BRAND_NAME: 'Acme' })).toBe('Acme');
   });
 

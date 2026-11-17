@@ -23,7 +23,7 @@ Sources, checked 16/11/2026:
 
 **17/11/2026:** Meta no longer offers "API setup with Instagram login" for newly created apps. Claude in Chrome saw "API setup with Instagram login is not available for newer apps" on the second app. New apps only get the unified login, which runs through Facebook Login for Business. So there is no separate Instagram app ID or secret, and upstream's **Instagram (Standalone)** channel (`instagram-standalone`, `INSTAGRAM_APP_*`) can't be used.
 
-We use **one app, `Tidepost`** (Business type), with "Manage everything on your Page" and "Manage messaging and content on Instagram" → **API setup with Facebook Login**. It powers:
+We use **one app, `Kanosena`** (App ID 1614622909955028, created as "Tidepost" and renamed when the brand was chosen; Business type), with "Manage everything on your Page" and "Manage messaging and content on Instagram" → **API setup with Facebook Login**. It powers:
 - the Facebook Page channel (`facebook`);
 - the Instagram (Facebook Business) channel (`instagram`).
 
@@ -38,22 +38,22 @@ The code checks that **every** permission in its list was granted (`checkScopes`
 ### Facebook Page channel (`facebook.provider.ts`)
 
 **`pages_show_list`**
-> Tidepost is a social media scheduling service for small businesses. After the business owner logs in with Facebook from our "Add Channel" screen, we use pages_show_list to list the Facebook Pages they manage, so they can choose which Page Tidepost should publish to. We store only the chosen Page's ID, name and picture. The owner can disconnect the Page at any time, which deletes its tokens and details.
+> Kanosena is a social media scheduling service for small businesses. After the business owner logs in with Facebook from our "Add Channel" screen, we use pages_show_list to list the Facebook Pages they manage, so they can choose which Page Kanosena should publish to. We store only the chosen Page's ID, name and picture. The owner can disconnect the Page at any time, which deletes its tokens and details.
 
 **`business_management`**
 > Many small businesses manage their Facebook Page through a Meta business portfolio rather than directly. We use business_management only to read the Pages owned by the business portfolios the owner belongs to (/me/businesses and /{business-id}/owned_pages), so those Pages appear in the list they choose from. We do not create, change or read any other business assets.
 
 **`pages_manage_posts`**
-> This is the core of our product. The business owner approves each post in Tidepost (text with an optional photo or video), and at the scheduled time we publish it to the Page they connected. Nothing is ever published without the owner's explicit approval in our app. We also use it to show the owner the post's link once it is live.
+> This is the core of our product. The business owner approves each post in Kanosena (text with an optional photo or video), and at the scheduled time we publish it to the Page they connected. Nothing is ever published without the owner's explicit approval in our app. We also use it to show the owner the post's link once it is live.
 
 **`pages_manage_engagement`**
-> When writing a post in Tidepost, the owner can add a first comment (for example a link or extra details) using "Add comment" in the post editor. Right after the approved post is published, we publish that comment on the post as the Page. We only post comments the owner has written and approved; we do not reply to, hide or delete other people's comments.
+> When writing a post in Kanosena, the owner can add a first comment (for example a link or extra details) using "Add comment" in the post editor. Right after the approved post is published, we publish that comment on the post as the Page. We only post comments the owner has written and approved; we do not reply to, hide or delete other people's comments.
 
 **`pages_read_engagement`**
-> We read the connected Page's basic details (name, picture) and the engagement on posts published through Tidepost (reactions, comments and shares counts), so we can show the owner how their approved posts performed on our "What worked" screen and in each post's Statistics. It is also required by read_insights and pages_manage_posts.
+> We read the connected Page's basic details (name, picture) and the engagement on posts published through Kanosena (reactions, comments and shares counts), so we can show the owner how their approved posts performed on our "What worked" screen and in each post's Statistics. It is also required by read_insights and pages_manage_posts.
 
 **`read_insights`**
-> We read post-level insights (reach and impressions) for posts published through Tidepost, and show them to the business owner on our "What worked" screen and in each post's Statistics window. This helps them see which kinds of posts work for their business. Insights are only shown to members of that business's Tidepost account and are deleted when the Page is disconnected or the account is closed.
+> We read post-level insights (reach and impressions) for posts published through Kanosena, and show them to the business owner on our "What worked" screen and in each post's Statistics window. This helps them see which kinds of posts work for their business. Insights are only shown to members of that business's Kanosena account and are deleted when the Page is disconnected or the account is closed.
 
 ### Instagram (Facebook Business) channel (`instagram.provider.ts`)
 
@@ -61,13 +61,13 @@ The code checks that **every** permission in its list was granted (`checkScopes`
 > After the business owner logs in with Facebook from our "Add Channel" screen and picks "Instagram (Facebook Business)", we use instagram_basic to read the Instagram professional account linked to their Facebook Page (username, name and profile picture), so they can confirm it is the right account. We store only that account's ID, username and picture.
 
 **`instagram_content_publish`**
-> This is the core of our product. The business owner approves each Instagram post in Tidepost (a photo, carousel, Reel or Story with a caption), and at the scheduled time we publish it to their Instagram professional account. Nothing is ever published without the owner's explicit approval in our app.
+> This is the core of our product. The business owner approves each Instagram post in Kanosena (a photo, carousel, Reel or Story with a caption), and at the scheduled time we publish it to their Instagram professional account. Nothing is ever published without the owner's explicit approval in our app.
 
 **`instagram_manage_comments`**
 > When writing a post, the owner can add a first comment using "Add comment" in the post editor. Right after the approved post is published, we publish that comment on it. We only post comments the owner wrote and approved; we do not reply to, hide or delete other people's comments.
 
 **`instagram_manage_insights`**
-> We read insights (reach, likes, comments, saves) for posts published through Tidepost and show them to the business owner on our "What worked" screen and in each post's Statistics window, so they can see which kinds of posts work. Shown only to that business's Tidepost account; deleted when the account is disconnected or closed.
+> We read insights (reach, likes, comments, saves) for posts published through Kanosena and show them to the business owner on our "What worked" screen and in each post's Statistics window, so they can see which kinds of posts work. Shown only to that business's Kanosena account; deleted when the account is disconnected or closed.
 
 **`pages_show_list`, `pages_read_engagement`, `business_management`** (needed by the Instagram channel too)
 > An Instagram professional account is reached through the Facebook Page it is linked to. We use pages_show_list and business_management to find the Pages the owner manages (directly or through their business portfolio), and pages_read_engagement to read the linked Instagram account from that Page. We do not publish to the Page through this channel.
@@ -83,7 +83,7 @@ Replace `<password>` with the test password from the password manager when pasti
 > **Website:** https://app.steadylamp.com
 > **Test login:** review@steadylamp.com / `<password>`
 >
-> Tidepost lets a small business owner approve social media posts, which we then publish at the planned time. Nothing is published without the owner's approval.
+> Kanosena lets a small business owner approve social media posts, which we then publish at the planned time. Nothing is published without the owner's approval.
 >
 > **Connect a Facebook Page (pages_show_list, business_management)**
 > 1. Log in at https://app.steadylamp.com/auth/login with the test login.
@@ -98,7 +98,7 @@ Replace `<password>` with the test password from the password manager when pasti
 > 8. Open the Page on Facebook to see the post and comment.
 >
 > **See results (pages_read_engagement, read_insights)**
-> 9. Back in Tidepost, open the post in the calendar and click "Statistics" to see reach and engagement read from the Page. Insights can take a few minutes to appear after publishing.
+> 9. Back in Kanosena, open the post in the calendar and click "Statistics" to see reach and engagement read from the Page. Insights can take a few minutes to appear after publishing.
 > 10. Click "What worked" in the left menu to see the same results summarised.
 >
 > **Instagram (instagram_basic, instagram_content_publish, instagram_manage_comments, instagram_manage_insights)**
@@ -129,5 +129,5 @@ Meta asks these during App Review and Data Use Checkup. "Platform Data" means an
 
 ## Business Verification and Tech Provider
 
-- **Business Verification** (Business Settings → Security Centre → Start verification). Needs: legal name Steady Lamp Ltd, company number 17533499, registered office 128 City Road, London, EC1V 2NX, phone **[FILL IN]**, website `https://steadylamp.com` (add the Tidepost mention first, see README item 2), and a domain or email check (support@steadylamp.com, or DNS/meta-tag domain verification of steadylamp.com). Meta may ask for a Companies House certificate.
+- **Business Verification** (Business Settings → Security Centre → Start verification). Needs: legal name Steady Lamp Ltd, company number 17533499, registered office 128 City Road, London, EC1V 2NX, phone **[FILL IN]**, website `https://steadylamp.com` (add the Kanosena mention first, see README item 2), and a domain or email check (support@steadylamp.com, or DNS/meta-tag domain verification of steadylamp.com). Meta may ask for a Companies House certificate.
 - **Tech Provider access verification**: App Dashboard → "Become a Tech Provider" (or Review → Access verification). Answers: we build a social media scheduling service that other businesses use to publish to their own Facebook Pages and Instagram accounts; we access their data only to publish posts they approved and show them their own results.

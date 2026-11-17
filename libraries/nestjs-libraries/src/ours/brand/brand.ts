@@ -1,6 +1,6 @@
 // OURS: brand name for text the backend sends to customers (emails).
 // Same env variable as the frontend, so one setting renames everything.
-const DEFAULT_BRAND_NAME = 'Tidepost';
+const DEFAULT_BRAND_NAME = 'Kanosena';
 
 export const brandName = (env: NodeJS.ProcessEnv = process.env) =>
   (env.NEXT_PUBLIC_BRAND_NAME || '').trim() || DEFAULT_BRAND_NAME;

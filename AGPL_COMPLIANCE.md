@@ -1,6 +1,6 @@
 # AGPL_COMPLIANCE.md
 
-How Tidepost (placeholder brand) complies with the GNU Affero General Public License v3 that upstream Postiz is released under. This is a working checklist, **not legal advice**. The last section lists what a lawyer should confirm before launch.
+How Kanosena complies with the GNU Affero General Public License v3 that upstream Postiz is released under. This is a working checklist, **not legal advice**. The last section lists what a lawyer should confirm before launch.
 
 - Upstream: https://github.com/gitroomhq/postiz-app, licence **AGPL-3.0** (`LICENSE`, and `"license": "AGPL-3.0"` in `package.json`).
 - Our fork: https://github.com/calvin22580/postiz-app (public).
@@ -8,7 +8,7 @@ How Tidepost (placeholder brand) complies with the GNU Affero General Public Lic
 
 ## Why AGPL matters for a hosted service
 
-Section 13 of the AGPL says that if we run a modified version and users interact with it over a network, we must offer those users the **Corresponding Source** of the version they are using, free of charge. Our customers use Tidepost in a browser, so this applies to every customer. It is the main obligation beyond keeping notices.
+Section 13 of the AGPL says that if we run a modified version and users interact with it over a network, we must offer those users the **Corresponding Source** of the version they are using, free of charge. Our customers use Kanosena in a browser, so this applies to every customer. It is the main obligation beyond keeping notices.
 
 ## What we do
 

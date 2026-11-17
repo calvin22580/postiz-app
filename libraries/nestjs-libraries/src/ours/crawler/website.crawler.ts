@@ -45,7 +45,7 @@ export interface CrawlOptions {
 }
 
 export const crawlerUserAgent = () => {
-  const brand = (process.env.NEXT_PUBLIC_BRAND_NAME || 'Tidepost').replace(
+  const brand = (process.env.NEXT_PUBLIC_BRAND_NAME || 'Kanosena').replace(
     /[^a-z0-9]/gi,
     ''
   );

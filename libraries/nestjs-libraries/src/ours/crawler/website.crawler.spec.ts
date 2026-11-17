@@ -109,14 +109,14 @@ describe('page picking and robots.txt', () => {
 
   it('follows the longest matching rule for our agent or *', () => {
     const robots = parseRobots(
-      'User-agent: TidepostBot\nDisallow: /a\nAllow: /a/b\n\nUser-agent: *\nDisallow: /',
-      'TidepostBot/1.0'
+      'User-agent: KanosenaBot\nDisallow: /a\nAllow: /a/b\n\nUser-agent: *\nDisallow: /',
+      'KanosenaBot/1.0'
     );
     expect(robots.isAllowed('/a/x')).toBe(false);
     expect(robots.isAllowed('/a/b/c')).toBe(true);
     expect(robots.isAllowed('/other')).toBe(true);
-    expect(parseRobots('User-agent: *\nDisallow: /', 'TidepostBot').isAllowed('/')).toBe(false);
-    expect(parseRobots('', 'TidepostBot').isAllowed('/')).toBe(true);
+    expect(parseRobots('User-agent: *\nDisallow: /', 'KanosenaBot').isAllowed('/')).toBe(false);
+    expect(parseRobots('', 'KanosenaBot').isAllowed('/')).toBe(true);
   });
 });
 
