@@ -1,16 +1,18 @@
 # Chrome prompt: LinkedIn app
 
-**Calvin:** log in to LinkedIn in Chrome with the account that is a **super admin of the Steady Lamp Ltd LinkedIn Page** (create the Page first if there isn't one), and to Cloudflare. Download `assets/app-icon-300.png` from this folder. Then paste the box below into Claude in Chrome.
+**Calvin:** paste the box below into Claude in Chrome. It will ask you to log in (with the account that is a super admin of the Steady Lamp Ltd LinkedIn Page) where needed.
 
 Important: LinkedIn does not let us re-apply with the same app after a rejection. The prompt therefore sets the app up but does **not** submit the Community Management access form until Calvin has checked it.
 
 ---
 
 ```text
-You are setting up a LinkedIn developer app for Tidepost, a social media scheduling service run by Steady Lamp Ltd (UK). Calvin is logged in. Work in a new tab. Rules:
+You are setting up a LinkedIn developer app for Tidepost, a social media scheduling service run by Steady Lamp Ltd (UK). Work in a new tab. Rules:
 - Do NOT submit any access request form (Community Management API, Standard tier) without showing Calvin the filled-in form and getting a "yes" in chat. A rejection means starting again with a new app.
 - Never type a secret into chat. Copy the client secret only into the Cloudflare form in step 6.
 - If anything asks for a detail not given here (phone, or anything else not listed), stop and ask Calvin.
+- If a site (linkedin.com/developers and dash.cloudflare.com) isn't logged in, open its login page, ask Calvin in chat to log in, and wait for him to say done. Calvin does nothing else.
+- Before starting, download the icon from https://github.com/calvin22580/postiz-app/raw/main/ours/docs/platform-review/assets/app-icon-300.png (it saves to Downloads).
 - If a screen differs from these steps, do the closest equivalent and tell Calvin.
 
 Values:
@@ -19,7 +21,7 @@ Values:
 - Privacy policy URL: https://app.steadylamp.com/privacy.html
 - Website: https://app.steadylamp.com/about.html
 - Business email: support@steadylamp.com
-- Logo: app-icon-300.png in Downloads
+- Logo: app-icon-300.png (downloaded above)
 - Redirect URLs (exactly, no trailing slash):
    https://app.steadylamp.com/integrations/social/linkedin-page
    https://app.steadylamp.com/integrations/social/linkedin

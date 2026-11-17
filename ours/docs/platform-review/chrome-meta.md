@@ -1,16 +1,18 @@
 # Chrome prompt: Meta apps
 
-**Calvin:** log in to https://developers.facebook.com and https://business.facebook.com in Chrome (and to Cloudflare at https://dash.cloudflare.com), then paste everything in the box below into Claude in Chrome.
+**Calvin:** paste the box below into Claude in Chrome. It will ask you to log in where needed.
 
-Download `assets/app-icon-1024.png` from this folder first (GitHub → the file → Download), so the agent can upload it from your Downloads folder.
+
 
 ---
 
 ```text
-You are setting up Meta developer apps for Tidepost, a social media scheduling service run by Steady Lamp Ltd (UK). Calvin is logged in. Work in a new tab. Follow these rules:
+You are setting up Meta developer apps for Tidepost, a social media scheduling service run by Steady Lamp Ltd (UK). Work in a new tab. Follow these rules:
 - Do NOT submit anything for App Review, do NOT click Publish / Go Live, and do NOT start Business Verification without asking Calvin first in chat.
 - Never type a secret into chat or a note. Copy App IDs and secrets only into the Cloudflare form in step 5.
 - If a field asks for something not given here (phone number, or anything else not listed), stop and ask Calvin.
+- If a site (developers.facebook.com, business.facebook.com and dash.cloudflare.com) isn't logged in, open its login page, ask Calvin in chat to log in, and wait for him to say done. Calvin does nothing else.
+- Before starting, download the icon from https://github.com/calvin22580/postiz-app/raw/main/ours/docs/platform-review/assets/app-icon-1024.png (it saves to Downloads).
 - If a screen looks different from these steps, do the closest equivalent and tell Calvin what you did.
 
 Values:
@@ -22,7 +24,7 @@ Values:
 - Terms of service URL: https://app.steadylamp.com/terms.html
 - User data deletion (instructions URL): https://app.steadylamp.com/data-deletion.html
 - Category: Business and pages
-- Icon: app-icon-1024.png in Downloads
+- Icon: app-icon-1024.png (downloaded above)
 
 STEP 1. App 1, name "Tidepost"
 a. developers.facebook.com/apps → Create app. Name "Tidepost", contact email support@steadylamp.com.
