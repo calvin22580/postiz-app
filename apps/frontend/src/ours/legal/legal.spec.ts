@@ -33,12 +33,10 @@ describe('legal facts', () => {
     expect(facts.companyName).toBe('Steady Lamp Ltd');
     expect(facts.contactEmail).toBe('support@steadylamp.com');
     expect(facts.reviewed).toBe(false);
-    expect(missingFacts(facts)).toEqual([
-      'companyNumber',
-      'registeredAddress',
-      'icoNumber',
-      'lastUpdated',
-    ]);
+    expect(facts.companyNumber).toBe('17533499');
+    expect(facts.registeredAddress).toBe('128 City Road, London, EC1V 2NX');
+    expect(facts.lastUpdated).toBe('17/11/2026');
+    expect(missingFacts(facts)).toEqual(['icoNumber']);
   });
 
   it('takes every value from the environment when set', () => {
@@ -57,10 +55,10 @@ describe('legal pages', () => {
     for (const page of pages) {
       const html = render(page, legalFacts({}));
       expect(html).toContain('data-testid="legal-draft"');
-      expect(html).toContain('[FILL IN: date published (DD/MM/YYYY)]');
+      expect(html).toContain('17/11/2026');
     }
     expect(render(PrivacyPolicy, legalFacts({}))).toContain(
-      '[FILL IN: company number]'
+      '[FILL IN: ICO registration number]'
     );
   });
 

@@ -39,7 +39,7 @@ Our code requests, on one app, and refuses to connect if any is missing:
 | Field | Answer |
 |---|---|
 | Legal name | Steady Lamp Ltd |
-| Registered address | **[FILL IN]** |
+| Registered address | 128 City Road, London, EC1V 2NX |
 | Business email | support@steadylamp.com |
 | Website | https://steadylamp.com (add a Tidepost mention first) and the product at https://app.steadylamp.com/about.html |
 | Privacy policy | https://app.steadylamp.com/privacy.html |
@@ -52,7 +52,7 @@ Our code requests, on one app, and refuses to connect if any is missing:
 ## Standard tier form answers
 
 **Company overview:**
-> Steady Lamp Ltd is a UK private limited company (**[FILL IN: company number]**) that builds software for small businesses. Contact: support@steadylamp.com.
+> Steady Lamp Ltd is a UK private limited company (company number 17533499, incorporated 21/10/2026) that builds software for small businesses. Contact: support@steadylamp.com.
 
 **Product overview:**
 > Tidepost (working name) plans, writes and schedules social media posts for small businesses, with the promise "You approve. We handle the rest." It builds a business profile from the company's own website, with a source for every fact, drafts a week of posts with simple branded graphics, and publishes only the posts the owner approves to their connected Facebook Page, Instagram account and LinkedIn Page. It is open source (https://github.com/calvin22580/postiz-app).

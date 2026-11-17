@@ -16,7 +16,7 @@ All values below are for the live site `https://app.steadylamp.com` (`FRONTEND_U
 | LinkedIn logo | `assets/app-icon-300.png` |
 | App name | `Tidepost` (placeholder brand). Must not contain "Linked", "In", "LinkedIn", "Microsoft", "Facebook", "Instagram", "Meta" or "FB" |
 | Category (Meta) | Business and pages |
-| Company | Steady Lamp Ltd, **[FILL IN: company number]**, **[FILL IN: registered address]** |
+| Company | Steady Lamp Ltd, company number 17533499, registered office 128 City Road, London, EC1V 2NX |
 
 ## Redirect URIs
 
