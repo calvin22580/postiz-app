@@ -72,7 +72,7 @@ visitor and crawler reaches them without an upstream change.
 | `NEXT_PUBLIC_LEGAL_COMPANY_NUMBER` | empty |
 | `NEXT_PUBLIC_LEGAL_REGISTERED_ADDRESS` | empty |
 | `NEXT_PUBLIC_LEGAL_ICO_NUMBER` | empty |
-| `NEXT_PUBLIC_LEGAL_CONTACT_EMAIL` | `support@steadylamp.com` |
+| `NEXT_PUBLIC_LEGAL_CONTACT_EMAIL` | `support@kanosena.com` |
 | `NEXT_PUBLIC_LEGAL_JURISDICTION` | `England and Wales` |
 | `NEXT_PUBLIC_LEGAL_LAST_UPDATED` | empty (DD/MM/YYYY) |
 | `NEXT_PUBLIC_LEGAL_REVIEWED` | `false`; set `true` after a solicitor's review |

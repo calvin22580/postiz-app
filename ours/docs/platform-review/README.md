@@ -3,8 +3,8 @@
 Everything needed to set up the developer apps and submit the reviews for Facebook, Instagram and LinkedIn, once Calvin has logged in.
 
 - **Checked on:** 16/11/2026, against the official Meta and LinkedIn pages linked in each file, and against upstream Postiz v2.26.0 code (scopes and callback URLs are copied from `libraries/nestjs-libraries/src/integrations/social/`).
-- **Live site:** https://app.steadylamp.com (test login `review@steadylamp.com`, password in Calvin's password manager and Mac `.env` as `DEPLOY_TEST_LOGIN_PASSWORD`. Never put it in this repo).
-- **Company:** Steady Lamp Ltd, support@steadylamp.com. Anything only Calvin knows is marked **[FILL IN]**.
+- **Live site:** https://app.kanosena.com (test login `review@steadylamp.com`, password in Calvin's password manager and Mac `.env` as `DEPLOY_TEST_LOGIN_PASSWORD`. Never put it in this repo).
+- **Company:** Steady Lamp Ltd, support@kanosena.com. Anything only Calvin knows is marked **[FILL IN]**.
 - `PLATFORM_APPROVALS.md` (repo root) is the background research. This folder is the hands-on pack and wins where they differ.
 
 ## Files
@@ -40,7 +40,7 @@ Everything needed to set up the developer apps and submit the reviews for Facebo
 ## Still open (not fixed here)
 
 1. **Legal pages say "Draft … not yet in force".** A reviewer can reject a privacy policy that says it is not in force. Company number and registered address are filled in (17/11/2026). Publication date and processor details filled in too. Still needs the ICO registration number and a legal review, then `NEXT_PUBLIC_LEGAL_REVIEWED=true`. **Do this before submitting any review.** Setting up the apps can go ahead now.
-2. **steadylamp.com does not mention the product.** It only shows Life in the UK Questions. LinkedIn verifies the organisation's website and Meta checks the business. Add a short "Kanosena" entry (one line and a link to `https://app.steadylamp.com/about.html`) to the steadylamp.com site. This is Calvin's own site, outside this repo.
+2. **steadylamp.com does not mention the product.** It only shows Life in the UK Questions. LinkedIn verifies the organisation's website and Meta checks the business. Add a short "Kanosena" entry (one line and a link to `https://app.kanosena.com/about.html`) to the steadylamp.com site. This is Calvin's own site, outside this repo.
 3. **One Meta app, no Instagram (Standalone).** Meta no longer offers Instagram Login to new apps (found 17/11/2026), so only the Instagram channel that goes through a linked Facebook Page works. Customers need their Instagram professional account linked to a Facebook Page. The standalone channel is hidden on the live site. A second app, "Tidepost Business", was created before this was found and is left unused on Calvin's instruction (see `meta.md`).
 4. **LinkedIn product clash (risk, unconfirmed).** A developer reports that **Community Management API** and **Sign In with LinkedIn using OpenID Connect** cannot both be on one app. Our code asks for `openid` and `profile` (from OpenID Connect) and the organisation scopes (from Community Management) on one app, and refuses to connect if any is missing. The Chrome prompt checks this and reports back. If it is true, a small change in our own files is needed (a LinkedIn provider that gets the name and picture from `r_basicprofile` instead of `openid`/`profile`). See `linkedin.md`.
 5. **Facebook Login for Business prefers a configuration ID.** Our code sends the classic `scope` list. Meta says for user tokens "scope can still be included, we recommend that you do not use it". So it should work. If the login dialog refuses it during setup, the fix is a configuration ID, which needs a code change.

@@ -2,6 +2,7 @@
 //
 // - Every request goes to one container instance (named "app") through its
 //   Durable Object.
+// - Requests to any host other than FRONTEND_URL's are redirected to it.
 // - A cron trigger runs every minute and calls keepAlive(), so the container
 //   stays on 24/7 (the background worker and cron jobs live inside it), is
 //   restarted if it crashed, and is replaced when a new image is deployed or
@@ -206,9 +207,21 @@ main{max-width:28rem;padding:2rem;text-align:center}h1{font-size:1.25rem;font-we
   });
 }
 
+// Any other host on this Worker (the old app.steadylamp.com address) gets a
+// permanent redirect to the same path on FRONTEND_URL. 308 keeps the method.
+function redirectToCanonical(request: Request, env: Env): Response | undefined {
+  if (typeof env.FRONTEND_URL !== 'string' || !env.FRONTEND_URL) return undefined;
+  const canonical = new URL(env.FRONTEND_URL);
+  const url = new URL(request.url);
+  if (url.host === canonical.host) return undefined;
+  url.protocol = canonical.protocol;
+  url.host = canonical.host;
+  return Response.redirect(url.toString(), 308);
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    return env.APP.getByName(INSTANCE_NAME).fetch(request);
+    return redirectToCanonical(request, env) ?? env.APP.getByName(INSTANCE_NAME).fetch(request);
   },
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil(env.APP.getByName(INSTANCE_NAME).keepAlive());

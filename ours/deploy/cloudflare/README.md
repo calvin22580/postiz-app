@@ -1,6 +1,6 @@
 # Cloudflare deployment (OURS)
 
-Runs the app on Cloudflare Containers at `https://app.steadylamp.com`. The plan and costs are in `deployment-plan.md` in the project files.
+Runs the app on Cloudflare Containers at `https://app.kanosena.com`. The plan and costs are in `deployment-plan.md` in the project files.
 
 ```
 visitor ─▶ Worker (src/index.ts) ─▶ Durable Object "app" ─▶ container :5000
@@ -9,7 +9,7 @@ visitor ─▶ Worker (src/index.ts) ─▶ Durable Object "app" ─▶ containe
                                                          orchestrator (Temporal worker)
                                                          redis (cache only, in memory)
 container ─▶ PlanetScale Postgres (London)   container ─▶ Temporal Cloud (London)
-container ─▶ R2 bucket tidepost-media-eu (media.steadylamp.com)
+container ─▶ R2 bucket tidepost-media-eu (media.kanosena.com for new uploads; media.steadylamp.com stays attached for older links)
 ```
 
 - **One container, on 24/7.** A cron trigger calls the Durable Object every minute. It starts the container if it isn't running (first deploy, crash, Cloudflare host restart). After a deploy, it replaces the container when the image or any var or secret has changed, so a rotated key takes effect within a minute or two.
@@ -62,7 +62,7 @@ pnpm exec wrangler secret put JWT_SECRET   # repeat for each secret above (first
 pnpm run deploy                             # builds the image (needs about 4 GB RAM for Docker), pushes, deploys
 ```
 
-The first deploy creates the `app.steadylamp.com` custom domain. After deploying, the cron replaces the running container within a minute or two, then the cold start runs.
+Deploys attach the `app.kanosena.com` and `app.steadylamp.com` custom domains (the Worker redirects the old one to `FRONTEND_URL`). After deploying, the cron replaces the running container within a minute or two, then the cold start runs.
 
 - Logs: `pnpm run logs` for the Worker. Container logs are in the Cloudflare dashboard under Workers → Containers.
 - Type check after changing `wrangler.jsonc`: `pnpm run types && pnpm run check`
@@ -77,6 +77,6 @@ About $34 a month for the container on 24/7, plus about $5–7 for PlanetScale a
 
 It needs two repository secrets (Settings → Secrets and variables → Actions):
 - `CLOUDFLARE_ACCOUNT_ID`
-- `CLOUDFLARE_API_TOKEN`: an account API token created from the "Edit Cloudflare Workers" template, plus **Containers: Edit** if it's listed separately, scoped to this account and the `steadylamp.com` zone.
+- `CLOUDFLARE_API_TOKEN`: an account API token created from the "Edit Cloudflare Workers" template, plus **Containers: Edit** if it's listed separately, scoped to this account and the `kanosena.com` and `steadylamp.com` zones.
 
 The app's secrets stay on the Worker. The workflow never sees them.
