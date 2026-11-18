@@ -371,7 +371,7 @@ Code: `libs/ours/plans/plan.stripe.ts` (Checkout, portal, webhook checks) and
   don't show. Changing a price means a new Stripe price with the same lookup
   key (`transfer_lookup_key`) and the new amount in `plans.config.ts`.
 - **Webhook:** `POST <backend>/ours/stripe/webhook` (on the live site
-  `https://app.steadylamp.com/api/ours/stripe/webhook`). Events:
+  `https://app.kanosena.com/api/ours/stripe/webhook`). Events:
   `checkout.session.completed`, `customer.subscription.created`,
   `customer.subscription.updated`, `customer.subscription.deleted`.
   Each is checked against `OURS_STRIPE_WEBHOOK_SECRET`, and the

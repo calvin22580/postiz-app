@@ -34,10 +34,11 @@ Plain settings are in `wrangler.jsonc` under `vars`. Secrets are set on the Work
 | `TEMPORAL_API_KEY` | Temporal Cloud API key |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID (used for the R2 endpoint) |
 | `CLOUDFLARE_ACCESS_KEY` / `CLOUDFLARE_SECRET_ACCESS_KEY` | R2 API token, Object Read & Write on `tidepost-media-eu` only |
+| `OURS_STRIPE_SECRET_KEY` / `OURS_STRIPE_WEBHOOK_SECRET` / `OURS_STRIPE_PORTAL_CONFIGURATION` | Stripe sandbox key, signing secret of the webhook at `https://app.kanosena.com/api/ours/stripe/webhook`, and the portal configuration id. Optional: see `ours/README.md` (Payments with Stripe) |
 
 Every string var and secret on the Worker is passed to the container as an environment variable, so a new app setting only needs `vars` or a new secret. No code change is needed.
 
-This environment is a **demo for platform app reviews**: `SANDBOX_CHANNEL_ENABLED=true` (always labelled), `OURS_BILLING_MODE=test`, `DISABLE_REGISTRATION=true`. There are no Facebook, Instagram or LinkedIn keys until approvals land, and no `ANTHROPIC_API_KEY` yet (AI features use their demo fallbacks).
+This environment is a **demo for platform app reviews**: `SANDBOX_CHANNEL_ENABLED=true` (always labelled), `OURS_BILLING_MODE=stripe` with a Stripe sandbox key (test cards only, labelled "Test payments"), `DISABLE_REGISTRATION=true`. There are no Facebook, Instagram or LinkedIn keys until approvals land, and no `ANTHROPIC_API_KEY` yet (AI features use their demo fallbacks).
 
 ## One-time Temporal Cloud setup
 
