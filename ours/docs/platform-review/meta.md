@@ -29,6 +29,21 @@ We use **one app, `Kanosena`** (App ID 1614622909955028, created as "Tidepost" a
 
 **Limitation:** customers need an Instagram professional account **linked to a Facebook Page**. An Instagram account with no Page can't be connected. The Instagram (Standalone) channel is hidden from the add-channel screen on the live site (`HIDDEN_PROVIDERS`).
 
+### Current app settings (checked 18/11/2026)
+
+Claude in Chrome renamed the app and saved these, then reloaded to confirm:
+
+- **Display name:** Kanosena (was "Tidepost"). "Tidepost Business" untouched.
+- **App domains:** `app.steadylamp.com`, `kanosena.com` (covers `app.kanosena.com`).
+- **Valid OAuth Redirect URIs:** `https://app.steadylamp.com/integrations/social/facebook`, `https://app.steadylamp.com/integrations/social/instagram`, `https://app.kanosena.com/integrations/social/facebook`, `https://app.kanosena.com/integrations/social/instagram`. Remove the steadylamp.com ones only after the domain move is proven.
+- **Still on steadylamp.com until the move:** contact email (support@steadylamp.com), Privacy, Terms and Data deletion URLs, Website platform Site URL (`https://app.steadylamp.com/about.html`).
+- **Unchanged:** permissions, client OAuth toggles, Strict Mode.
+- `pages_read_user_content` was added on 17/11; the "Invalid Scopes" error is gone and the connect flow reaches Facebook's Page picker.
+
+**Test Page:** "Kanosena" (category Software, Page ID 61596371804205), created 18/11 for connect tests and screencasts instead of Calvin's real Pages. No Instagram account linked yet, nothing posted. Apps see it under a different ID, **1442258752307158** (new-style Pages show one ID in the profile link and another to apps).
+
+**Facebook connect test passed (18/11/2026)** on app.steadylamp.com, as the review account: the dialog named the app "Kanosena", no errors. Pages: "Opt in to current Pages only", only Kanosena ticked. Businesses: Facebook requires at least one, so only "Steady Lamp Ltd" (896366080169225) was ticked. Permissions granted (each for 1 Page / 1 Business): Page and App insights, Manage your business, Create and manage content, Manage comments, Read content posted on the Page, Read user content, Show a list of Pages. The app's "Configure Your Channel" screen offered only Kanosena; it now shows as a Facebook channel. Nothing posted or scheduled. Next: the Instagram (Facebook Business) test once an IG professional account is linked to the Page.
+
 A second app, "Tidepost Business" (App ID 1428592625924097), was created before this was found. Calvin's decision: leave it unused, don't delete it, and don't submit it for review.
 
 ## Permissions and justification text
