@@ -36,7 +36,7 @@ Claude in Chrome renamed the app and saved these, then reloaded to confirm:
 - **Display name:** Kanosena (was "Tidepost"). "Tidepost Business" untouched.
 - **App domains:** `app.steadylamp.com`, `kanosena.com` (covers `app.kanosena.com`).
 - **Valid OAuth Redirect URIs:** `https://app.steadylamp.com/integrations/social/facebook`, `https://app.steadylamp.com/integrations/social/instagram`, `https://app.kanosena.com/integrations/social/facebook`, `https://app.kanosena.com/integrations/social/instagram`. Remove the steadylamp.com ones only after the domain move is proven.
-- **Still on steadylamp.com until the move:** contact email (support@steadylamp.com), Privacy, Terms and Data deletion URLs, Website platform Site URL (`https://app.steadylamp.com/about.html`).
+- **Still on steadylamp.com, to move to kanosena right after the domain switch:** contact email (support@steadylamp.com → support@kanosena.com), Privacy, Terms and Data deletion URLs, Website platform Site URL (`https://app.steadylamp.com/about.html`).
 - **Unchanged:** permissions, client OAuth toggles, Strict Mode.
 - `pages_read_user_content` was added on 17/11; the "Invalid Scopes" error is gone and the connect flow reaches Facebook's Page picker.
 
@@ -51,7 +51,7 @@ A second app, "Tidepost Business" (App ID 1428592625924097), was created before 
 | Item | State |
 |---|---|
 | App | `Kanosena` (was `Tidepost`), App ID `1614622909955028` (not secret), Business type, unpublished (Development mode). Calvin is Administrator |
-| Business portfolio | Steady Lamp Ltd, portfolio ID `896366080169225`, **not verified** (Meta says it is eligible). Legal name, address, phone and website on the portfolio are blank; support@steadylamp.com pending confirmation |
+| Business portfolio | Steady Lamp Ltd, portfolio ID `896366080169225`, **not verified** (Meta says it is eligible). Legal name, address, phone and website on the portfolio are blank; support@kanosena.com pending confirmation |
 | Pages permissions | business_management, pages_show_list, public_profile, pages_manage_posts, pages_manage_engagement, pages_read_engagement, read_insights. **Add `pages_read_user_content`** (see below) |
 | Instagram permissions ("API setup with Facebook login") | instagram_basic, instagram_content_publish, instagram_manage_comments, instagram_manage_insights, pages_show_list, pages_read_engagement, business_management. No messaging permissions. **Add `pages_read_user_content`** |
 | Facebook Login for Business | Client OAuth on, Web OAuth on, Enforce HTTPS on, Strict Mode on, Login from devices off, JS SDK login off |
@@ -117,13 +117,13 @@ Tick the "I agree that I will use this permission in compliance with its allowed
 
 Replace `<password>` with the test password from the password manager when pasting. Do not save it in this file.
 
-> **Website:** https://app.steadylamp.com
+> **Website:** https://app.kanosena.com
 > **Test login:** review@steadylamp.com / `<password>`
 >
 > Kanosena lets a small business owner approve social media posts, which we then publish at the planned time. Nothing is published without the owner's approval.
 >
 > **Connect a Facebook Page (pages_show_list, business_management)**
-> 1. Log in at https://app.steadylamp.com/auth/login with the test login.
+> 1. Log in at https://app.kanosena.com/auth/login with the test login.
 > 2. In the left sidebar, click "Add Channel", then "Facebook Page".
 > 3. Log in with your Facebook test user and allow access. Choose a Page from the list (this list uses pages_show_list, and Pages owned through a business portfolio come from business_management). The Page now appears in the sidebar.
 >
@@ -166,5 +166,5 @@ Meta asks these during App Review and Data Use Checkup. "Platform Data" means an
 
 ## Business Verification and Tech Provider
 
-- **Business Verification** (Business Settings → Security Centre → Start verification). Needs: legal name Steady Lamp Ltd, company number 17533499, registered office 128 City Road, London, EC1V 2NX, phone **[FILL IN]**, website `https://steadylamp.com` (add the Kanosena mention first, see README item 2), and a domain or email check (support@steadylamp.com, or DNS/meta-tag domain verification of steadylamp.com). Meta may ask for a Companies House certificate.
+- **Business Verification** (Business Settings → Security Centre → Start verification). Needs: legal name Steady Lamp Ltd, company number 17533499, registered office 128 City Road, London, EC1V 2NX, phone **[FILL IN]**, website `https://steadylamp.com` (add the Kanosena mention first, see README item 2), and a domain or email check (support@kanosena.com, or DNS/meta-tag domain verification of steadylamp.com). Meta may ask for a Companies House certificate.
 - **Tech Provider access verification**: App Dashboard → "Become a Tech Provider" (or Review → Access verification). Answers: we build a social media scheduling service that other businesses use to publish to their own Facebook Pages and Instagram accounts; we access their data only to publish posts they approved and show them their own results.

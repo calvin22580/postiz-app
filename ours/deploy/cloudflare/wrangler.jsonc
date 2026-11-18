@@ -7,7 +7,12 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-11-01",
   "observability": { "enabled": true },
-  "routes": [{ "pattern": "app.steadylamp.com", "custom_domain": true }],
+  // app.kanosena.com is the live address. app.steadylamp.com (the address
+  // before the rebrand) stays attached and redirects to it, so old links work.
+  "routes": [
+    { "pattern": "app.kanosena.com", "custom_domain": true },
+    { "pattern": "app.steadylamp.com", "custom_domain": true }
+  ],
   "workers_dev": false,
   "triggers": { "crons": ["* * * * *"] },
   "containers": [
@@ -32,9 +37,9 @@
   "vars": {
     "NODE_ENV": "production",
     "TZ": "UTC",
-    "MAIN_URL": "https://app.steadylamp.com",
-    "FRONTEND_URL": "https://app.steadylamp.com",
-    "NEXT_PUBLIC_BACKEND_URL": "https://app.steadylamp.com/api",
+    "MAIN_URL": "https://app.kanosena.com",
+    "FRONTEND_URL": "https://app.kanosena.com",
+    "NEXT_PUBLIC_BACKEND_URL": "https://app.kanosena.com/api",
     "BACKEND_INTERNAL_URL": "http://localhost:3000",
     "REDIS_URL": "redis://localhost:6379",
     "IS_GENERAL": "true",
@@ -43,7 +48,9 @@
     "STORAGE_PROVIDER": "cloudflare",
     "CLOUDFLARE_BUCKETNAME": "tidepost-media-eu",
     "CLOUDFLARE_REGION": "auto",
-    "CLOUDFLARE_BUCKET_URL": "https://media.steadylamp.com",
+    // New uploads use media.kanosena.com. media.steadylamp.com stays attached
+    // to the bucket because older posts store links to it.
+    "CLOUDFLARE_BUCKET_URL": "https://media.kanosena.com",
     "ENCRYPTION_PROVIDER": "local",
     "DISABLE_REGISTRATION": "true",
     "API_LIMIT": "30",

@@ -15,7 +15,7 @@ Meta wants one screencast per permission showing "the end-to-end user experience
 ## Video 1: Connecting a Facebook Page
 **Attach to:** `pages_show_list`, `business_management`
 
-1. Start on https://app.steadylamp.com/auth/login. Caption: "Kanosena: a small business owner logs in".
+1. Start on https://app.kanosena.com/auth/login. Caption: "Kanosena: a small business owner logs in".
 2. Log in with review@steadylamp.com. The calendar opens.
 3. Click "Add Channel". Caption: "The owner connects their Facebook Page".
 4. Click "Facebook Page". The Facebook login dialog opens. Caption: "Facebook Login: the owner grants access".

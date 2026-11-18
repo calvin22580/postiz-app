@@ -31,7 +31,7 @@ describe('legal facts', () => {
   it('uses the defaults and lists what is still to be filled in', () => {
     const facts = legalFacts({});
     expect(facts.companyName).toBe('Steady Lamp Ltd');
-    expect(facts.contactEmail).toBe('support@steadylamp.com');
+    expect(facts.contactEmail).toBe('support@kanosena.com');
     expect(facts.reviewed).toBe(false);
     expect(facts.companyNumber).toBe('17533499');
     expect(facts.registeredAddress).toBe('128 City Road, London, EC1V 2NX');
@@ -75,7 +75,7 @@ describe('legal pages', () => {
     const html = render(PrivacyPolicy, legalFacts({}));
     // how users request deletion (Meta Platform Terms 4.b, LinkedIn 5.1)
     expect(html).toContain(`href="${legalPaths.dataDeletion}"`);
-    expect(html).toContain('mailto:support@steadylamp.com');
+    expect(html).toContain('mailto:support@kanosena.com');
     // what we process from the platforms, and the limits on it
     expect(html).toContain('Data from Facebook, Instagram and LinkedIn');
     expect(html).toContain('We do not sell, license or buy platform data.');
@@ -107,7 +107,7 @@ describe('about page', () => {
       expect(html).toContain(`href="${path}"`);
     }
     expect(html).toContain('href="/auth/login"');
-    expect(html).toContain('mailto:support@steadylamp.com');
+    expect(html).toContain('mailto:support@kanosena.com');
     expect(html).not.toMatch(/\bPostiz\b/);
   });
 
