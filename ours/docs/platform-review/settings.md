@@ -14,7 +14,7 @@ All values below are for the live site `https://app.steadylamp.com` (`FRONTEND_U
 | Contact / business email | `support@steadylamp.com` |
 | App icon | `assets/app-icon-1024.png` (1024×1024) |
 | LinkedIn logo | `assets/app-icon-300.png` |
-| App name | `Tidepost` (placeholder brand). Must not contain "Linked", "In", "LinkedIn", "Microsoft", "Facebook", "Instagram", "Meta" or "FB" |
+| App name | `Kanosena`. Must not contain "Linked", "In", "LinkedIn", "Microsoft", "Facebook", "Instagram", "Meta" or "FB" |
 | Category (Meta) | Business and pages |
 | Company | Steady Lamp Ltd, company number 17533499, registered office 128 City Road, London, EC1V 2NX |
 
@@ -24,7 +24,7 @@ Copied from the code (`{FRONTEND_URL}/integrations/social/{identifier}`).
 
 | App | Where in the dashboard | Add exactly |
 |---|---|---|
-| Meta app `Tidepost` (Facebook and Instagram via Facebook Login) | Facebook Login for Business → Settings → Valid OAuth Redirect URIs | `https://app.steadylamp.com/integrations/social/facebook` and `https://app.steadylamp.com/integrations/social/instagram` |
+| Meta app `Kanosena` (Facebook and Instagram via Facebook Login) | Facebook Login for Business → Settings → Valid OAuth Redirect URIs | `https://app.steadylamp.com/integrations/social/facebook` and `https://app.steadylamp.com/integrations/social/instagram`, plus the same two on `https://app.kanosena.com` (all four saved 18/11/2026) |
 | LinkedIn app | Auth → OAuth 2.0 settings → Authorized redirect URLs for your app | `https://app.steadylamp.com/integrations/social/linkedin-page` and `https://app.steadylamp.com/integrations/social/linkedin` |
 
 On Meta app 1, also set (Facebook Login for Business → Settings): Client OAuth login **on**, Web OAuth login **on**, Enforce HTTPS **on**, Use Strict Mode for redirect URIs **on**, Login from devices **off**, Login with the JavaScript SDK **off**.
@@ -39,8 +39,8 @@ Put these on the Cloudflare Worker that serves app.steadylamp.com (Workers & Pag
 
 | Secret | Comes from |
 |---|---|
-| `FACEBOOK_APP_ID` | Meta app `Tidepost` → App settings → Basic → App ID |
-| `FACEBOOK_APP_SECRET` | Meta app `Tidepost` → App settings → Basic → App secret |
+| `FACEBOOK_APP_ID` | Meta app `Kanosena` → App settings → Basic → App ID |
+| `FACEBOOK_APP_SECRET` | Meta app `Kanosena` → App settings → Basic → App secret |
 | `LINKEDIN_CLIENT_ID` | LinkedIn app → Auth → Client ID |
 | `LINKEDIN_CLIENT_SECRET` | LinkedIn app → Auth → Primary Client Secret |
 

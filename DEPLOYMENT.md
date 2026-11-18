@@ -1,6 +1,6 @@
 # DEPLOYMENT.md
 
-What Tidepost (placeholder brand) needs in production. **Nothing is deployed by this document.** It is based on upstream **v2.26.0** (`docker-compose.yaml`, `Dockerfile.dev`, `var/docker/nginx.conf`, `.env.example` and the env vars the code reads).
+What Kanosena needs in production. **Nothing is deployed by this document.** It is based on upstream **v2.26.0** (`docker-compose.yaml`, `Dockerfile.dev`, `var/docker/nginx.conf`, `.env.example` and the env vars the code reads).
 
 **Live deployment (16/11/2026):** the review/demo site runs on Cloudflare Containers at `https://app.steadylamp.com`, with PlanetScale Postgres (London), Temporal Cloud (London) and R2. Setup, secrets and deploy steps: `ours/deploy/cloudflare/README.md`. The rest of this document is the general requirements list.
 
@@ -36,7 +36,7 @@ Upstream's compose uses `ghcr.io/gitroomhq/postiz-app:latest`. **We must not use
 | `DATABASE_URL` | Postgres connection string |
 | `REDIS_URL` | Redis connection string |
 | `JWT_SECRET` | Long random string, unique per environment |
-| `FRONTEND_URL` | Public app URL, e.g. `https://app.tidepost.example`. **All OAuth callbacks are built from this** |
+| `FRONTEND_URL` | Public app URL, e.g. `https://app.kanosena.com`. **All OAuth callbacks are built from this** |
 | `MAIN_URL` | Same as `FRONTEND_URL` in a single-domain setup |
 | `NEXT_PUBLIC_BACKEND_URL` | Public API URL. With the bundled nginx: `{FRONTEND_URL}/api` |
 | `BACKEND_INTERNAL_URL` | `http://localhost:3000` inside the container |

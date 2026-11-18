@@ -41,13 +41,13 @@ Our code requests, on one app, and refuses to connect if any is missing:
 | Legal name | Steady Lamp Ltd |
 | Registered address | 128 City Road, London, EC1V 2NX |
 | Business email | support@steadylamp.com |
-| Website | https://steadylamp.com (add a Tidepost mention first) and the product at https://app.steadylamp.com/about.html |
+| Website | https://steadylamp.com (add a Kanosena mention first) and the product at https://app.steadylamp.com/about.html |
 | Privacy policy | https://app.steadylamp.com/privacy.html |
 | Use cases | **Page Management** and **Page Analytics**. Not Executive Management, Employee Advocacy or Brand Engagement |
 | Use case description | See below |
 
 **Use case description:**
-> Tidepost is a social media service for UK small businesses (1–20 staff), run by Steady Lamp Ltd. A business owner connects their company's LinkedIn Page through LinkedIn's OAuth flow. Tidepost drafts posts from the business's own website, the owner approves, edits or rejects each one, and approved posts are published to the LinkedIn Page at the planned time. Nothing is published without the owner's explicit approval. We then show the owner how each published post performed (impressions, reactions, comments and shares counts) so they can see what works. We use rw_organization_admin to list the Pages the member administers so they can choose one, and to read Page and post analytics; w_organization_social to publish approved posts as the Page; r_organization_social to read the published posts' social action counts. We do not message members, scrape profiles, target ads or sell or share LinkedIn data.
+> Kanosena is a social media service for UK small businesses (1–20 staff), run by Steady Lamp Ltd. A business owner connects their company's LinkedIn Page through LinkedIn's OAuth flow. Kanosena drafts posts from the business's own website, the owner approves, edits or rejects each one, and approved posts are published to the LinkedIn Page at the planned time. Nothing is published without the owner's explicit approval. We then show the owner how each published post performed (impressions, reactions, comments and shares counts) so they can see what works. We use rw_organization_admin to list the Pages the member administers so they can choose one, and to read Page and post analytics; w_organization_social to publish approved posts as the Page; r_organization_social to read the published posts' social action counts. We do not message members, scrape profiles, target ads or sell or share LinkedIn data.
 
 ## Standard tier form answers
 
@@ -55,7 +55,7 @@ Our code requests, on one app, and refuses to connect if any is missing:
 > Steady Lamp Ltd is a UK private limited company (company number 17533499, incorporated 21/10/2026) that builds software for small businesses. Contact: support@steadylamp.com.
 
 **Product overview:**
-> Tidepost (working name) plans, writes and schedules social media posts for small businesses, with the promise "You approve. We handle the rest." It builds a business profile from the company's own website, with a source for every fact, drafts a week of posts with simple branded graphics, and publishes only the posts the owner approves to their connected Facebook Page, Instagram account and LinkedIn Page. It is open source (https://github.com/calvin22580/postiz-app).
+> Kanosena plans, writes and schedules social media posts for small businesses, with the promise "You approve. We handle the rest." It builds a business profile from the company's own website, with a source for every fact, drafts a week of posts with simple branded graphics, and publishes only the posts the owner approves to their connected Facebook Page, Instagram account and LinkedIn Page. It is open source (https://github.com/calvin22580/postiz-app).
 
 **Test credentials:**
 > https://app.steadylamp.com, user review@steadylamp.com, password `<password>` (paste from the password manager). The account has a LinkedIn Page connected **[only once that is true]** and a "Sandbox" channel, which is a simulated channel that never publishes anywhere.
@@ -66,7 +66,7 @@ Our code requests, on one app, and refuses to connect if any is missing:
 > 2. To connect a Page: "Add Channel" → "LinkedIn Page" → LinkedIn OAuth → choose the Page.
 > 3. To post: "Create Post" → select the LinkedIn Page avatar → type text, optionally "Insert Media" → "Post now". The post appears on the LinkedIn Page.
 > 4. Analytics: open the post in the calendar → "Statistics", or open "What worked" in the left menu.
-> 5. Comments by members are not displayed in Tidepost, so the comment and commenter-profile test cases don't apply.
+> 5. Comments by members are not displayed in Kanosena, so the comment and commenter-profile test cases don't apply.
 
 ## Screencast script (one video, narrated)
 
@@ -75,15 +75,15 @@ LinkedIn: high resolution, downloadable (upload the MP4 to a link that downloads
 Same set-up as the Meta screencasts (clean Chrome window, macOS recording). Record after the Development tier is granted and the LinkedIn keys are on the live site.
 
 **Page Management**
-1. Narrate: "This is Tidepost, a social media service for small businesses by Steady Lamp Ltd. A business owner logs in." Log in.
+1. Narrate: "This is Kanosena, a social media service for small businesses by Steady Lamp Ltd. A business owner logs in." Log in.
 2. **Test case 1, OAuth:** "The owner connects their company's LinkedIn Page." Add Channel → LinkedIn Page → full LinkedIn consent screen, showing the permissions → Allow → choose the Page from the list → Page appears in the sidebar.
-3. **Test case 2, post to the Page:** "The owner writes a post, or approves one from their weekly plan, and Tidepost publishes it to the Page." Create Post → select the Page → test text plus a photo → Post now. Then open the Page on linkedin.com and show the post.
+3. **Test case 2, post to the Page:** "The owner writes a post, or approves one from their weekly plan, and Kanosena publishes it to the Page." Create Post → select the Page → test text plus a photo → Post now. Then open the Page on linkedin.com and show the post.
 4. Optional: "Weekly posts" → Approve one draft → show it scheduled in the calendar. Narrate: "Nothing is published without the owner's approval."
-5. **Test cases 3 and 4:** narrate "Tidepost does not display comments or commenter profile data from LinkedIn."
+5. **Test cases 3 and 4:** narrate "Kanosena does not display comments or commenter profile data from LinkedIn."
 6. **Test case 5:** narrate "We store only the Page's ID, name and logo and the member's name and picture for the connection. No other member personal data is used."
 
 **Page Analytics**
-7. **Test case 2, post performance:** "Tidepost shows how each post performed." Open the post → Statistics (impressions, reactions, comments, shares). Then "What worked".
+7. **Test case 2, post performance:** "Kanosena shows how each post performed." Open the post → Statistics (impressions, reactions, comments, shares). Then "What worked".
 8. **Test case 3:** narrate "We show only totals. No profile data of members who engaged is displayed."
 
 Keep it under 5 minutes.

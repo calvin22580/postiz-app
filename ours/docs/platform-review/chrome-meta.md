@@ -7,7 +7,7 @@
 ---
 
 ```text
-You are setting up a Meta developer app for Tidepost, a social media scheduling service run by Steady Lamp Ltd (UK). Work in a new tab. Follow these rules:
+You are setting up a Meta developer app for Kanosena, a social media scheduling service run by Steady Lamp Ltd (UK). Work in a new tab. Follow these rules:
 - Do NOT submit anything for App Review, do NOT click Publish / Go Live, and do NOT start Business Verification without asking Calvin first in chat.
 - Never type a secret into chat or a note. Copy App IDs and secrets only into the Cloudflare form in step 5.
 - If a field asks for something not given here (phone number, or anything else not listed), stop and ask Calvin.
@@ -26,8 +26,8 @@ Values:
 - Category: Business and pages
 - Icon: app-icon-1024.png (downloaded above)
 
-STEP 1. App 1, name "Tidepost"
-a. developers.facebook.com/apps → Create app. Name "Tidepost", contact email support@steadylamp.com.
+STEP 1. App 1, name "Kanosena"
+a. developers.facebook.com/apps → Create app. Name "Kanosena", contact email support@steadylamp.com.
 b. Use cases: choose "Manage everything on your Page" AND "Manage messaging and content on Instagram". App type Business if asked. Connect it to the Steady Lamp Ltd business portfolio.
 c. Customise "Manage everything on your Page": keep business_management, pages_show_list, public_profile; ADD pages_manage_posts, pages_manage_engagement, pages_read_engagement, read_insights, pages_read_user_content (Meta requires it for pages_manage_engagement). Add nothing else.
 d. Customise "Manage messaging and content on Instagram": choose "API setup with Facebook login". Keep/ADD instagram_basic, instagram_content_publish, instagram_manage_comments, instagram_manage_insights, pages_show_list, pages_read_engagement, business_management, pages_read_user_content (Meta requires it for instagram_basic). REMOVE instagram_manage_messages and any other messaging permission if allowed. Tell Calvin if something can't be removed.
@@ -52,5 +52,5 @@ dash.cloudflare.com → Workers & Pages → the Worker serving app.steadylamp.co
    FACEBOOK_APP_SECRET = App 1 App secret
 Deploy/save. Do not show the values in chat.
 
-STEP 6. Report to Calvin in chat (no secrets): the Tidepost App ID (not secret), which permissions it has and anything that could not be added or removed, the redirect URIs as saved, Business Verification status and what it needs, the Tech Provider requirements, and anything that looked different from these steps. Calvin will paste this report back to Claude.
+STEP 6. Report to Calvin in chat (no secrets): the Kanosena App ID (not secret), which permissions it has and anything that could not be added or removed, the redirect URIs as saved, Business Verification status and what it needs, the Tech Provider requirements, and anything that looked different from these steps. Calvin will paste this report back to Claude.
 ```

@@ -1,6 +1,6 @@
 # PLATFORM_APPROVALS.md
 
-What we need to apply for so Tidepost (placeholder brand) can publish to Facebook, Instagram and LinkedIn for customers.
+What we need to apply for so Kanosena can publish to Facebook, Instagram and LinkedIn for customers.
 
 - **Checked against:** upstream Postiz **v2.26.0** code and the official docs linked below, on 15/11/2026.
 - **Scopes, callback URLs and env var names** are copied from the code. File references point at `libraries/nestjs-libraries/src/integrations/social/`.
@@ -10,7 +10,7 @@ What we need to apply for so Tidepost (placeholder brand) can publish to Faceboo
 >
 > **17/11/2026: Instagram (Standalone) is not available to us.** Meta no longer offers "API setup with Instagram login" for new apps (only the unified login through Facebook Login for Business), so there is no Instagram app ID or secret for `instagram-standalone`. We use one Meta app for Facebook and for Instagram via a linked Facebook Page (section 2a). Customers need an Instagram professional account linked to a Page. Section 2b and the "apply for both" recommendation below are out of date.
 
-Throughout, `FRONTEND_URL` means the public URL customers use for the app, for example `https://app.tidepost.example`. Callback URLs are built from it, so it must be the final production domain before you register the URLs.
+Throughout, `FRONTEND_URL` means the public URL customers use for the app, for example `https://app.kanosena.com`. Callback URLs are built from it, so it must be the final production domain before you register the URLs.
 
 ---
 
@@ -21,7 +21,7 @@ Both Meta and LinkedIn vet the **business**, not just the app. These are the slo
 | Need | Meta | LinkedIn | Notes |
 |---|---|---|---|
 | A registered legal entity (for example a UK Ltd company) | Needed for Business Verification | **Required.** "Only available to registered legal organizations for commercial use cases only" | If you trade as a sole trader, confirm whether that is accepted before applying. **UNVERIFIED for sole traders.** |
-| Business email on your own domain | Strongly advised | **Required.** Personal addresses "won't pass the vetting process" | e.g. `you@tidepost.example`, not Gmail |
+| Business email on your own domain | Strongly advised | **Required.** Personal addresses "won't pass the vetting process" | e.g. `you@kanosena.com`, not Gmail |
 | Public website on that domain | Needed | Needed: website and domain are verified | Can be a one-page site |
 | Privacy policy URL | Required in App Settings | Required for Standard tier | Must say how users can ask for their data to be deleted. **Draft ready:** `https://<app domain>/privacy.html` (fill in company details first) |
 | Terms of service URL | Asked for in App Settings | Asked for | **Draft ready:** `https://<app domain>/terms.html` |
@@ -31,7 +31,7 @@ Both Meta and LinkedIn vet the **business**, not just the app. These are the slo
 | A running, publicly reachable instance | Reviewers must be able to test it | Needed for the Standard tier screencast | Not needed to *start* applications. Needed before you submit for review |
 | Test login for reviewers | Required | Required for Standard tier | A reviewer account on the deployed instance |
 
-**Brand rules for app names:** LinkedIn rejects apps whose name or logo includes any part of "LinkedIn" or "Microsoft" (for example "Linked" or "In"). Keep "Tidepost", or the final brand, as the app name on both platforms.
+**Brand rules for app names:** LinkedIn rejects apps whose name or logo includes any part of "LinkedIn" or "Microsoft" (for example "Linked" or "In"). Keep "Kanosena", or the final brand, as the app name on both platforms.
 
 ---
 
