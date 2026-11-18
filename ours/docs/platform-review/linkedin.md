@@ -9,7 +9,7 @@ Sources, checked 16/11/2026:
 ## What LinkedIn requires, in short
 
 - **Community Management API** is "only available to registered legal organizations for commercial use cases". Steady Lamp Ltd qualifies.
-- Before applying: a **super admin of the Steady Lamp Ltd LinkedIn Page verifies the app**, a verified **business email** on our own domain (support@steadylamp.com; personal emails "will not pass the vetting process"), and an app name and logo with no part of "LinkedIn" or "Microsoft".
+- Before applying: a **super admin of the Steady Lamp Ltd LinkedIn Page verifies the app**, a verified **business email** on our own domain (support@kanosena.com; personal emails "will not pass the vetting process"), and an app name and logo with no part of "LinkedIn" or "Microsoft".
 - **Development tier** first: approved use case, verified business email, verified organisation, verified website and domain, app verified by the Page.
 - **Standard tier** next, once the integration works: company and product overview, use case description, test credentials, a valid privacy policy, and a high-resolution, downloadable screencast of "all core functionality".
 - **A rejection at either tier means a new app.** "You will not be able to re-apply … with your existing app." So nothing is submitted until every field below is filled in and the legal pages are out of draft.
@@ -40,9 +40,9 @@ Our code requests, on one app, and refuses to connect if any is missing:
 |---|---|
 | Legal name | Steady Lamp Ltd |
 | Registered address | 128 City Road, London, EC1V 2NX |
-| Business email | support@steadylamp.com |
-| Website | https://steadylamp.com (add a Kanosena mention first) and the product at https://app.steadylamp.com/about.html |
-| Privacy policy | https://app.steadylamp.com/privacy.html |
+| Business email | support@kanosena.com |
+| Website | https://app.kanosena.com/about.html (kanosena.com will point to the product page) |
+| Privacy policy | https://app.kanosena.com/privacy.html |
 | Use cases | **Page Management** and **Page Analytics**. Not Executive Management, Employee Advocacy or Brand Engagement |
 | Use case description | See below |
 
@@ -52,17 +52,17 @@ Our code requests, on one app, and refuses to connect if any is missing:
 ## Standard tier form answers
 
 **Company overview:**
-> Steady Lamp Ltd is a UK private limited company (company number 17533499, incorporated 21/10/2026) that builds software for small businesses. Contact: support@steadylamp.com.
+> Steady Lamp Ltd is a UK private limited company (company number 17533499, incorporated 21/10/2026) that builds software for small businesses. Contact: support@kanosena.com.
 
 **Product overview:**
 > Kanosena plans, writes and schedules social media posts for small businesses, with the promise "You approve. We handle the rest." It builds a business profile from the company's own website, with a source for every fact, drafts a week of posts with simple branded graphics, and publishes only the posts the owner approves to their connected Facebook Page, Instagram account and LinkedIn Page. It is open source (https://github.com/calvin22580/postiz-app).
 
 **Test credentials:**
-> https://app.steadylamp.com, user review@steadylamp.com, password `<password>` (paste from the password manager). The account has a LinkedIn Page connected **[only once that is true]** and a "Sandbox" channel, which is a simulated channel that never publishes anywhere.
+> https://app.kanosena.com, user review@steadylamp.com, password `<password>` (paste from the password manager). The account has a LinkedIn Page connected **[only once that is true]** and a "Sandbox" channel, which is a simulated channel that never publishes anywhere.
 
 ## Reviewer instructions (for the form's notes)
 
-> 1. Log in at https://app.steadylamp.com/auth/login.
+> 1. Log in at https://app.kanosena.com/auth/login.
 > 2. To connect a Page: "Add Channel" → "LinkedIn Page" → LinkedIn OAuth → choose the Page.
 > 3. To post: "Create Post" → select the LinkedIn Page avatar → type text, optionally "Insert Media" → "Post now". The post appears on the LinkedIn Page.
 > 4. Analytics: open the post in the calendar → "Statistics", or open "What worked" in the left menu.

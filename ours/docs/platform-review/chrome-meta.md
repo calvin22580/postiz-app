@@ -17,24 +17,24 @@ You are setting up a Meta developer app for Kanosena, a social media scheduling 
 
 Values:
 - Business portfolio: Steady Lamp Ltd (create it if it doesn't exist, ask Calvin first). Company number 17533499, registered office 128 City Road, London, EC1V 2NX
-- Contact email: support@steadylamp.com
-- App domain: app.steadylamp.com
-- Website / Site URL: https://app.steadylamp.com/about.html
-- Privacy policy URL: https://app.steadylamp.com/privacy.html
-- Terms of service URL: https://app.steadylamp.com/terms.html
-- User data deletion (instructions URL): https://app.steadylamp.com/data-deletion.html
+- Contact email: support@kanosena.com
+- App domain: app.kanosena.com
+- Website / Site URL: https://app.kanosena.com/about.html
+- Privacy policy URL: https://app.kanosena.com/privacy.html
+- Terms of service URL: https://app.kanosena.com/terms.html
+- User data deletion (instructions URL): https://app.kanosena.com/data-deletion.html
 - Category: Business and pages
 - Icon: app-icon-1024.png (downloaded above)
 
 STEP 1. App 1, name "Kanosena"
-a. developers.facebook.com/apps → Create app. Name "Kanosena", contact email support@steadylamp.com.
+a. developers.facebook.com/apps → Create app. Name "Kanosena", contact email support@kanosena.com.
 b. Use cases: choose "Manage everything on your Page" AND "Manage messaging and content on Instagram". App type Business if asked. Connect it to the Steady Lamp Ltd business portfolio.
-c. Customise "Manage everything on your Page": keep business_management, pages_show_list, public_profile; ADD pages_manage_posts, pages_manage_engagement, pages_read_engagement, read_insights. Add nothing else.
-d. Customise "Manage messaging and content on Instagram": choose "API setup with Facebook login". Keep/ADD instagram_basic, instagram_content_publish, instagram_manage_comments, instagram_manage_insights, pages_show_list, pages_read_engagement, business_management. REMOVE instagram_manage_messages and any other messaging permission if allowed. Tell Calvin if something can't be removed.
-e. App settings → Basic: App domains app.steadylamp.com; privacy, terms and data deletion URLs above; category Business and pages; upload the icon; Add platform → Website, Site URL above. Save.
+c. Customise "Manage everything on your Page": keep business_management, pages_show_list, public_profile; ADD pages_manage_posts, pages_manage_engagement, pages_read_engagement, read_insights, pages_read_user_content (Meta requires it for pages_manage_engagement). Add nothing else.
+d. Customise "Manage messaging and content on Instagram": choose "API setup with Facebook login". Keep/ADD instagram_basic, instagram_content_publish, instagram_manage_comments, instagram_manage_insights, pages_show_list, pages_read_engagement, business_management, pages_read_user_content (Meta requires it for instagram_basic). REMOVE instagram_manage_messages and any other messaging permission if allowed. Tell Calvin if something can't be removed.
+e. App settings → Basic: App domains app.kanosena.com; privacy, terms and data deletion URLs above; category Business and pages; upload the icon; Add platform → Website, Site URL above. Save.
 f. Facebook Login for Business → Settings: Client OAuth login ON, Web OAuth login ON, Enforce HTTPS ON, Use Strict Mode for redirect URIs ON, Login with the JavaScript SDK OFF, Login from devices OFF. Valid OAuth Redirect URIs, exactly these two (no trailing slash):
-   https://app.steadylamp.com/integrations/social/facebook
-   https://app.steadylamp.com/integrations/social/instagram
+   https://app.kanosena.com/integrations/social/facebook
+   https://app.kanosena.com/integrations/social/instagram
    Save.
 g. App roles: confirm Calvin's Facebook account is an Administrator.
 
@@ -47,7 +47,7 @@ STEP 4. Business Verification
 Business settings (business.facebook.com/settings) → Security Centre / Business info. Tell Calvin whether Steady Lamp Ltd is verified, and if not, list exactly what the form asks for (company number, address, phone, domain check). Do not start it without Calvin.
 
 STEP 5. Secrets into Cloudflare (no chat)
-dash.cloudflare.com → Workers & Pages → the Worker serving app.steadylamp.com (ask Calvin if unsure which) → Settings → Variables and Secrets → Add, type "Secret", for each:
+dash.cloudflare.com → Workers & Pages → the Worker serving app.kanosena.com (ask Calvin if unsure which) → Settings → Variables and Secrets → Add, type "Secret", for each:
    FACEBOOK_APP_ID = App 1 App ID (App settings → Basic)
    FACEBOOK_APP_SECRET = App 1 App secret
 Deploy/save. Do not show the values in chat.
