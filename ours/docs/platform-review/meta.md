@@ -29,6 +29,19 @@ We use **one app, `Kanosena`** (App ID 1614622909955028, created as "Tidepost" a
 
 **Limitation:** customers need an Instagram professional account **linked to a Facebook Page**. An Instagram account with no Page can't be connected. The Instagram (Standalone) channel is hidden from the add-channel screen on the live site (`HIDDEN_PROVIDERS`).
 
+### Current app settings (checked 18/11/2026)
+
+Claude in Chrome renamed the app and saved these, then reloaded to confirm:
+
+- **Display name:** Kanosena (was "Tidepost"). "Tidepost Business" untouched.
+- **App domains:** `app.steadylamp.com`, `kanosena.com` (covers `app.kanosena.com`).
+- **Valid OAuth Redirect URIs:** `https://app.steadylamp.com/integrations/social/facebook`, `https://app.steadylamp.com/integrations/social/instagram`, `https://app.kanosena.com/integrations/social/facebook`, `https://app.kanosena.com/integrations/social/instagram`. Remove the steadylamp.com ones only after the domain move is proven.
+- **Still on steadylamp.com until the move:** contact email (support@steadylamp.com), Privacy, Terms and Data deletion URLs, Website platform Site URL (`https://app.steadylamp.com/about.html`).
+- **Unchanged:** permissions, client OAuth toggles, Strict Mode.
+- `pages_read_user_content` was added on 17/11; the "Invalid Scopes" error is gone and the connect flow reaches Facebook's Page picker.
+
+**Test Page:** "Kanosena" (category Software, Page ID 61596371804205), created 18/11 for connect tests and screencasts instead of Calvin's real Pages. No Instagram account linked yet, nothing posted. A full connect with only this Page ticked is still to be confirmed.
+
 A second app, "Tidepost Business" (App ID 1428592625924097), was created before this was found. Calvin's decision: leave it unused, don't delete it, and don't submit it for review.
 
 ## Permissions and justification text

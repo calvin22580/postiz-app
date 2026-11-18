@@ -24,7 +24,7 @@ Copied from the code (`{FRONTEND_URL}/integrations/social/{identifier}`).
 
 | App | Where in the dashboard | Add exactly |
 |---|---|---|
-| Meta app `Kanosena` (Facebook and Instagram via Facebook Login) | Facebook Login for Business → Settings → Valid OAuth Redirect URIs | `https://app.steadylamp.com/integrations/social/facebook` and `https://app.steadylamp.com/integrations/social/instagram` |
+| Meta app `Kanosena` (Facebook and Instagram via Facebook Login) | Facebook Login for Business → Settings → Valid OAuth Redirect URIs | `https://app.steadylamp.com/integrations/social/facebook` and `https://app.steadylamp.com/integrations/social/instagram`, plus the same two on `https://app.kanosena.com` (all four saved 18/11/2026) |
 | LinkedIn app | Auth → OAuth 2.0 settings → Authorized redirect URLs for your app | `https://app.steadylamp.com/integrations/social/linkedin-page` and `https://app.steadylamp.com/integrations/social/linkedin` |
 
 On Meta app 1, also set (Facebook Login for Business → Settings): Client OAuth login **on**, Web OAuth login **on**, Enforce HTTPS **on**, Use Strict Mode for redirect URIs **on**, Login from devices **off**, Login with the JavaScript SDK **off**.
