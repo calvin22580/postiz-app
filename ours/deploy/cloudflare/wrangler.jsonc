@@ -55,9 +55,12 @@
     "DISABLE_REGISTRATION": "true",
     "API_LIMIT": "30",
     // Demo environment for platform app reviews: the Sandbox channel is on and
-    // always labelled; plans can be switched without payment ("Test mode").
+    // always labelled. Plans are paid through Stripe's sandbox ("Test
+    // payments" on screen, test cards only, no real money). Needs the
+    // OURS_STRIPE_* secrets; without them the plan screen falls back to "email
+    // us". A live Stripe key would also need OURS_STRIPE_ALLOW_LIVE=true.
     "SANDBOX_CHANNEL_ENABLED": "true",
-    "OURS_BILLING_MODE": "test",
+    "OURS_BILLING_MODE": "stripe",
     // Meta no longer offers Instagram Login to new apps (17/11/2026), so the
     // Instagram (Standalone) channel can't work for us. Instagram goes through
     // a linked Facebook Page instead. See ours/docs/platform-review/meta.md.

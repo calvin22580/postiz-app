@@ -19,6 +19,7 @@ import { SeasonalController } from '@gitroom/backend/ours/seasonal.controller';
 import { SeasonalService } from '@gitroom/nestjs-libraries/ours/seasonal/seasonal.service';
 import { SeasonalRepository } from '@gitroom/nestjs-libraries/ours/seasonal/seasonal.repository';
 import { PlanController } from '@gitroom/backend/ours/plan.controller';
+import { StripeWebhookController } from '@gitroom/backend/ours/stripe.webhook.controller';
 import { PlanService } from '@gitroom/nestjs-libraries/ours/plans/plan.service';
 import { PlanRepository } from '@gitroom/nestjs-libraries/ours/plans/plan.repository';
 import { ChannelLimitGuard } from '@gitroom/backend/ours/channel.limit.guard';
@@ -39,9 +40,13 @@ const authenticatedController = [
   PerformanceController,
 ];
 
+// No sign-in: callers prove who they are another way (Stripe signs its
+// webhooks)
+const publicController = [StripeWebhookController];
+
 @Module({
   imports: [],
-  controllers: authenticatedController,
+  controllers: [...authenticatedController, ...publicController],
   providers: [
     BusinessProfileService,
     BusinessProfileRepository,

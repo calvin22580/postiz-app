@@ -11,6 +11,7 @@ const planSelect = {
   plan: true,
   trialEndsAt: true,
   paymentProvider: true,
+  externalId: true,
   startedAt: true,
 } as const;
 
@@ -48,13 +49,27 @@ export class PlanRepository {
     }
   }
 
-  setPlan(orgId: string, plan: string, paymentProvider: string) {
+  // externalId: the provider's subscription id (Stripe), left as it is when
+  // not given
+  setPlan(orgId: string, plan: string, paymentProvider: string, externalId?: string) {
     return this._plan.model.oursPlanSubscription.upsert({
       where: { organizationId: orgId },
-      create: { organizationId: orgId, plan, paymentProvider },
-      update: { plan, paymentProvider, trialEndsAt: null, startedAt: new Date() },
+      create: { organizationId: orgId, plan, paymentProvider, externalId },
+      update: { plan, paymentProvider, externalId, trialEndsAt: null, startedAt: new Date() },
       select: planSelect,
     });
+  }
+
+  // A paid subscription is over: back to an ended trial, so new work stops
+  // until the owner picks a plan. Only the subscription we have on record can
+  // end it, so a late event about an older one changes nothing.
+  async endPlan(orgId: string, externalId: string, endedAt: Date) {
+    const { count } = await this._plan.model.oursPlanSubscription.updateMany({
+      // already ended: a repeated event doesn't move the date
+      where: { organizationId: orgId, externalId, plan: { not: 'trial' } },
+      data: { plan: 'trial', trialEndsAt: endedAt },
+    });
+    return count === 1;
   }
 
   async getUsage(orgId: string, period: string) {

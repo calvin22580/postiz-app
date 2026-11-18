@@ -304,7 +304,7 @@ describe('PlanService', () => {
     expect(JSON.stringify(view)).not.toContain('aiSpendUsd');
     expect(JSON.stringify(view)).not.toContain('1.23');
     expect(view.fairUseReached).toBe(false);
-    expect(view.billing).toEqual({ mode: 'off', canChange: false });
+    expect(view.billing).toEqual({ mode: 'off', canChange: false, canManage: false, testPayments: false });
   });
 
   it('only changes plan in test mode, and only for admins', async () => {
@@ -317,6 +317,6 @@ describe('PlanService', () => {
     const view = await service.changePlan('org-1', 'growth', true);
     expect(repo.setPlan).toHaveBeenCalledWith('org-1', 'growth', 'test');
     expect(view.plan.key).toBe('growth');
-    expect(view.billing).toEqual({ mode: 'test', canChange: true });
+    expect(view.billing).toEqual({ mode: 'test', canChange: true, canManage: false, testPayments: false });
   });
 });

@@ -22,7 +22,7 @@ import {
   TRIAL_PLAN_KEY,
   trialDays,
 } from '@gitroom/nestjs-libraries/ours/plans/plans.config';
-import { paymentProviderFor } from '@gitroom/nestjs-libraries/ours/plans/plan.payment';
+import { BillingUpdate, paymentProviderFor } from '@gitroom/nestjs-libraries/ours/plans/plan.payment';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -31,7 +31,9 @@ dayjs.extend(timezone);
 // answer 402 by sending the owner to upstream's own billing page.
 export const PLAN_LIMIT_STATUS = 403;
 
-export type PlanStatus = 'trial' | 'trial-ended' | 'active';
+// "ended": a paid plan was cancelled or stopped being paid for
+export type PlanStatus = 'trial' | 'trial-ended' | 'ended' | 'active';
+
 
 // what claim() took, so the same unit can be given back
 export interface UsageTicket {
@@ -87,13 +89,17 @@ export const formatDay = (date: Date, tz = captionTimezone()) =>
   }).format(date);
 
 export const planStatus = (
-  row: { plan: string; trialEndsAt: Date | null },
+  row: { plan: string; trialEndsAt: Date | null; paymentProvider?: string },
   now: Date = new Date()
 ): PlanStatus => {
   if (row.plan !== TRIAL_PLAN_KEY) {
     return 'active';
   }
-  return row.trialEndsAt && row.trialEndsAt.getTime() <= now.getTime() ? 'trial-ended' : 'trial';
+  if (!row.trialEndsAt || row.trialEndsAt.getTime() > now.getTime()) {
+    return 'trial';
+  }
+  // a row that has had a paid plan is back on "trial" only because it ended
+  return row.paymentProvider && row.paymentProvider !== 'none' ? 'ended' : 'trial-ended';
 };
 
 // The next plan up that allows more of something, for the "move to …" hint.
@@ -228,11 +234,12 @@ export class PlanService {
       this._planRepository.aiSpendUsd(orgId, period.spendFrom, now),
     ]);
     const mode = billingMode();
+    const provider = paymentProviderFor(mode);
     return {
       plan: {
         key: plan.key,
-        name: plan.name,
-        summary: plan.summary,
+        name: status === 'ended' ? 'No plan' : plan.name,
+        summary: status === 'ended' ? 'Your plan has ended. Choose one below to keep going.' : plan.summary,
         monthlyPence: plan.monthlyPence,
         status,
         trialEndsAt: row.trialEndsAt ? dayjs(row.trialEndsAt).tz(captionTimezone()).format('YYYY-MM-DD') : null,
@@ -261,7 +268,12 @@ export class PlanService {
       billing: {
         mode,
         // only admins change the plan, and only where the app can do it
-        canChange: mode === 'test' && canManage,
+        canChange: mode !== 'off' && canManage,
+        // card details, invoices and cancelling, on the provider's own page
+        canManage:
+          canManage && !!provider?.manageUrl && row.paymentProvider === provider.name && !!row.externalId,
+        // the provider's test mode: no real money moves, and the screen says so
+        testPayments: !!provider?.isTest?.(),
       },
     };
   }
@@ -281,14 +293,95 @@ export class PlanService {
         400
       );
     }
-    const result = await provider.changePlan(orgId, plan);
+    const { row } = await this.current(orgId);
+    const result = await provider.changePlan(orgId, plan, row);
     if (result.status === 'changed') {
       await this._planRepository.setPlan(orgId, plan.key, provider.name);
     }
     return { ...(await this.overview(orgId, canManage)), ...(result.status === 'redirect' ? { redirect: result.url } : {}) };
   }
 
+  // A page where an admin manages card details, invoices and cancelling.
+  async manageBilling(orgId: string, canManage: boolean) {
+    if (!canManage) {
+      throw new HttpException('Only an admin of your team can manage billing.', PLAN_LIMIT_STATUS);
+    }
+    const provider = paymentProviderFor(billingMode());
+    const { row } = await this.current(orgId);
+    const url = provider?.manageUrl ? await provider.manageUrl(orgId, row) : null;
+    if (!url) {
+      throw new HttpException('There’s no billing to manage yet.', 400);
+    }
+    return { url };
+  }
+
+  // A payment provider's webhook (Stripe's for now). Never throws: a payment
+  // webhook that throws can leave billing half-applied. Returns whether it
+  // was handled; retry asks the provider to send it again later.
+  async paymentWebhook(
+    providerName: string,
+    rawBody: Buffer | undefined,
+    signature: string | undefined
+  ): Promise<{ ok: boolean; retry: boolean }> {
+    const provider = paymentProviderFor(billingMode());
+    if (!provider?.readWebhook || provider.name !== providerName) {
+      this._logger.warn(`A ${providerName} webhook arrived, but ${providerName} billing isn't switched on`);
+      return { ok: false, retry: false };
+    }
+    try {
+      const update = await provider.readWebhook(rawBody, signature);
+      if (!update) {
+        return { ok: false, retry: false };
+      }
+      await this.applyBillingUpdate(provider.name, update);
+      return { ok: true, retry: false };
+    } catch (e) {
+      this._logger.error(`${providerName} webhook failed: ${(e as Error).message}`);
+      return { ok: false, retry: true };
+    }
+  }
+
+  // Brings our plan row in line with what the payment provider says. Only
+  // called from paymentWebhook, which catches a failure and asks for a retry.
+  async applyBillingUpdate(providerName: string, update: BillingUpdate) {
+    if (update.state === 'ignore') {
+      return;
+    }
+    const { orgId, externalId } = update;
+    if (update.state === 'ended') {
+      if (await this._planRepository.endPlan(orgId, externalId, update.endedAt)) {
+        this._logger.log(`org=${orgId} plan ended (${providerName} ${externalId})`);
+      }
+      return;
+    }
+    const plan = PAID_PLANS.find((p) => p.key === update.planKey);
+    if (!plan) {
+      // paid for but not ours to map: needs a person, so it's an error
+      this._logger.error(`org=${orgId}: ${providerName} ${externalId} has a plan we don't know (${update.planKey})`);
+      return;
+    }
+    const row = await this._planRepository.getPlan(orgId);
+    if (row?.paymentProvider === providerName && row.externalId === externalId && row.plan === plan.key) {
+      // nothing changed (a renewal, or the same event twice): keep
+      // startedAt, which the fair-use month counts from
+      return;
+    }
+    if (row?.paymentProvider === providerName && row.externalId && row.externalId !== externalId) {
+      // two paid subscriptions for one organisation: someone may be paying
+      // twice, so a person needs to look
+      this._logger.error(`org=${orgId} had ${providerName} ${row.externalId}, now ${externalId}: check for a double payment`);
+    }
+    await this._planRepository.setPlan(orgId, plan.key, providerName, externalId);
+    this._logger.log(`org=${orgId} is on ${plan.key} (${providerName} ${externalId})`);
+  }
+
   private assertUsable(row: { trialEndsAt: Date | null }, status: PlanStatus) {
+    if (status === 'ended') {
+      throw new HttpException(
+        `Your plan ended on ${formatDay(row.trialEndsAt!)}. Choose a plan on Plan and usage to keep going.`,
+        PLAN_LIMIT_STATUS
+      );
+    }
     if (status === 'trial-ended') {
       throw new HttpException(
         `Your free trial ended on ${formatDay(row.trialEndsAt!)}. Choose a plan on Plan and usage to keep going.`,

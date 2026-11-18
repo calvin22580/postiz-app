@@ -2,8 +2,9 @@
 // OURS: "Plan and usage" (Milestone 7). What the owner's plan includes, how
 // much of it they've used this month, and the plans they can move to.
 // Prices come from the backend's plan config, in GBP by default.
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import clsx from 'clsx';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
 import { readError } from '@gitroom/frontend/ours/profile/business.profile.hooks';
@@ -158,13 +159,68 @@ const CurrentPlan: FC<{ data: PlanOverview }> = ({ data }) => {
           Choose a plan below to keep writing and scheduling new ones.
         </Notice>
       )}
+      {plan.status === 'ended' && plan.trialEndsAt && (
+        <Notice tone="attention" testId="plan-ended">
+          Your plan ended on {formatDate(plan.trialEndsAt)}. Your posts already scheduled still go out. Choose a
+          plan below to keep writing and scheduling new ones.
+        </Notice>
+      )}
       {plan.status === 'active' && period.resetsOn && (
         <p className="text-[14px] text-textItemBlur" data-testid="plan-resets">
           Your monthly allowance started again on {formatDate(period.start)} and next resets on{' '}
           {formatDate(period.resetsOn)}.
         </p>
       )}
+      {data.billing.canManage && <ManageBilling />}
     </Card>
+  );
+};
+
+// Card details, invoices and cancelling, on Stripe's own billing page
+const ManageBilling: FC = () => {
+  const fetch = useFetch();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const open = async () => {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/ours/plan/billing');
+      if (!res.ok) {
+        setMessage((await readError(res)) || 'We couldn’t open your billing page. Please try again.');
+        setBusy(false);
+        return;
+      }
+      window.location.href = (await res.json()).url;
+    } catch {
+      setMessage('We couldn’t open your billing page. Please try again.');
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-[8px]">
+      <div>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={open}
+          data-testid="plan-manage-billing"
+          className={clsx(
+            'h-[40px] px-[16px] rounded-[10px] border border-newBorder text-[14px] font-[500]',
+            busy && 'opacity-60'
+          )}
+        >
+          {busy ? 'Opening…' : 'Card, invoices and cancelling'}
+        </button>
+      </div>
+      {message && (
+        <div role="alert" className="text-[14px]">
+          {message}
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -248,7 +304,13 @@ const PlanOption: FC<{
                 busy && 'opacity-60'
               )}
             >
-              {busy === card.key ? 'Switching…' : `Switch to ${card.name}`}
+              {busy === card.key
+                ? data.billing.mode === 'stripe'
+                  ? 'Opening payment…'
+                  : 'Switching…'
+                : data.billing.mode === 'stripe' && data.plan.status !== 'active'
+                  ? `Choose ${card.name}`
+                  : `Switch to ${card.name}`}
             </button>
           )
         )}
@@ -257,7 +319,11 @@ const PlanOption: FC<{
   );
 };
 
-const Plans: FC<{ data: PlanOverview; onChanged: (next: PlanOverview) => void }> = ({ data, onChanged }) => {
+const Plans: FC<{ data: PlanOverview; locked: boolean; onChanged: (next: PlanOverview) => void }> = ({
+  data,
+  locked,
+  onChanged,
+}) => {
   const fetch = useFetch();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -272,7 +338,13 @@ const Plans: FC<{ data: PlanOverview; onChanged: (next: PlanOverview) => void }>
         setMessage((await readError(res)) || 'We couldn’t change your plan. Please try again.');
         return;
       }
-      onChanged(await res.json());
+      const next: PlanOverview = await res.json();
+      if (next.redirect) {
+        // pay first: the plan changes once Stripe confirms the payment
+        window.location.href = next.redirect;
+        return;
+      }
+      onChanged(next);
     } catch {
       setMessage('We couldn’t change your plan. Please try again.');
     } finally {
@@ -291,7 +363,7 @@ const Plans: FC<{ data: PlanOverview; onChanged: (next: PlanOverview) => void }>
       </div>
       <ul className="grid grid-cols-3 gap-[16px] tablet:grid-cols-1 mobile:grid-cols-1">
         {data.plans.map((card) => (
-          <PlanOption key={card.key} card={card} data={data} busy={busy} onChoose={choose} />
+          <PlanOption key={card.key} card={card} data={data} busy={locked ? 'locked' : busy} onChoose={choose} />
         ))}
       </ul>
       <p className="text-[13px] text-textItemBlur" data-testid="plan-vat">
@@ -320,8 +392,44 @@ const Plans: FC<{ data: PlanOverview; onChanged: (next: PlanOverview) => void }>
   );
 };
 
+// Back from Stripe: ?checkout=success|cancelled, or ?billing=updated
+// Read once, then taken out of the address, so a reload later doesn't say
+// "thank you" again.
+const useReturnFromPayment = () => {
+  const params = useSearchParams();
+  const router = useRouter();
+  const [returned] = useState(
+    () => params?.get('checkout') || (params?.get('billing') === 'updated' ? 'updated' : null)
+  );
+  useEffect(() => {
+    if (returned) {
+      router.replace('/plan');
+    }
+  }, [returned, router]);
+  return returned;
+};
+
 export const PlanPage: FC = () => {
-  const { data, error, mutate } = usePlanOverview();
+  const returned = useReturnFromPayment();
+  const [waitedEnough, setWaitedEnough] = useState(false);
+  // Just paid: keep checking until Stripe's confirmation reaches us, for up
+  // to a minute. After a change on Stripe's billing page, check for half a
+  // minute (we can't tell which plan was picked there).
+  const waiting = (returned === 'success' || returned === 'updated') && !waitedEnough;
+  const { data, error, mutate } = usePlanOverview(
+    waiting
+      ? (latest?: PlanOverview) => (returned === 'success' && latest?.plan.status === 'active' ? 0 : 3000)
+      : 0
+  );
+  useEffect(() => {
+    if (returned !== 'success' && returned !== 'updated') {
+      return;
+    }
+    const timer = setTimeout(() => setWaitedEnough(true), returned === 'success' ? 60000 : 30000);
+    return () => clearTimeout(timer);
+  }, [returned]);
+  // no second checkout while the first one is still being confirmed
+  const confirming = returned === 'success' && !waitedEnough && data?.plan.status !== 'active';
 
   return (
     <Shell>
@@ -352,9 +460,33 @@ export const PlanPage: FC = () => {
               Test mode: switching plan here is free and no payment is taken.
             </Notice>
           )}
+          {data.billing.testPayments && (
+            <Notice tone="attention" testId="plan-test-payments">
+              Test payments: this is Stripe’s test mode. Use a test card. No real money is taken.
+            </Notice>
+          )}
+          {returned === 'success' &&
+            (data.plan.status === 'active' ? (
+              <Notice testId="plan-checkout-done">Thank you. Your payment went through and your plan is ready.</Notice>
+            ) : waitedEnough ? (
+              <Notice tone="attention" testId="plan-checkout-slow">
+                Your payment went through, but your plan hasn’t updated yet. Please refresh in a minute, or get in
+                touch if it still hasn’t changed.
+              </Notice>
+            ) : (
+              <Notice testId="plan-checkout-waiting">Thank you. We’re setting up your plan, which takes a moment.</Notice>
+            ))}
+          {returned === 'cancelled' && (
+            <Notice testId="plan-checkout-cancelled">Payment cancelled. Nothing was charged.</Notice>
+          )}
+          {returned === 'updated' && (
+            <Notice testId="plan-billing-updated">
+              Your billing is up to date. A change of plan shows here as soon as Stripe confirms it.
+            </Notice>
+          )}
           <CurrentPlan data={data} />
           <Usage data={data} />
-          <Plans data={data} onChanged={(next) => mutate(next, { revalidate: false })} />
+          <Plans data={data} locked={confirming} onChanged={(next) => mutate(next, { revalidate: false })} />
         </>
       )}
     </Shell>

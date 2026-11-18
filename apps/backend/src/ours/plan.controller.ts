@@ -23,6 +23,12 @@ export class PlanController {
     return this._planService.overview(org.id, canManagePlan(org));
   }
 
+  // Stripe's billing page: card details, invoices and cancelling
+  @Get('/billing')
+  manageBilling(@GetOrgFromRequest() org: Organization) {
+    return this._planService.manageBilling(org.id, canManagePlan(org));
+  }
+
   @Put('/')
   changePlan(@GetOrgFromRequest() org: Organization, @Body() body: ChangePlanDto) {
     return this._planService.changePlan(org.id, body.plan, canManagePlan(org));
