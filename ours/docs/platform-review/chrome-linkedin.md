@@ -7,7 +7,7 @@ Important: LinkedIn does not let us re-apply with the same app after a rejection
 ---
 
 ```text
-You are setting up a LinkedIn developer app for Tidepost, a social media scheduling service run by Steady Lamp Ltd (UK). Work in a new tab. Rules:
+You are setting up a LinkedIn developer app for Kanosena, a social media scheduling service run by Steady Lamp Ltd (UK). Work in a new tab. Rules:
 - Do NOT submit any access request form (Community Management API, Standard tier) without showing Calvin the filled-in form and getting a "yes" in chat. A rejection means starting again with a new app.
 - Never type a secret into chat. Copy the client secret only into the Cloudflare form in step 6.
 - If anything asks for a detail not given here (phone, or anything else not listed), stop and ask Calvin.
@@ -16,7 +16,7 @@ You are setting up a LinkedIn developer app for Tidepost, a social media schedul
 - If a screen differs from these steps, do the closest equivalent and tell Calvin.
 
 Values:
-- App name: Tidepost   (must not contain "Linked", "In", "LinkedIn" or "Microsoft")
+- App name: Kanosena   (must not contain "Linked", "In", "LinkedIn" or "Microsoft")
 - LinkedIn Page: Steady Lamp Ltd (the company Page Calvin super-admins)
 - Privacy policy URL: https://app.steadylamp.com/privacy.html
 - Website: https://app.steadylamp.com/about.html
@@ -30,7 +30,7 @@ STEP 1. Page check
 Confirm a LinkedIn Page for Steady Lamp Ltd exists and Calvin's account is a super admin (Page → Admin tools → Manage admins). If not, stop and tell Calvin.
 
 STEP 2. Create the app
-linkedin.com/developers/apps → Create app. Name Tidepost, LinkedIn Page Steady Lamp Ltd, privacy policy URL above, logo, accept the legal agreement. Create.
+linkedin.com/developers/apps → Create app. Name Kanosena, LinkedIn Page Steady Lamp Ltd, privacy policy URL above, logo, accept the legal agreement. Create.
 
 STEP 3. Verify the app with the Page
 Settings tab → Verify → generate the verification URL. Calvin's account is a Page super admin, so open the URL and approve it. Confirm the Settings tab shows the app as verified.
@@ -44,7 +44,7 @@ a. Find "Community Management API" → Request access. Open the form and FILL IT
    - Legal name: Steady Lamp Ltd. Registered address: 128 City Road, London, EC1V 2NX. Business email: support@steadylamp.com (verify it if asked; Calvin may need to click an email link). Website: https://steadylamp.com. Privacy policy: https://app.steadylamp.com/privacy.html
    - Use cases: Page Management and Page Analytics only.
    - Use case description (paste exactly):
-     "Tidepost is a social media service for UK small businesses (1–20 staff), run by Steady Lamp Ltd. A business owner connects their company's LinkedIn Page through LinkedIn's OAuth flow. Tidepost drafts posts from the business's own website, the owner approves, edits or rejects each one, and approved posts are published to the LinkedIn Page at the planned time. Nothing is published without the owner's explicit approval. We then show the owner how each published post performed (impressions, reactions, comments and shares counts) so they can see what works. We use rw_organization_admin to list the Pages the member administers so they can choose one, and to read Page and post analytics; w_organization_social to publish approved posts as the Page; r_organization_social to read the published posts' social action counts. We do not message members, scrape profiles, target ads or sell or share LinkedIn data."
+     "Kanosena is a social media service for UK small businesses (1–20 staff), run by Steady Lamp Ltd. A business owner connects their company's LinkedIn Page through LinkedIn's OAuth flow. Kanosena drafts posts from the business's own website, the owner approves, edits or rejects each one, and approved posts are published to the LinkedIn Page at the planned time. Nothing is published without the owner's explicit approval. We then show the owner how each published post performed (impressions, reactions, comments and shares counts) so they can see what works. We use rw_organization_admin to list the Pages the member administers so they can choose one, and to read Page and post analytics; w_organization_social to publish approved posts as the Page; r_organization_social to read the published posts' social action counts. We do not message members, scrape profiles, target ads or sell or share LinkedIn data."
    Take a screenshot of the filled form for Calvin, then STOP and ask Calvin whether to submit.
 b. Note whether "Sign In with LinkedIn using OpenID Connect" and "Share on LinkedIn" can be added alongside Community Management API. If the page says one disables or excludes the other, do NOT add it; just report the exact wording. If they are self-serve and compatible, add them.
 c. Do NOT add "Advertising API" or any other product.

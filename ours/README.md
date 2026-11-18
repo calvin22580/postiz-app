@@ -16,11 +16,11 @@ Everything in this fork that is ours rather than upstream Postiz. Read
 
 ## Brand
 
-The brand is a placeholder ("Tidepost") and is driven by environment variables:
+The brand is Kanosena (chosen 17/11/2026). It is driven by environment variables:
 
 | Variable | Used by | Default |
 |----------|---------|---------|
-| `NEXT_PUBLIC_BRAND_NAME` | frontend (build time), backend emails | `Tidepost` |
+| `NEXT_PUBLIC_BRAND_NAME` | frontend (build time), backend emails | `Kanosena` |
 | `NEXT_PUBLIC_BRAND_COLOUR` | frontend colour tokens, logo tile | `#1F5F5B` |
 | `NEXT_PUBLIC_BRAND_LOGO_URL` | optional image logo; text wordmark if empty | empty |
 | `NEXT_PUBLIC_SOURCE_CODE_URL` | "Source code" link | our GitHub fork |
@@ -40,7 +40,7 @@ How it works, without editing upstream screens one by one:
   (`resolveAlias` in `with-ours.mjs`).
 - **Colour.** `brand.style.tsx` overrides upstream's CSS colour variables.
 - **Static assets.** `favicon.ico`, `favicon.png` and `postiz.svg` in
-  `apps/frontend/public` are replaced with the placeholder mark (asset swaps,
+  `apps/frontend/public` are replaced with the brand mark (asset swaps,
   listed in `UPSTREAM_PATCHES.md`). Regenerate them if the brand changes.
 
 - **Legal links.** Upstream's sign-up page links to upstream's own terms and
