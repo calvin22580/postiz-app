@@ -9,7 +9,9 @@ import { deleteDialog } from '@gitroom/react/helpers/delete.dialog';
 
 // true when the response was the channel limit and the owner has been told
 export const showChannelLimit = async (response: Response) => {
-  if (response.status !== 403) {
+  // a connection link's visitor may not be the owner and can't change the
+  // plan: that page shows its own failure (connect.link.tsx)
+  if (response.status !== 403 || response.url.includes('/integrations/public/')) {
     return false;
   }
   const { message, planLimit } = await response
