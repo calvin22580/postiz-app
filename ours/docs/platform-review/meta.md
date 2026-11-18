@@ -50,7 +50,7 @@ A second app, "Tidepost Business" (App ID 1428592625924097), was created before 
 
 | Item | State |
 |---|---|
-| App | `Tidepost`, App ID `1614622909955028` (not secret), Business type, unpublished (Development mode). Calvin is Administrator |
+| App | `Kanosena` (was `Tidepost`), App ID `1614622909955028` (not secret), Business type, unpublished (Development mode). Calvin is Administrator |
 | Business portfolio | Steady Lamp Ltd, portfolio ID `896366080169225`, **not verified** (Meta says it is eligible). Legal name, address, phone and website on the portfolio are blank; support@steadylamp.com pending confirmation |
 | Pages permissions | business_management, pages_show_list, public_profile, pages_manage_posts, pages_manage_engagement, pages_read_engagement, read_insights. **Add `pages_read_user_content`** (see below) |
 | Instagram permissions ("API setup with Facebook login") | instagram_basic, instagram_content_publish, instagram_manage_comments, instagram_manage_insights, pages_show_list, pages_read_engagement, business_management. No messaging permissions. **Add `pages_read_user_content`** |
@@ -63,7 +63,7 @@ A second app, "Tidepost Business" (App ID 1428592625924097), was created before 
 Notes from the report:
 - **First connect test (17/11, 23:08) failed** with "Invalid Scopes: pages_read_user_content". Our code never asks for it: Meta adds it itself because `pages_manage_engagement` and `instagram_basic` both depend on it (Meta's permissions reference). Fix: add it to both use cases. Every other dependency is already on the app.
 - Meta now labels "API setup with Facebook login" for Instagram as **legacy**. It still works; new features go only to "Unified login". Our `instagram` provider uses the Facebook Login flow, so nothing changes now, but watch for a deprecation date.
-- "Tidepost" is a placeholder name. Rename under App settings → Basic before going live if the brand changes. App names can't contain Instagram, Insta, Gram, FB or similar.
+- Renamed from "Tidepost" to "Kanosena" on 18/11/2026. App names can't contain Instagram, Insta, Gram, FB or similar.
 
 ## Permissions and justification text
 
@@ -104,7 +104,7 @@ The code checks that **every** permission in its list was granted (`checkScopes`
 > We read insights (reach, likes, comments, saves) for posts published through Kanosena and show them to the business owner on our "What worked" screen and in each post's Statistics window, so they can see which kinds of posts work. Shown only to that business's Kanosena account; deleted when the account is disconnected or closed.
 
 **`pages_read_user_content`** (required by Meta as a dependency of pages_manage_engagement and instagram_basic)
-> Meta requires this permission for pages_manage_engagement and instagram_basic, which we use to post the owner's own first comment on their published post and to identify their linked Instagram account. Tidepost does not read, store or display posts, comments or reviews written by other people on the Page. The only comment content we handle is the comment the owner wrote and approved in Tidepost.
+> Meta requires this permission for pages_manage_engagement and instagram_basic, which we use to post the owner's own first comment on their published post and to identify their linked Instagram account. Kanosena does not read, store or display posts, comments or reviews written by other people on the Page. The only comment content we handle is the comment the owner wrote and approved in Kanosena.
 
 **`pages_show_list`, `pages_read_engagement`, `business_management`** (needed by the Instagram channel too)
 > An Instagram professional account is reached through the Facebook Page it is linked to. We use pages_show_list and business_management to find the Pages the owner manages (directly or through their business portfolio), and pages_read_engagement to read the linked Instagram account from that Page. We do not publish to the Page through this channel.

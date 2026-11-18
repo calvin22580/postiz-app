@@ -19,7 +19,7 @@ Everything needed to set up the developer apps and submit the reviews for Facebo
 | [chrome-linkedin.md](chrome-linkedin.md) | Prompt to paste into Claude in Chrome after logging in to LinkedIn |
 | `assets/app-icon-1024.png`, `assets/app-icon-300.png` | Kanosena app icon (Meta wants 1024×1024; LinkedIn wants a square logo) |
 
-**Meta status (17/11/2026):** app `Tidepost` (App ID `1614622909955028`) is set up in Development mode, secrets are on the Worker. See the Status section in `meta.md`. Business Verification, Tech Provider, icon and App Review still to do.
+**Meta status (17/11/2026):** app `Kanosena` (was `Tidepost`) (App ID `1614622909955028`) is set up in Development mode, secrets are on the Worker. See the Status section in `meta.md`. Business Verification, Tech Provider, icon and App Review still to do.
 
 ## The order
 
