@@ -373,10 +373,22 @@ Code: `libs/ours/plans/plan.stripe.ts` (Checkout, portal, webhook checks) and
 - **Webhook:** `POST <backend>/ours/stripe/webhook` (on the live site
   `https://app.steadylamp.com/api/ours/stripe/webhook`). Events:
   `checkout.session.completed`, `customer.subscription.created`,
-  `customer.subscription.updated`, `customer.subscription.deleted`,
-  `invoice.paid`. Each is checked against `OURS_STRIPE_WEBHOOK_SECRET`, and the
+  `customer.subscription.updated`, `customer.subscription.deleted`.
+  Each is checked against `OURS_STRIPE_WEBHOOK_SECRET`, and the
   subscription is read fresh from Stripe, so order and repeats don't matter.
-  It never throws; a failure answers 500 and Stripe retries.
+  It never throws; a failure answers 500 and Stripe retries. A second live
+  subscription for one organisation, or a price we don't know, is logged as
+  an error for a person to check.
+- **One Stripe customer per organisation**, tagged
+  `metadata.organizationId`. A new checkout first looks for it and its live
+  subscription, so a second click or tab opens the portal instead of a
+  second subscription. Paused, cancelled and unpaid subscriptions end the
+  plan on the date Stripe ended them.
+- **VAT:** with `OURS_VAT_REGISTERED=true`, Checkout adds VAT with Stripe Tax
+  (`automatic_tax`), so Stripe Tax must be set up with the UK registration
+  first. Prices in Stripe stay before VAT ("exclusive").
+- **Going live:** rows still hold test subscription ids; they're treated as
+  "none" when Stripe says they don't exist, so nothing needs clearing.
 - **Setup for a new Stripe account or sandbox:** one product per plan with a
   monthly GBP price at the plan's amount and its lookup key; a webhook
   endpoint with the events above; the customer portal switched on, with

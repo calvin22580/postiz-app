@@ -17,13 +17,27 @@ export interface CurrentBilling {
   externalId: string | null;
 }
 
+// What a provider's webhook means for our plan row, worked out by the
+// provider so PlanService needs no provider-specific code.
+export type BillingUpdate =
+  | { state: 'ignore' }
+  // paid up: the organisation is on planKey
+  | { state: 'live'; orgId: string; externalId: string; planKey: string }
+  // over: new work stops until the owner picks a plan again
+  | { state: 'ended'; orgId: string; externalId: string; endedAt: Date };
+
 export interface PlanPaymentProvider {
   // stored on the plan row as paymentProvider
   name: string;
   changePlan(orgId: string, plan: PlanDefinition, current: CurrentBilling | null): Promise<PlanChangeResult>;
   // a page where the owner manages payment details, invoices and cancelling;
   // null when there's nothing to manage yet
-  manageUrl?(current: CurrentBilling | null): Promise<string | null>;
+  manageUrl?(orgId: string, current: CurrentBilling | null): Promise<string | null>;
+  // checks a webhook came from the provider (null when it didn't) and says
+  // what it means for the plan
+  readWebhook?(rawBody: Buffer | undefined, signature: string | undefined): Promise<BillingUpdate | null>;
+  // payments in the provider's test mode: no real money moves
+  isTest?(): boolean;
 }
 
 // Test mode: the plan changes at once and no payment is taken. The plan

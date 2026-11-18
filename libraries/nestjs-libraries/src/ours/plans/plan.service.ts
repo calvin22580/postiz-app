@@ -18,19 +18,11 @@ import {
   MeteredKey,
   PAID_PLANS,
   PlanDefinition,
-  planForStripeLookupKey,
   pricingDisplay,
-  stripeTestKey,
   TRIAL_PLAN_KEY,
   trialDays,
 } from '@gitroom/nestjs-libraries/ours/plans/plans.config';
-import { paymentProviderFor } from '@gitroom/nestjs-libraries/ours/plans/plan.payment';
-import type Stripe from 'stripe';
-import {
-  ENDED_SUBSCRIPTION_STATUSES,
-  LIVE_SUBSCRIPTION_STATUSES,
-  StripePaymentProvider,
-} from '@gitroom/nestjs-libraries/ours/plans/plan.stripe';
+import { BillingUpdate, paymentProviderFor } from '@gitroom/nestjs-libraries/ours/plans/plan.payment';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -42,15 +34,6 @@ export const PLAN_LIMIT_STATUS = 403;
 // "ended": a paid plan was cancelled or stopped being paid for
 export type PlanStatus = 'trial' | 'trial-ended' | 'ended' | 'active';
 
-// Stripe events that can change a subscription. Each one is handled by
-// reading the subscription fresh, so the order they arrive in doesn't matter.
-export const STRIPE_PLAN_EVENTS = [
-  'checkout.session.completed',
-  'customer.subscription.created',
-  'customer.subscription.updated',
-  'customer.subscription.deleted',
-  'invoice.paid',
-];
 
 // what claim() took, so the same unit can be given back
 export interface UsageTicket {
@@ -251,6 +234,7 @@ export class PlanService {
       this._planRepository.aiSpendUsd(orgId, period.spendFrom, now),
     ]);
     const mode = billingMode();
+    const provider = paymentProviderFor(mode);
     return {
       plan: {
         key: plan.key,
@@ -285,9 +269,11 @@ export class PlanService {
         mode,
         // only admins change the plan, and only where the app can do it
         canChange: mode !== 'off' && canManage,
-        // card details, invoices and cancelling (Stripe's portal)
-        canManage: mode === 'stripe' && canManage && row.paymentProvider === 'stripe' && !!row.externalId,
-        testPayments: mode === 'stripe' && stripeTestKey(),
+        // card details, invoices and cancelling, on the provider's own page
+        canManage:
+          canManage && !!provider?.manageUrl && row.paymentProvider === provider.name && !!row.externalId,
+        // the provider's test mode: no real money moves, and the screen says so
+        testPayments: !!provider?.isTest?.(),
       },
     };
   }
@@ -322,73 +308,71 @@ export class PlanService {
     }
     const provider = paymentProviderFor(billingMode());
     const { row } = await this.current(orgId);
-    const url = provider?.manageUrl ? await provider.manageUrl(row) : null;
+    const url = provider?.manageUrl ? await provider.manageUrl(orgId, row) : null;
     if (!url) {
       throw new HttpException('There’s no billing to manage yet.', 400);
     }
     return { url };
   }
 
-  // Stripe's webhook. Never throws: a payment webhook that throws can leave
-  // billing half-applied. Returns the HTTP status to answer with; anything
-  // but 2xx makes Stripe send the event again later.
-  async stripeWebhook(rawBody: Buffer | undefined, signature: string | undefined): Promise<number> {
-    if (billingMode() !== 'stripe') {
-      return 404;
+  // A payment provider's webhook (Stripe's for now). Never throws: a payment
+  // webhook that throws can leave billing half-applied. Returns whether it
+  // was handled; retry asks the provider to send it again later.
+  async paymentWebhook(
+    providerName: string,
+    rawBody: Buffer | undefined,
+    signature: string | undefined
+  ): Promise<{ ok: boolean; retry: boolean }> {
+    const provider = paymentProviderFor(billingMode());
+    if (!provider?.readWebhook || provider.name !== providerName) {
+      this._logger.warn(`A ${providerName} webhook arrived, but ${providerName} billing isn't switched on`);
+      return { ok: false, retry: false };
     }
     try {
-      const provider = new StripePaymentProvider();
-      const event = provider.parseWebhook(rawBody, signature);
-      if (!event) {
-        return 400;
+      const update = await provider.readWebhook(rawBody, signature);
+      if (!update) {
+        return { ok: false, retry: false };
       }
-      if (!STRIPE_PLAN_EVENTS.includes(event.type)) {
-        return 200;
-      }
-      const subscription = await provider.subscriptionFor(event);
-      if (subscription) {
-        await this.syncStripeSubscription(subscription);
-      }
-      return 200;
+      await this.applyBillingUpdate(provider.name, update);
+      return { ok: true, retry: false };
     } catch (e) {
-      this._logger.error(`Stripe webhook failed: ${(e as Error).message}`);
-      return 500;
+      this._logger.error(`${providerName} webhook failed: ${(e as Error).message}`);
+      return { ok: false, retry: true };
     }
   }
 
-  // Brings our plan row in line with a Stripe subscription. Only called from
-  // stripeWebhook, which catches a failure and answers 500 so Stripe retries.
-  async syncStripeSubscription(subscription: Stripe.Subscription, now: Date = new Date()) {
-    const orgId = subscription.metadata?.organizationId;
-    if (!orgId) {
-      this._logger.warn(`Stripe subscription ${subscription.id} has no organisation, ignored`);
+  // Brings our plan row in line with what the payment provider says. Only
+  // called from paymentWebhook, which catches a failure and asks for a retry.
+  async applyBillingUpdate(providerName: string, update: BillingUpdate) {
+    if (update.state === 'ignore') {
+      return;
+    }
+    const { orgId, externalId } = update;
+    if (update.state === 'ended') {
+      if (await this._planRepository.endPlan(orgId, externalId, update.endedAt)) {
+        this._logger.log(`org=${orgId} plan ended (${providerName} ${externalId})`);
+      }
+      return;
+    }
+    const plan = PAID_PLANS.find((p) => p.key === update.planKey);
+    if (!plan) {
+      // paid for but not ours to map: needs a person, so it's an error
+      this._logger.error(`org=${orgId}: ${providerName} ${externalId} has a plan we don't know (${update.planKey})`);
       return;
     }
     const row = await this._planRepository.getPlan(orgId);
-    if (LIVE_SUBSCRIPTION_STATUSES.includes(subscription.status)) {
-      const plan = planForStripeLookupKey(subscription.items.data[0]?.price?.lookup_key);
-      if (!plan) {
-        this._logger.error(`Stripe subscription ${subscription.id} has a price we don't know, ignored`);
-        return;
-      }
-      if (row?.paymentProvider === 'stripe' && row.externalId === subscription.id && row.plan === plan.key) {
-        // nothing changed (a renewal, or the same event twice): keep
-        // startedAt, which the fair-use month counts from
-        return;
-      }
-      if (row?.paymentProvider === 'stripe' && row.externalId && row.externalId !== subscription.id && row.plan !== TRIAL_PLAN_KEY) {
-        this._logger.warn(`org=${orgId} had Stripe subscription ${row.externalId}, now ${subscription.id}`);
-      }
-      await this._planRepository.setPlan(orgId, plan.key, 'stripe', subscription.id);
-      this._logger.log(`org=${orgId} is on ${plan.key} (Stripe ${subscription.id})`);
+    if (row?.paymentProvider === providerName && row.externalId === externalId && row.plan === plan.key) {
+      // nothing changed (a renewal, or the same event twice): keep
+      // startedAt, which the fair-use month counts from
       return;
     }
-    if (ENDED_SUBSCRIPTION_STATUSES.includes(subscription.status)) {
-      if (await this._planRepository.endPlan(orgId, subscription.id, now)) {
-        this._logger.log(`org=${orgId} plan ended (Stripe ${subscription.id} ${subscription.status})`);
-      }
+    if (row?.paymentProvider === providerName && row.externalId && row.externalId !== externalId) {
+      // two paid subscriptions for one organisation: someone may be paying
+      // twice, so a person needs to look
+      this._logger.error(`org=${orgId} had ${providerName} ${row.externalId}, now ${externalId}: check for a double payment`);
     }
-    // "incomplete": the first payment hasn't gone through yet; wait
+    await this._planRepository.setPlan(orgId, plan.key, providerName, externalId);
+    this._logger.log(`org=${orgId} is on ${plan.key} (${providerName} ${externalId})`);
   }
 
   private assertUsable(row: { trialEndsAt: Date | null }, status: PlanStatus) {

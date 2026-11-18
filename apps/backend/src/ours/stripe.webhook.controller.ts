@@ -7,7 +7,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { PlanService } from '@gitroom/nestjs-libraries/ours/plans/plan.service';
 
-@ApiTags('Plan')
+@ApiTags('Stripe')
 @Controller('/ours/stripe')
 export class StripeWebhookController {
   constructor(private _planService: PlanService) {}
@@ -19,8 +19,9 @@ export class StripeWebhookController {
     @Headers('stripe-signature') signature: string | undefined,
     @Res({ passthrough: true }) res: Response
   ) {
-    const status = await this._planService.stripeWebhook(req.rawBody, signature);
-    res.status(status);
-    return { received: status === 200 };
+    const { ok, retry } = await this._planService.paymentWebhook('stripe', req.rawBody, signature);
+    // anything but 2xx makes Stripe send the event again later
+    res.status(ok ? 200 : retry ? 500 : 400);
+    return { received: ok };
   }
 }

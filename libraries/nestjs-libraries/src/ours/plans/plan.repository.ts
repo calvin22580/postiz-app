@@ -65,7 +65,8 @@ export class PlanRepository {
   // end it, so a late event about an older one changes nothing.
   async endPlan(orgId: string, externalId: string, endedAt: Date) {
     const { count } = await this._plan.model.oursPlanSubscription.updateMany({
-      where: { organizationId: orgId, externalId },
+      // already ended: a repeated event doesn't move the date
+      where: { organizationId: orgId, externalId, plan: { not: 'trial' } },
       data: { plan: 'trial', trialEndsAt: endedAt },
     });
     return count === 1;

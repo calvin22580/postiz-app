@@ -4,7 +4,7 @@
 // Prices come from the backend's plan config, in GBP by default.
 import { FC, useEffect, useState } from 'react';
 import clsx from 'clsx';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
 import { readError } from '@gitroom/frontend/ours/profile/business.profile.hooks';
@@ -319,7 +319,11 @@ const PlanOption: FC<{
   );
 };
 
-const Plans: FC<{ data: PlanOverview; onChanged: (next: PlanOverview) => void }> = ({ data, onChanged }) => {
+const Plans: FC<{ data: PlanOverview; locked: boolean; onChanged: (next: PlanOverview) => void }> = ({
+  data,
+  locked,
+  onChanged,
+}) => {
   const fetch = useFetch();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -359,7 +363,7 @@ const Plans: FC<{ data: PlanOverview; onChanged: (next: PlanOverview) => void }>
       </div>
       <ul className="grid grid-cols-3 gap-[16px] tablet:grid-cols-1 mobile:grid-cols-1">
         {data.plans.map((card) => (
-          <PlanOption key={card.key} card={card} data={data} busy={busy} onChoose={choose} />
+          <PlanOption key={card.key} card={card} data={data} busy={locked ? 'locked' : busy} onChoose={choose} />
         ))}
       </ul>
       <p className="text-[13px] text-textItemBlur" data-testid="plan-vat">
@@ -389,28 +393,43 @@ const Plans: FC<{ data: PlanOverview; onChanged: (next: PlanOverview) => void }>
 };
 
 // Back from Stripe: ?checkout=success|cancelled, or ?billing=updated
+// Read once, then taken out of the address, so a reload later doesn't say
+// "thank you" again.
 const useReturnFromPayment = () => {
   const params = useSearchParams();
-  return params?.get('checkout') || (params?.get('billing') === 'updated' ? 'updated' : null);
+  const router = useRouter();
+  const [returned] = useState(
+    () => params?.get('checkout') || (params?.get('billing') === 'updated' ? 'updated' : null)
+  );
+  useEffect(() => {
+    if (returned) {
+      router.replace('/plan');
+    }
+  }, [returned, router]);
+  return returned;
 };
 
 export const PlanPage: FC = () => {
   const returned = useReturnFromPayment();
   const [waitedEnough, setWaitedEnough] = useState(false);
-  // just paid: keep checking until Stripe's confirmation reaches us, for up
-  // to a minute
+  // Just paid: keep checking until Stripe's confirmation reaches us, for up
+  // to a minute. After a change on Stripe's billing page, check for half a
+  // minute (we can't tell which plan was picked there).
+  const waiting = (returned === 'success' || returned === 'updated') && !waitedEnough;
   const { data, error, mutate } = usePlanOverview(
-    returned === 'success' && !waitedEnough
-      ? (latest?: PlanOverview) => (latest?.plan.status === 'active' ? 0 : 3000)
+    waiting
+      ? (latest?: PlanOverview) => (returned === 'success' && latest?.plan.status === 'active' ? 0 : 3000)
       : 0
   );
   useEffect(() => {
-    if (returned !== 'success') {
+    if (returned !== 'success' && returned !== 'updated') {
       return;
     }
-    const timer = setTimeout(() => setWaitedEnough(true), 60000);
+    const timer = setTimeout(() => setWaitedEnough(true), returned === 'success' ? 60000 : 30000);
     return () => clearTimeout(timer);
   }, [returned]);
+  // no second checkout while the first one is still being confirmed
+  const confirming = returned === 'success' && !waitedEnough && data?.plan.status !== 'active';
 
   return (
     <Shell>
@@ -467,7 +486,7 @@ export const PlanPage: FC = () => {
           )}
           <CurrentPlan data={data} />
           <Usage data={data} />
-          <Plans data={data} onChanged={(next) => mutate(next, { revalidate: false })} />
+          <Plans data={data} locked={confirming} onChanged={(next) => mutate(next, { revalidate: false })} />
         </>
       )}
     </Shell>

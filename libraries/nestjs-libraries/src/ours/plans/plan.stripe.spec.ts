@@ -9,7 +9,7 @@ import {
   PAID_PLANS,
   stripeLookupKey,
 } from '@gitroom/nestjs-libraries/ours/plans/plans.config';
-import { StripePaymentProvider } from '@gitroom/nestjs-libraries/ours/plans/plan.stripe';
+import { billingUpdateFor, StripePaymentProvider } from '@gitroom/nestjs-libraries/ours/plans/plan.stripe';
 import { formatDay, planStatus, PlanService } from '@gitroom/nestjs-libraries/ours/plans/plan.service';
 
 const WEBHOOK_SECRET = 'whsec_test_secret';
@@ -38,18 +38,32 @@ const subscription = (over: Record<string, unknown> = {}, plan = growth) =>
   }) as unknown as Stripe.Subscription;
 
 // a Stripe client with only the calls we make, all recorded
-const fakeStripe = (opts: { prices?: Stripe.Price[]; sub?: Stripe.Subscription } = {}) => {
+const fakeStripe = (
+  opts: {
+    prices?: Stripe.Price[];
+    sub?: Stripe.Subscription | 'missing';
+    customers?: { id: string }[];
+    subs?: Stripe.Subscription[];
+  } = {}
+) => {
   const calls = {
     checkout: vi.fn(async (_p: Stripe.Checkout.SessionCreateParams) => ({ url: 'https://checkout.stripe.test/c' })),
     portal: vi.fn(async (_p: Stripe.BillingPortal.SessionCreateParams) => ({ url: 'https://billing.stripe.test/p' })),
     prices: vi.fn(async (_p: Stripe.PriceListParams) => ({ data: opts.prices ?? [price()] })),
-    retrieve: vi.fn(async (_id: string) => opts.sub ?? subscription()),
+    retrieve: vi.fn(async (_id: string) => {
+      if (opts.sub === 'missing') throw Object.assign(new Error('No such subscription'), { code: 'resource_missing' });
+      return opts.sub ?? subscription();
+    }),
+    list: vi.fn(async (_p: Stripe.SubscriptionListParams) => ({ data: opts.subs ?? [] })),
+    search: vi.fn(async (_p: Stripe.CustomerSearchParams) => ({ data: opts.customers ?? [] })),
+    createCustomer: vi.fn(async (_p: Stripe.CustomerCreateParams) => ({ id: 'cus_new' })),
   };
   const stripe = {
     checkout: { sessions: { create: calls.checkout } },
     billingPortal: { sessions: { create: calls.portal } },
     prices: { list: calls.prices },
-    subscriptions: { retrieve: calls.retrieve },
+    subscriptions: { retrieve: calls.retrieve, list: calls.list },
+    customers: { search: calls.search, create: calls.createCustomer },
   } as unknown as Stripe;
   return { stripe, calls };
 };
@@ -83,9 +97,10 @@ describe('StripePaymentProvider', () => {
   });
   afterEach(() => {
     delete process.env.FRONTEND_URL;
+    delete process.env.OURS_VAT_REGISTERED;
   });
 
-  it('sends a first plan to Checkout, tagged with the organisation', async () => {
+  it('sends a first plan to Checkout, with one customer tagged with the organisation', async () => {
     const { stripe, calls } = fakeStripe();
     const result = await new StripePaymentProvider(stripe).changePlan('org-1', growth, {
       paymentProvider: 'none',
@@ -93,9 +108,12 @@ describe('StripePaymentProvider', () => {
     });
     expect(result).toEqual({ status: 'redirect', url: 'https://checkout.stripe.test/c' });
     expect(calls.prices).toHaveBeenCalledWith({ lookup_keys: ['ours_plan_growth_monthly'], active: true, limit: 1 });
+    expect(calls.search.mock.calls[0][0].query).toBe("metadata['organizationId']:'org-1'");
+    expect(calls.createCustomer).toHaveBeenCalledWith({ metadata: { organizationId: 'org-1' } });
     const params = calls.checkout.mock.calls[0][0];
     expect(params).toMatchObject({
       mode: 'subscription',
+      customer: 'cus_new',
       line_items: [{ price: 'price_growth', quantity: 1 }],
       client_reference_id: 'org-1',
       subscription_data: { metadata: { organizationId: 'org-1', plan: 'growth' } },
@@ -103,7 +121,14 @@ describe('StripePaymentProvider', () => {
       success_url: 'https://app.example.test/plan?checkout=success',
       cancel_url: 'https://app.example.test/plan?checkout=cancelled',
     });
-    expect(params.customer).toBeUndefined();
+    expect(params.automatic_tax).toBeUndefined();
+  });
+
+  it('adds VAT at checkout when the plan cards say "+ VAT"', async () => {
+    process.env.OURS_VAT_REGISTERED = 'true';
+    const { stripe, calls } = fakeStripe();
+    await new StripePaymentProvider(stripe).changePlan('org-1', growth, null);
+    expect(calls.checkout.mock.calls[0][0].automatic_tax).toEqual({ enabled: true });
   });
 
   it('refuses when Stripe’s price doesn’t match the price we show', async () => {
@@ -122,7 +147,8 @@ describe('StripePaymentProvider', () => {
   });
 
   it('confirms a switch on Stripe’s portal when already paying', async () => {
-    const { stripe, calls } = fakeStripe({ prices: [price(growth)], sub: subscription({}, starter) });
+    const paying = subscription({}, starter);
+    const { stripe, calls } = fakeStripe({ prices: [price(growth)], sub: paying, subs: [paying] });
     const result = await new StripePaymentProvider(stripe).changePlan('org-1', growth, {
       paymentProvider: 'stripe',
       externalId: 'sub_1',
@@ -138,22 +164,67 @@ describe('StripePaymentProvider', () => {
     });
   });
 
+  it('finds an earlier payment that isn’t on record yet, instead of charging twice', async () => {
+    const paying = subscription({}, starter);
+    const { stripe, calls } = fakeStripe({ customers: [{ id: 'cus_1' }], subs: [paying] });
+    await new StripePaymentProvider(stripe).changePlan('org-1', growth, { paymentProvider: 'none', externalId: null });
+    expect(calls.createCustomer).not.toHaveBeenCalled();
+    expect(calls.checkout).not.toHaveBeenCalled();
+    expect(calls.portal).toHaveBeenCalled();
+  });
+
   it('reuses the customer after a plan ended, so invoices stay together', async () => {
-    const { stripe, calls } = fakeStripe({ sub: subscription({ status: 'canceled' }) });
+    const ended = subscription({ status: 'canceled' });
+    const { stripe, calls } = fakeStripe({ sub: ended, subs: [ended] });
     await new StripePaymentProvider(stripe).changePlan('org-1', growth, { paymentProvider: 'stripe', externalId: 'sub_1' });
     expect(calls.portal).not.toHaveBeenCalled();
     expect(calls.checkout.mock.calls[0][0].customer).toBe('cus_1');
   });
 
-  it('only opens the billing page for an organisation that has paid through Stripe', async () => {
+  it('doesn’t lock the owner out when the subscription on record no longer exists', async () => {
+    const { stripe, calls } = fakeStripe({ sub: 'missing' });
+    const result = await new StripePaymentProvider(stripe).changePlan('org-1', growth, {
+      paymentProvider: 'stripe',
+      externalId: 'sub_gone',
+    });
+    expect(result.status).toBe('redirect');
+    expect(calls.checkout.mock.calls[0][0].customer).toBe('cus_new');
+  });
+
+  it('only opens the billing page for an organisation with a Stripe customer', async () => {
+    const none = fakeStripe();
+    expect(await new StripePaymentProvider(none.stripe).manageUrl('org-1', null)).toBeNull();
+    expect(none.calls.createCustomer).not.toHaveBeenCalled();
     const { stripe, calls } = fakeStripe();
-    const provider = new StripePaymentProvider(stripe);
-    expect(await provider.manageUrl(null)).toBeNull();
-    expect(await provider.manageUrl({ paymentProvider: 'test', externalId: null })).toBeNull();
-    expect(await provider.manageUrl({ paymentProvider: 'stripe', externalId: 'sub_1' })).toBe(
-      'https://billing.stripe.test/p'
-    );
-    expect(calls.portal.mock.calls[0][0]).toMatchObject({ customer: 'cus_1', return_url: 'https://app.example.test/plan' });
+    expect(
+      await new StripePaymentProvider(stripe).manageUrl('org-1', { paymentProvider: 'stripe', externalId: 'sub_1' })
+    ).toBe('https://billing.stripe.test/p');
+    expect(calls.portal.mock.calls[0][0]).toMatchObject({ customer: 'cus_1' });
+  });
+});
+
+describe('what a Stripe subscription means for the plan', () => {
+  it('maps live, ended, paused and pending subscriptions', () => {
+    expect(billingUpdateFor(subscription({}, growth))).toEqual({
+      state: 'live',
+      orgId: 'org-1',
+      externalId: 'sub_1',
+      planKey: 'growth',
+    });
+    expect(billingUpdateFor(subscription({ status: 'past_due' }))).toMatchObject({ state: 'live' });
+    const endedAt = Date.UTC(2026, 10, 2, 10) / 1000;
+    for (const status of ['canceled', 'unpaid', 'incomplete_expired', 'paused']) {
+      expect(billingUpdateFor(subscription({ status, ended_at: endedAt }))).toEqual({
+        state: 'ended',
+        orgId: 'org-1',
+        externalId: 'sub_1',
+        endedAt: new Date('2026-11-02T10:00:00Z'),
+      });
+    }
+    expect(billingUpdateFor(subscription({ status: 'incomplete' }))).toEqual({ state: 'ignore' });
+    expect(billingUpdateFor(subscription({ metadata: {} }))).toEqual({ state: 'ignore' });
+    const unknown = subscription({ items: { data: [{ id: 'si_1', price: price(growth, { lookup_key: 'other' }) }] } });
+    expect(billingUpdateFor(unknown)).toMatchObject({ state: 'live', planKey: 'stripe price other' });
   });
 });
 
@@ -167,7 +238,7 @@ const makeService = (row: Record<string, unknown> | null) => {
       return plan;
     }),
     endPlan: vi.fn(async (_org: string, externalId: string, endedAt: Date) => {
-      if (plan?.externalId !== externalId) return false;
+      if (plan?.externalId !== externalId || plan?.plan === 'trial') return false;
       plan = { ...plan, plan: 'trial', trialEndsAt: endedAt };
       return true;
     }),
@@ -186,16 +257,22 @@ const signed = (event: Record<string, unknown>) => {
   return { body: Buffer.from(payload), header };
 };
 
-describe('Stripe webhook', () => {
-  beforeEach(() => {
-    process.env.OURS_BILLING_MODE = 'stripe';
-    process.env.OURS_STRIPE_SECRET_KEY = 'sk_test_x';
-    process.env.OURS_STRIPE_WEBHOOK_SECRET = WEBHOOK_SECRET;
+const stripeOn = () =>
+  Object.assign(process.env, {
+    OURS_BILLING_MODE: 'stripe',
+    OURS_STRIPE_SECRET_KEY: 'sk_test_x',
+    OURS_STRIPE_WEBHOOK_SECRET: WEBHOOK_SECRET,
   });
+const stripeOff = () => {
+  delete process.env.OURS_BILLING_MODE;
+  delete process.env.OURS_STRIPE_SECRET_KEY;
+  delete process.env.OURS_STRIPE_WEBHOOK_SECRET;
+};
+
+describe('Stripe webhook', () => {
+  beforeEach(stripeOn);
   afterEach(() => {
-    delete process.env.OURS_BILLING_MODE;
-    delete process.env.OURS_STRIPE_SECRET_KEY;
-    delete process.env.OURS_STRIPE_WEBHOOK_SECRET;
+    stripeOff();
     vi.restoreAllMocks();
   });
 
@@ -203,15 +280,19 @@ describe('Stripe webhook', () => {
     process.env.OURS_BILLING_MODE = 'test';
     const { service } = makeService(null);
     const { body, header } = signed({ id: 'evt_1', type: 'customer.subscription.updated', data: { object: {} } });
-    expect(await service.stripeWebhook(body, header)).toBe(404);
+    expect(await service.paymentWebhook('stripe', body, header)).toEqual({ ok: false, retry: false });
   });
 
   it('rejects events that Stripe didn’t sign, and changes nothing', async () => {
     const { service, repo } = makeService(null);
     const { body } = signed({ id: 'evt_1', type: 'customer.subscription.updated', data: { object: subscription() } });
-    expect(await service.stripeWebhook(body, 't=1,v1=forged')).toBe(400);
-    expect(await service.stripeWebhook(body, undefined)).toBe(400);
-    expect(await service.stripeWebhook(undefined, 'x')).toBe(400);
+    for (const [raw, sig] of [
+      [body, 't=1,v1=forged'],
+      [body, undefined],
+      [undefined, 'x'],
+    ] as const) {
+      expect(await service.paymentWebhook('stripe', raw, sig)).toEqual({ ok: false, retry: false });
+    }
     expect(repo.setPlan).not.toHaveBeenCalled();
   });
 
@@ -225,7 +306,7 @@ describe('Stripe webhook', () => {
       type: 'checkout.session.completed',
       data: { object: { object: 'checkout.session', subscription: 'sub_1' } },
     });
-    expect(await service.stripeWebhook(body, header)).toBe(200);
+    expect(await service.paymentWebhook('stripe', body, header)).toEqual({ ok: true, retry: false });
     expect(lookup).toHaveBeenCalled();
     expect(repo.setPlan).toHaveBeenCalledWith('org-1', 'growth', 'stripe', 'sub_1');
   });
@@ -234,20 +315,20 @@ describe('Stripe webhook', () => {
     const lookup = vi.spyOn(StripePaymentProvider.prototype, 'subscriptionFor');
     const { service } = makeService(null);
     const { body, header } = signed({ id: 'evt_1', type: 'customer.created', data: { object: {} } });
-    expect(await service.stripeWebhook(body, header)).toBe(200);
+    expect(await service.paymentWebhook('stripe', body, header)).toEqual({ ok: true, retry: false });
     expect(lookup).not.toHaveBeenCalled();
   });
 
-  it('never throws: a failure answers 500 so Stripe sends the event again', async () => {
+  it('never throws: a failure asks Stripe to send the event again', async () => {
     vi.spyOn(StripePaymentProvider.prototype, 'subscriptionFor').mockResolvedValue(subscription());
     const { service, repo } = makeService(null);
     repo.getPlan.mockRejectedValueOnce(new Error('db down'));
-    const { body, header } = signed({ id: 'evt_1', type: 'invoice.paid', data: { object: { subscription: 'sub_1' } } });
-    await expect(service.stripeWebhook(body, header)).resolves.toBe(500);
+    const { body, header } = signed({ id: 'evt_1', type: 'customer.subscription.updated', data: { object: subscription() } });
+    await expect(service.paymentWebhook('stripe', body, header)).resolves.toEqual({ ok: false, retry: true });
   });
 });
 
-describe('syncing a Stripe subscription', () => {
+describe('applying a billing update', () => {
   const paying = (key = 'starter', externalId = 'sub_1') => ({
     plan: key,
     trialEndsAt: null,
@@ -255,56 +336,52 @@ describe('syncing a Stripe subscription', () => {
     externalId,
     startedAt: new Date('2026-11-02'),
   });
+  const apply = (service: PlanService, sub: Stripe.Subscription) => service.applyBillingUpdate('stripe', billingUpdateFor(sub));
 
   it('moves the plan when the subscription’s price changes', async () => {
     const { service, repo } = makeService(paying('starter'));
-    await service.syncStripeSubscription(subscription({}, growth));
+    await apply(service, subscription({}, growth));
     expect(repo.setPlan).toHaveBeenCalledWith('org-1', 'growth', 'stripe', 'sub_1');
   });
 
   it('leaves a renewal alone, so the fair-use month isn’t restarted', async () => {
     const { service, repo } = makeService(paying('growth'));
-    await service.syncStripeSubscription(subscription({}, growth));
-    await service.syncStripeSubscription(subscription({ status: 'past_due' }, growth));
+    await apply(service, subscription({}, growth));
+    await apply(service, subscription({ status: 'past_due' }, growth));
     expect(repo.setPlan).not.toHaveBeenCalled();
   });
 
-  it('ignores subscriptions without an organisation or with a price we don’t know', async () => {
+  it('ignores subscriptions without an organisation, pending ones, and prices we don’t know', async () => {
     const { service, repo } = makeService(paying('growth'));
-    await service.syncStripeSubscription(subscription({ metadata: {} }));
-    await service.syncStripeSubscription(
-      subscription({ items: { data: [{ id: 'si_1', price: price(growth, { lookup_key: 'something_else' }) }] } })
-    );
-    await service.syncStripeSubscription(subscription({ status: 'incomplete' }));
+    await apply(service, subscription({ metadata: {} }));
+    await apply(service, subscription({ items: { data: [{ id: 'si_1', price: price(growth, { lookup_key: 'x' }) }] } }));
+    await apply(service, subscription({ status: 'incomplete' }));
     expect(repo.setPlan).not.toHaveBeenCalled();
     expect(repo.endPlan).not.toHaveBeenCalled();
   });
 
-  it('ends the plan when the subscription ends, and says so in plain words', async () => {
+  it('ends the plan on the day Stripe ended it, and says so in plain words', async () => {
     const { service, row } = makeService(paying('growth'));
-    const now = new Date(Date.now() - 2 * 24 * 3600 * 1000);
-    await service.syncStripeSubscription(subscription({ status: 'canceled' }), now);
-    expect(row()).toMatchObject({ plan: 'trial', trialEndsAt: now, paymentProvider: 'stripe' });
+    const endedAt = new Date(Math.floor((Date.now() - 2 * 24 * 3600 * 1000) / 1000) * 1000);
+    await apply(service, subscription({ status: 'canceled', ended_at: endedAt.getTime() / 1000 }));
+    expect(row()).toMatchObject({ plan: 'trial', trialEndsAt: endedAt, paymentProvider: 'stripe' });
     expect(planStatus(row() as never)).toBe('ended');
+    // the same event again doesn't move the date
+    await apply(service, subscription({ status: 'canceled', ended_at: endedAt.getTime() / 1000 + 3600 }));
+    expect(row()).toMatchObject({ trialEndsAt: endedAt });
     await expect(service.claim('org-1', 'postsScheduled')).rejects.toThrow(
-      `Your plan ended on ${formatDay(now)}. Choose a plan on Plan and usage to keep going.`
+      `Your plan ended on ${formatDay(endedAt)}. Choose a plan on Plan and usage to keep going.`
     );
-    Object.assign(process.env, {
-      OURS_BILLING_MODE: 'stripe',
-      OURS_STRIPE_SECRET_KEY: 'sk_test_x',
-      OURS_STRIPE_WEBHOOK_SECRET: WEBHOOK_SECRET,
-    });
+    stripeOn();
     const view = await service.overview('org-1', true);
-    delete process.env.OURS_BILLING_MODE;
-    delete process.env.OURS_STRIPE_SECRET_KEY;
-    delete process.env.OURS_STRIPE_WEBHOOK_SECRET;
+    stripeOff();
     expect(view.plan).toMatchObject({ status: 'ended', name: 'No plan' });
     expect(view.billing).toMatchObject({ mode: 'stripe', canChange: true, canManage: true, testPayments: true });
   });
 
   it('doesn’t let a late event about an older subscription end a newer one', async () => {
     const { service, repo } = makeService(paying('growth', 'sub_new'));
-    await service.syncStripeSubscription(subscription({ id: 'sub_old', status: 'canceled' }));
+    await apply(service, subscription({ id: 'sub_old', status: 'canceled' }));
     expect(repo.endPlan).toHaveBeenCalledWith('org-1', 'sub_old', expect.any(Date));
     expect(repo.setPlan).not.toHaveBeenCalled();
     expect((await service.current('org-1')).status).toBe('active');
