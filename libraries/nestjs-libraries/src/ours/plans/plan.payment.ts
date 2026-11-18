@@ -1,9 +1,9 @@
-// OURS: the seam where a payment provider plugs in (Milestone 7). Nothing
-// here takes money. To add Stripe later: implement PlanPaymentProvider with
-// our own env names (OURS_STRIPE_SECRET_KEY, not upstream's STRIPE_* names,
-// which switch on upstream's billing screens and limits), return a Checkout
-// URL as { status: 'redirect' }, and set the plan from a webhook of our own.
+// OURS: the seam where a payment provider plugs in (Milestone 7). Stripe is
+// in plan.stripe.ts, under our own env names (OURS_STRIPE_*), never
+// upstream's STRIPE_* names, which switch on upstream's billing screens and
+// limits.
 import type { BillingMode, PlanDefinition } from '@gitroom/nestjs-libraries/ours/plans/plans.config';
+import { StripePaymentProvider } from '@gitroom/nestjs-libraries/ours/plans/plan.stripe';
 
 export type PlanChangeResult =
   // the plan applies straight away
@@ -11,10 +11,19 @@ export type PlanChangeResult =
   // send the owner to a checkout page; the plan changes when payment succeeds
   | { status: 'redirect'; url: string };
 
+// what we already know about the organisation's billing (ours_plan_subscription)
+export interface CurrentBilling {
+  paymentProvider: string;
+  externalId: string | null;
+}
+
 export interface PlanPaymentProvider {
   // stored on the plan row as paymentProvider
   name: string;
-  changePlan(orgId: string, plan: PlanDefinition): Promise<PlanChangeResult>;
+  changePlan(orgId: string, plan: PlanDefinition, current: CurrentBilling | null): Promise<PlanChangeResult>;
+  // a page where the owner manages payment details, invoices and cancelling;
+  // null when there's nothing to manage yet
+  manageUrl?(current: CurrentBilling | null): Promise<string | null>;
 }
 
 // Test mode: the plan changes at once and no payment is taken. The plan
@@ -27,5 +36,12 @@ export class TestModePaymentProvider implements PlanPaymentProvider {
 }
 
 // null: the app can't change plans ("off" mode)
-export const paymentProviderFor = (mode: BillingMode): PlanPaymentProvider | null =>
-  mode === 'test' ? new TestModePaymentProvider() : null;
+export const paymentProviderFor = (mode: BillingMode): PlanPaymentProvider | null => {
+  if (mode === 'test') {
+    return new TestModePaymentProvider();
+  }
+  if (mode === 'stripe') {
+    return new StripePaymentProvider();
+  }
+  return null;
+};

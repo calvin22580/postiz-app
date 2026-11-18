@@ -18,11 +18,19 @@ import {
   MeteredKey,
   PAID_PLANS,
   PlanDefinition,
+  planForStripeLookupKey,
   pricingDisplay,
+  stripeTestKey,
   TRIAL_PLAN_KEY,
   trialDays,
 } from '@gitroom/nestjs-libraries/ours/plans/plans.config';
 import { paymentProviderFor } from '@gitroom/nestjs-libraries/ours/plans/plan.payment';
+import type Stripe from 'stripe';
+import {
+  ENDED_SUBSCRIPTION_STATUSES,
+  LIVE_SUBSCRIPTION_STATUSES,
+  StripePaymentProvider,
+} from '@gitroom/nestjs-libraries/ours/plans/plan.stripe';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -31,7 +39,18 @@ dayjs.extend(timezone);
 // answer 402 by sending the owner to upstream's own billing page.
 export const PLAN_LIMIT_STATUS = 403;
 
-export type PlanStatus = 'trial' | 'trial-ended' | 'active';
+// "ended": a paid plan was cancelled or stopped being paid for
+export type PlanStatus = 'trial' | 'trial-ended' | 'ended' | 'active';
+
+// Stripe events that can change a subscription. Each one is handled by
+// reading the subscription fresh, so the order they arrive in doesn't matter.
+export const STRIPE_PLAN_EVENTS = [
+  'checkout.session.completed',
+  'customer.subscription.created',
+  'customer.subscription.updated',
+  'customer.subscription.deleted',
+  'invoice.paid',
+];
 
 // what claim() took, so the same unit can be given back
 export interface UsageTicket {
@@ -87,13 +106,17 @@ export const formatDay = (date: Date, tz = captionTimezone()) =>
   }).format(date);
 
 export const planStatus = (
-  row: { plan: string; trialEndsAt: Date | null },
+  row: { plan: string; trialEndsAt: Date | null; paymentProvider?: string },
   now: Date = new Date()
 ): PlanStatus => {
   if (row.plan !== TRIAL_PLAN_KEY) {
     return 'active';
   }
-  return row.trialEndsAt && row.trialEndsAt.getTime() <= now.getTime() ? 'trial-ended' : 'trial';
+  if (!row.trialEndsAt || row.trialEndsAt.getTime() > now.getTime()) {
+    return 'trial';
+  }
+  // a row that has had a paid plan is back on "trial" only because it ended
+  return row.paymentProvider && row.paymentProvider !== 'none' ? 'ended' : 'trial-ended';
 };
 
 // The next plan up that allows more of something, for the "move to …" hint.
@@ -231,8 +254,8 @@ export class PlanService {
     return {
       plan: {
         key: plan.key,
-        name: plan.name,
-        summary: plan.summary,
+        name: status === 'ended' ? 'No plan' : plan.name,
+        summary: status === 'ended' ? 'Your plan has ended. Choose one below to keep going.' : plan.summary,
         monthlyPence: plan.monthlyPence,
         status,
         trialEndsAt: row.trialEndsAt ? dayjs(row.trialEndsAt).tz(captionTimezone()).format('YYYY-MM-DD') : null,
@@ -261,7 +284,10 @@ export class PlanService {
       billing: {
         mode,
         // only admins change the plan, and only where the app can do it
-        canChange: mode === 'test' && canManage,
+        canChange: mode !== 'off' && canManage,
+        // card details, invoices and cancelling (Stripe's portal)
+        canManage: mode === 'stripe' && canManage && row.paymentProvider === 'stripe' && !!row.externalId,
+        testPayments: mode === 'stripe' && stripeTestKey(),
       },
     };
   }
@@ -281,14 +307,97 @@ export class PlanService {
         400
       );
     }
-    const result = await provider.changePlan(orgId, plan);
+    const { row } = await this.current(orgId);
+    const result = await provider.changePlan(orgId, plan, row);
     if (result.status === 'changed') {
       await this._planRepository.setPlan(orgId, plan.key, provider.name);
     }
     return { ...(await this.overview(orgId, canManage)), ...(result.status === 'redirect' ? { redirect: result.url } : {}) };
   }
 
+  // A page where an admin manages card details, invoices and cancelling.
+  async manageBilling(orgId: string, canManage: boolean) {
+    if (!canManage) {
+      throw new HttpException('Only an admin of your team can manage billing.', PLAN_LIMIT_STATUS);
+    }
+    const provider = paymentProviderFor(billingMode());
+    const { row } = await this.current(orgId);
+    const url = provider?.manageUrl ? await provider.manageUrl(row) : null;
+    if (!url) {
+      throw new HttpException('There’s no billing to manage yet.', 400);
+    }
+    return { url };
+  }
+
+  // Stripe's webhook. Never throws: a payment webhook that throws can leave
+  // billing half-applied. Returns the HTTP status to answer with; anything
+  // but 2xx makes Stripe send the event again later.
+  async stripeWebhook(rawBody: Buffer | undefined, signature: string | undefined): Promise<number> {
+    if (billingMode() !== 'stripe') {
+      return 404;
+    }
+    try {
+      const provider = new StripePaymentProvider();
+      const event = provider.parseWebhook(rawBody, signature);
+      if (!event) {
+        return 400;
+      }
+      if (!STRIPE_PLAN_EVENTS.includes(event.type)) {
+        return 200;
+      }
+      const subscription = await provider.subscriptionFor(event);
+      if (subscription) {
+        await this.syncStripeSubscription(subscription);
+      }
+      return 200;
+    } catch (e) {
+      this._logger.error(`Stripe webhook failed: ${(e as Error).message}`);
+      return 500;
+    }
+  }
+
+  // Brings our plan row in line with a Stripe subscription. Only called from
+  // stripeWebhook, which catches a failure and answers 500 so Stripe retries.
+  async syncStripeSubscription(subscription: Stripe.Subscription, now: Date = new Date()) {
+    const orgId = subscription.metadata?.organizationId;
+    if (!orgId) {
+      this._logger.warn(`Stripe subscription ${subscription.id} has no organisation, ignored`);
+      return;
+    }
+    const row = await this._planRepository.getPlan(orgId);
+    if (LIVE_SUBSCRIPTION_STATUSES.includes(subscription.status)) {
+      const plan = planForStripeLookupKey(subscription.items.data[0]?.price?.lookup_key);
+      if (!plan) {
+        this._logger.error(`Stripe subscription ${subscription.id} has a price we don't know, ignored`);
+        return;
+      }
+      if (row?.paymentProvider === 'stripe' && row.externalId === subscription.id && row.plan === plan.key) {
+        // nothing changed (a renewal, or the same event twice): keep
+        // startedAt, which the fair-use month counts from
+        return;
+      }
+      if (row?.paymentProvider === 'stripe' && row.externalId && row.externalId !== subscription.id && row.plan !== TRIAL_PLAN_KEY) {
+        this._logger.warn(`org=${orgId} had Stripe subscription ${row.externalId}, now ${subscription.id}`);
+      }
+      await this._planRepository.setPlan(orgId, plan.key, 'stripe', subscription.id);
+      this._logger.log(`org=${orgId} is on ${plan.key} (Stripe ${subscription.id})`);
+      return;
+    }
+    if (ENDED_SUBSCRIPTION_STATUSES.includes(subscription.status)) {
+      if (await this._planRepository.endPlan(orgId, subscription.id, now)) {
+        this._logger.log(`org=${orgId} plan ended (Stripe ${subscription.id} ${subscription.status})`);
+      }
+    }
+    // "incomplete": the first payment hasn't gone through yet; wait
+  }
+
   private assertUsable(row: { trialEndsAt: Date | null }, status: PlanStatus) {
+    if (status === 'ended') {
+      throw new HttpException(
+        `Your plan ended on ${formatDay(row.trialEndsAt!)}. Choose a plan on Plan and usage to keep going.`,
+        PLAN_LIMIT_STATUS
+      );
+    }
     if (status === 'trial-ended') {
       throw new HttpException(
         `Your free trial ended on ${formatDay(row.trialEndsAt!)}. Choose a plan on Plan and usage to keep going.`,

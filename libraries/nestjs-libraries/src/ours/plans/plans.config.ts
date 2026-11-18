@@ -149,9 +149,41 @@ export const pricingDisplay = (env: NodeJS.ProcessEnv = process.env) => {
 };
 
 // "test": the owner can switch plans in the app and no payment is taken (for
-// trying the product, labelled on screen). "off" (the default): plans and
-// usage are shown, and changing plan means getting in touch. A payment
-// provider such as Stripe would be a third mode, see plan.payment.ts.
-export type BillingMode = 'test' | 'off';
-export const billingMode = (env: NodeJS.ProcessEnv = process.env): BillingMode =>
-  env.OURS_BILLING_MODE === 'test' ? 'test' : 'off';
+// trying the product, labelled on screen). "stripe": the owner pays through
+// Stripe Checkout and the plan changes when Stripe tells us the payment went
+// through (plan.stripe.ts). "off" (the default): plans and usage are shown,
+// and changing plan means getting in touch.
+export type BillingMode = 'test' | 'stripe' | 'off';
+
+// A live Stripe key takes real money, so it only counts when
+// OURS_STRIPE_ALLOW_LIVE=true says so on purpose. Anything else falls back to
+// "off", never to taking payments by accident.
+export const stripeTestKey = (env: NodeJS.ProcessEnv = process.env) => {
+  const key = (env.OURS_STRIPE_SECRET_KEY || '').trim();
+  return key.startsWith('sk_test_') || key.startsWith('rk_test_');
+};
+
+export const stripeKeyUsable = (env: NodeJS.ProcessEnv = process.env) => {
+  const key = (env.OURS_STRIPE_SECRET_KEY || '').trim();
+  if (stripeTestKey(env)) {
+    return true;
+  }
+  return (key.startsWith('sk_live_') || key.startsWith('rk_live_')) && env.OURS_STRIPE_ALLOW_LIVE === 'true';
+};
+
+export const billingMode = (env: NodeJS.ProcessEnv = process.env): BillingMode => {
+  if (env.OURS_BILLING_MODE === 'test') {
+    return 'test';
+  }
+  if (env.OURS_BILLING_MODE === 'stripe' && stripeKeyUsable(env) && !!env.OURS_STRIPE_WEBHOOK_SECRET) {
+    return 'stripe';
+  }
+  return 'off';
+};
+
+// The Stripe price for a plan is found by this lookup key, so price ids never
+// need copying into settings. ours/README.md has the setup.
+export const stripeLookupKey = (planKey: string) => `ours_plan_${planKey}_monthly`;
+
+export const planForStripeLookupKey = (lookupKey: string | null | undefined) =>
+  PAID_PLANS.find((p) => stripeLookupKey(p.key) === lookupKey);

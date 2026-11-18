@@ -337,21 +337,57 @@ Settings (all optional):
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `OURS_BILLING_MODE` | `off` | `test`: admins switch plan on `/plan`, no payment, labelled "Test mode". `off`: the screen asks the owner to email us (`NEXT_PUBLIC_LEGAL_CONTACT_EMAIL`). |
+| `OURS_BILLING_MODE` | `off` | `test`: admins switch plan on `/plan`, no payment, labelled "Test mode". `stripe`: admins pay through Stripe (below). `off`: the screen asks the owner to email us (`NEXT_PUBLIC_LEGAL_CONTACT_EMAIL`). |
+| `OURS_STRIPE_SECRET_KEY` | | Secret. Stripe secret or restricted key. A test key (`sk_test_`/`rk_test_`) shows a "Test payments" notice on `/plan`. |
+| `OURS_STRIPE_WEBHOOK_SECRET` | | Secret. Signing secret (`whsec_…`) of the webhook endpoint below. Without it `stripe` mode stays `off`. |
+| `OURS_STRIPE_ALLOW_LIVE` | | Must be `true` for a live key (`sk_live_`) to take payments. Any live key without it falls back to `off`. |
+| `OURS_STRIPE_PORTAL_CONFIGURATION` | | Optional `bpc_…` id of a customer portal set up for our plans. Stripe's default portal settings are used otherwise. |
 | `OURS_TRIAL_DAYS` | `14` | Length of the free trial. |
 | `OURS_CURRENCY` | `GBP` | Currency the prices are shown in. |
 | `OURS_VAT_REGISTERED` | `false` | `true` shows prices as "+ VAT" with the VAT-inclusive figure. |
 | `OURS_VAT_RATE` | `0.2` | VAT rate used when registered. |
 
-Do not set upstream's `STRIPE_PUBLISHABLE_KEY`: it turns on upstream's own
-billing screens and USD limits. A payment provider for our plans goes in
-`plan.payment.ts` with our own env names.
+Do not set upstream's `STRIPE_PUBLISHABLE_KEY` or `STRIPE_SECRET_KEY`: they
+turn on upstream's own billing screens and USD limits. Our Stripe code uses
+only the `OURS_STRIPE_*` names.
+
+### Payments with Stripe (`OURS_BILLING_MODE=stripe`)
+
+Code: `libs/ours/plans/plan.stripe.ts` (Checkout, portal, webhook checks) and
+`PlanService.stripeWebhook` / `syncStripeSubscription`.
+
+- **First plan:** Stripe Checkout, a monthly subscription. The plan changes
+  only when Stripe's webhook says the subscription is active, never on the
+  redirect back. `/plan?checkout=success` waits for it (up to a minute).
+- **Changing plan while paying:** Stripe's customer portal shows the prorated
+  amount and confirms. **Card, invoices and cancelling:** the same portal
+  (`GET /ours/plan/billing`).
+- **Cancelled or unpaid:** at the end of the paid period the plan ends. New
+  work stops with "Your plan ended on DD/MM/YYYY…", and posts already
+  scheduled still go out (same as an ended trial).
+- **Prices** are found by lookup key `ours_plan_<key>_monthly` (`starter`,
+  `growth`, `pro`). Checkout refuses if Stripe's amount, currency or interval
+  differs from `plans.config.ts`, so a customer is never charged a price we
+  don't show. Changing a price means a new Stripe price with the same lookup
+  key (`transfer_lookup_key`) and the new amount in `plans.config.ts`.
+- **Webhook:** `POST <backend>/ours/stripe/webhook` (on the live site
+  `https://app.steadylamp.com/api/ours/stripe/webhook`). Events:
+  `checkout.session.completed`, `customer.subscription.created`,
+  `customer.subscription.updated`, `customer.subscription.deleted`,
+  `invoice.paid`. Each is checked against `OURS_STRIPE_WEBHOOK_SECRET`, and the
+  subscription is read fresh from Stripe, so order and repeats don't matter.
+  It never throws; a failure answers 500 and Stripe retries.
+- **Setup for a new Stripe account or sandbox:** one product per plan with a
+  monthly GBP price at the plan's amount and its lookup key; a webhook
+  endpoint with the events above; the customer portal switched on, with
+  "switch plans" listing the three prices. Then set the secrets above and
+  `OURS_BILLING_MODE=stripe`.
 
 To move a customer to a plan by hand while `OURS_BILLING_MODE=off`, set
 `plan` on their row in `ours_plan_subscription` (Prisma Studio) to `starter`,
 `growth` or `pro`.
 
-API: `GET /ours/plan`, `PUT /ours/plan` (`plan`).
+API: `GET /ours/plan`, `PUT /ours/plan` (`plan`; answers with `redirect` when the owner must pay first), `GET /ours/plan/billing`, `POST /ours/stripe/webhook` (no sign-in, Stripe-signed).
 
 ## What worked (Milestone 8)
 

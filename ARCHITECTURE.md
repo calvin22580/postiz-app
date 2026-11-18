@@ -139,7 +139,7 @@ Milestone 5 (review screen) kept the Sandbox-only rule on purpose. Real channels
 - The AI cost already logged in `ours_ai_usage` is a hidden fair-use cap per plan; the owner never sees an amount.
 - The channel limit runs on upstream's own "add a channel" routes through a global guard in our module (`ChannelLimitGuard`, `APP_GUARD`), which reads upstream's existing `@CheckPolicies([Create, CHANNEL])` metadata. No upstream file changed. It skips the routes that finish a connection already counted (OAuth callback, page picker), as upstream's guard does, and also checks `POST /integrations/public/connect/:token` (connection links, which upstream checks in the handler). Disabled channels count, since they can be enabled again without connecting anything.
 - Limits answer with HTTP 403, never 402: upstream's frontend answers 402 by opening upstream's billing page.
-- Payment: none yet. `plan.payment.ts` is the seam. A Stripe provider must use our own env names, never upstream's `STRIPE_*`, so upstream's billing stays off.
+- Payment: `plan.payment.ts` is the seam, `plan.stripe.ts` the Stripe provider (`OURS_BILLING_MODE=stripe`), under our own `OURS_STRIPE_*` names so upstream's billing stays off. Checkout for a first plan, Stripe's customer portal for switching, cards and cancelling. Our own webhook (`/ours/stripe/webhook`, outside the sign-in middleware, upstream's `/stripe` untouched) sets `ours_plan_subscription` from the subscription read fresh from Stripe; `externalId` holds the subscription id. An ended subscription puts the row back on an ended trial (`paymentProvider` stays `stripe`, shown as "ended"). No schema change.
 
 ## Learning from post performance (Milestone 8)
 

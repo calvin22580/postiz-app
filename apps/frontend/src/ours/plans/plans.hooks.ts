@@ -16,7 +16,7 @@ export interface PlanCard {
 
 export interface PlanOverview {
   plan: Omit<PlanCard, 'limits'> & {
-    status: 'trial' | 'trial-ended' | 'active';
+    status: 'trial' | 'trial-ended' | 'ended' | 'active';
     // calendar date, YYYY-MM-DD
     trialEndsAt: string | null;
   };
@@ -28,10 +28,23 @@ export interface PlanOverview {
   plans: PlanCard[];
   metrics: { key: MetricKey; title: string }[];
   pricing: { currency: string; locale: string; vatRegistered: boolean; vatRate: number };
-  billing: { mode: 'test' | 'off'; canChange: boolean };
+  billing: {
+    mode: 'test' | 'stripe' | 'off';
+    canChange: boolean;
+    // card details, invoices and cancelling on Stripe's billing page
+    canManage: boolean;
+    // Stripe test keys: no real money moves, and the screen says so
+    testPayments: boolean;
+  };
+  // set when changing plan means paying first (Stripe Checkout or portal)
+  redirect?: string;
 }
 
-export const usePlanOverview = () => {
+// refreshInterval: keep checking, e.g. just back from paying, while Stripe
+// tells us the payment went through
+export const usePlanOverview = (
+  refreshInterval: number | ((latest?: PlanOverview) => number) = 0
+) => {
   const fetch = useFetch();
   return useSWR<PlanOverview>(
     'ours-plan',
@@ -40,6 +53,6 @@ export const usePlanOverview = () => {
       if (!res.ok) throw new Error('load failed');
       return res.json();
     },
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false, refreshInterval }
   );
 };
