@@ -217,10 +217,18 @@ export class PlanService {
       return;
     }
     const { row, plan, status } = await this.current(orgId);
-    this.assertUsable(row, status);
+    // planLimit: 'channels' tells the app's connect buttons to show the
+    // message instead of following a connection link (ours/plans/channel.limit.ts)
+    const stop = (message: string) =>
+      new HttpException({ statusCode: PLAN_LIMIT_STATUS, message, planLimit: 'channels' }, PLAN_LIMIT_STATUS);
+    try {
+      this.assertUsable(row, status);
+    } catch (e) {
+      throw stop((e as HttpException).message);
+    }
     const used = await this.channelsUsed(orgId);
     if (used >= plan.limits.channels) {
-      throw new HttpException(channelLimitMessage(plan, used), PLAN_LIMIT_STATUS);
+      throw stop(channelLimitMessage(plan, used));
     }
   }
 

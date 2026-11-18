@@ -101,7 +101,16 @@ test('trial, switching plan, counting usage and stopping at a limit', async ({ p
     expect((await res.json()).message).toBe(
       'Your Starter plan includes 2 connected channels, and you’re using 2. Remove one to connect another, or move to Growth (4 channels) on Plan and usage.'
     );
-    await page.goto('/plan');
+    // the connect buttons show the reason instead of following an empty
+    // link to /undefined (an OAuth provider, as on the live site, 18/11/2026)
+    await page.goto('/launches');
+    await page.getByRole('button', { name: /add channel/i }).first().click();
+    await page.getByText('Instagram (Facebook Business)').first().click();
+    await expect(page.getByText('Can’t connect another channel')).toBeVisible();
+    await expect(page.getByText(/Your Starter plan includes 2 connected channels/)).toBeVisible();
+    await page.screenshot({ path: 'test-results/plan-channel-limit.png' });
+    await page.getByRole('button', { name: 'Go to Plan and usage' }).click();
+    await page.waitForURL(/\/plan$/);
     await expectUsed(page, 'channels', 2, 2);
 
     // 8. readable on a phone, no sideways scrolling
