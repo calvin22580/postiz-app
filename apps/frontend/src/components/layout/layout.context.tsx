@@ -6,6 +6,7 @@ import { deleteDialog } from '@gitroom/react/helpers/delete.dialog';
 import { useDecisionModal } from '@gitroom/frontend/components/layout/new-modal';
 import { useReturnUrl } from '@gitroom/frontend/app/(app)/auth/return.url.component';
 import { useVariables } from '@gitroom/react/helpers/variable.context';
+import { showChannelLimit } from '@gitroom/frontend/ours/plans/channel.limit'; // OURS (2026-11-18): plan channel limit message
 export default function LayoutContext(params: { children: ReactNode }) {
   if (params?.children) {
     // eslint-disable-next-line react/no-children-prop
@@ -105,6 +106,7 @@ function LayoutContextInner(params: { children: ReactNode }) {
         return false;
       }
 
+      if (await showChannelLimit(response)) return false; // OURS (2026-11-18): plan channel limit message instead of a broken link
       if (response.status === 402) {
         const { message, canManageBillingUi } = await response
           .clone()

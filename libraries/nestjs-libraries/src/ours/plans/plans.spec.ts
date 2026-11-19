@@ -265,6 +265,9 @@ describe('PlanService', () => {
       'Your free trial ended on 01/11/2026. Choose a plan on Plan and usage to keep going.'
     );
     await expect(service.assertCanAddChannel('org-1')).rejects.toThrow('free trial ended');
+    expect((await service.assertCanAddChannel('org-1').catch((e) => e)).getResponse()).toMatchObject({
+      planLimit: 'channels',
+    });
   });
 
   it('stops AI work at the fair-use cap, but still lets approved posts through', async () => {
@@ -285,6 +288,10 @@ describe('PlanService', () => {
     const two = [{ disabled: false }, { disabled: true }];
     const { service } = makeService({ plan: active('starter'), channels: two });
     await expect(service.assertCanAddChannel('org-1')).rejects.toThrow('includes 2 connected channels, and you’re using 2');
+    // the app's connect buttons look for planLimit to show the message
+    const error = await service.assertCanAddChannel('org-1').catch((e) => e);
+    expect(error.getStatus()).toBe(PLAN_LIMIT_STATUS);
+    expect(error.getResponse()).toMatchObject({ planLimit: 'channels' });
     await expect(service.assertCanAddChannel('org-1', 'existing')).resolves.toBeUndefined();
     // the public API passes the channel's id instead of its internal id
     await expect(service.assertCanAddChannel('org-1', 'i1')).resolves.toBeUndefined();

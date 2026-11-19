@@ -50,7 +50,7 @@ export const InstagramContinue = withContinueProvider<
       <div>
         <img
           className="w-full max-w-[156px]"
-          src={item.picture.data.url}
+          src={item.picture?.data?.url || '/no-picture.jpg' /* OURS (2026-11-19): an account with no profile picture showed a broken image */}
           alt="profile"
         />
       </div>
