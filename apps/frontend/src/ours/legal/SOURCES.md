@@ -1,14 +1,15 @@
 # Legal pages: sources and open points
 
-The privacy policy, terms of service and data deletion page in this folder are
-drafts written on 15/11/2026. **A solicitor should review them before launch.**
-They are not legal advice.
+The privacy policy, terms of service and data deletion page in this folder were
+written on 15/11/2026 and published as in force from 19/11/2026. A solicitor's
+review is still worth doing before paid launch. They are not legal advice.
 
 Pages: `/privacy.html`, `/terms.html`, `/data-deletion.html` (routes in
 `apps/frontend/src/app/(legal)/`). Company facts come from `legal.ts`
 (`legal.defaults.json`, overridable by `NEXT_PUBLIC_LEGAL_*`). Anything not yet
 known is printed as a visible `[FILL IN: ...]` marker, and a "Draft" notice
-shows until every fact is set and `NEXT_PUBLIC_LEGAL_REVIEWED=true`.
+shows while a required fact is empty or `NEXT_PUBLIC_LEGAL_IN_FORCE` is not
+`true`. The ICO registration number is optional and is only mentioned once set.
 
 ## What each requirement asks for, and where it is met
 
@@ -41,7 +42,7 @@ shows until every fact is set and `NEXT_PUBLIC_LEGAL_REVIEWED=true`.
 
 ## Before launch (not done in this change)
 
-1. Fill in every `[FILL IN]` marker, then set `NEXT_PUBLIC_LEGAL_REVIEWED=true` after the solicitor's review.
+1. Add the ICO registration number (`NEXT_PUBLIC_LEGAL_ICO_NUMBER`) once the fee is paid, and set `NEXT_PUBLIC_LEGAL_REVIEWED=true` after a solicitor's review.
 2. Deletion must really happen. Today an emailed request has to be carried out by hand in the database, because upstream soft-deletes. A proper hard-delete job (account, profile, media, tokens) would make the promises in these pages easy to keep.
 3. Disconnecting a channel keeps its token (soft delete). LinkedIn's terms say to keep content only as long as necessary. Consider clearing tokens on disconnect.
 4. LinkedIn's Data Storage Requirements limit how long member profile data (24 hours) and social activity (48 hours) may be cached. Check what upstream stores for LinkedIn channels before the LinkedIn review.

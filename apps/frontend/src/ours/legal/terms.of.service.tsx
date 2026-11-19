@@ -1,7 +1,6 @@
 // OURS: our terms of service, for business customers in the UK. Covers what
 // LinkedIn's API Terms (section 5.1 and 8.1) and Meta's Platform Terms expect
 // an app's own user terms to say. Sources are listed in SOURCES.md (this folder).
-// Needs a solicitor's review before launch.
 import { FC } from 'react';
 import { brand } from '@gitroom/frontend/ours/brand/brand';
 import { LegalFacts, legalPaths } from '@gitroom/frontend/ours/legal/legal';
@@ -180,7 +179,9 @@ export const TermsOfService: FC<{ facts: LegalFacts }> = ({ facts }) => {
         <p>
           {name} is currently free to use while we test it. We will not
           charge you anything without telling you the price and getting your
-          agreement first. Paid plans will come with updated terms.
+          agreement first. Any payment screen you see while we test uses
+          Stripe&apos;s test mode and takes no real money. Paid plans will come
+          with updated terms.
         </p>
       </Section>
 

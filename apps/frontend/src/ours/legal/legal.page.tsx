@@ -95,7 +95,7 @@ export const LegalPage: FC<{
   // An ordinary public page (About): no "last updated" line or draft notice.
   plain?: boolean;
 }> = ({ title, current, facts, children, plain }) => {
-  const draft = !plain && (!facts.reviewed || missingFacts(facts).length > 0);
+  const draft = !plain && (!facts.inForce || missingFacts(facts).length > 0);
   return (
     <div className="min-h-screen bg-newBgColor text-newTextColor">
       <header className="mx-auto flex max-w-[760px] flex-wrap items-center justify-between gap-[12px] px-[16px] pt-[32px]">
@@ -125,7 +125,11 @@ export const LegalPage: FC<{
             <h1 className="text-[30px] font-[700] leading-[1.2]">{title}</h1>
             {!plain && (
               <p className="text-[14px] text-textItemBlur">
-                Last updated: <Fact value={facts.lastUpdated} label="date published (DD/MM/YYYY)" />
+                Effective from:{' '}
+                <Fact value={facts.effectiveDate} label="date in force (DD/MM/YYYY)" />
+                . Last updated:{' '}
+                <Fact value={facts.lastUpdated} label="date published (DD/MM/YYYY)" />
+                .
               </p>
             )}
           </div>
@@ -135,8 +139,7 @@ export const LegalPage: FC<{
               data-testid="legal-draft"
               className="rounded-[10px] border border-[#F0D58A] bg-[#FFF4D6] px-[14px] py-[12px] text-[14px] text-[#5C3D00]"
             >
-              Draft. This page is waiting for company details and a legal
-              review, and is not yet in force.
+              Draft. This page is not yet in force.
             </div>
           )}
           {children}
