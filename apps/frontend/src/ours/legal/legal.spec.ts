@@ -19,6 +19,8 @@ const complete: Record<string, string> = {
   NEXT_PUBLIC_LEGAL_REGISTERED_ADDRESS: '1 Test Street, Testtown, TE1 1ST',
   NEXT_PUBLIC_LEGAL_ICO_NUMBER: 'ZA000000',
   NEXT_PUBLIC_LEGAL_LAST_UPDATED: '01/12/2026',
+  NEXT_PUBLIC_LEGAL_EFFECTIVE_DATE: '02/12/2026',
+  NEXT_PUBLIC_LEGAL_IN_FORCE: 'true',
   NEXT_PUBLIC_LEGAL_REVIEWED: 'true',
 };
 
@@ -35,8 +37,11 @@ describe('legal facts', () => {
     expect(facts.reviewed).toBe(false);
     expect(facts.companyNumber).toBe('17533499');
     expect(facts.registeredAddress).toBe('128 City Road, London, EC1V 2NX');
-    expect(facts.lastUpdated).toBe('17/11/2026');
-    expect(missingFacts(facts)).toEqual(['icoNumber']);
+    expect(facts.lastUpdated).toBe('19/11/2026');
+    expect(facts.effectiveDate).toBe('19/11/2026');
+    expect(facts.inForce).toBe(true);
+    // the ICO number is optional, so nothing is missing
+    expect(missingFacts(facts)).toEqual([]);
   });
 
   it('takes every value from the environment when set', () => {
@@ -47,19 +52,40 @@ describe('legal facts', () => {
     expect(missingFacts(facts)).toEqual([]);
     expect(facts.contactEmail).toBe('privacy@example.co.uk');
     expect(facts.reviewed).toBe(true);
+    expect(facts.effectiveDate).toBe('02/12/2026');
   });
 });
 
 describe('legal pages', () => {
-  it('mark missing facts and the draft status instead of guessing', () => {
+  it('are published as final with an effective date by default', () => {
     for (const page of pages) {
       const html = render(page, legalFacts({}));
-      expect(html).toContain('data-testid="legal-draft"');
-      expect(html).toContain('17/11/2026');
+      expect(html).not.toContain('data-testid="legal-draft"');
+      expect(html).not.toContain('[FILL IN');
+      expect(html).not.toMatch(/not yet in force/);
+      expect(html).toContain('Effective from:');
+      expect(html).toContain('19/11/2026');
     }
-    expect(render(PrivacyPolicy, legalFacts({}))).toContain(
-      '[FILL IN: ICO registration number]'
+  });
+
+  it('never claim an ICO registration that has not been set', () => {
+    const html = render(PrivacyPolicy, legalFacts({}));
+    expect(html).not.toContain('registration number');
+    expect(render(PrivacyPolicy, legalFacts(complete))).toContain(
+      'registration number ZA000000'
     );
+  });
+
+  it('mark missing facts and the draft status instead of guessing', () => {
+    const facts = { ...legalFacts({}), companyNumber: '' };
+    expect(missingFacts(facts)).toEqual(['companyNumber']);
+    for (const page of pages) {
+      expect(render(page, facts)).toContain('data-testid="legal-draft"');
+    }
+    expect(render(PrivacyPolicy, facts)).toContain('[FILL IN: company number]');
+    expect(
+      render(PrivacyPolicy, legalFacts({ NEXT_PUBLIC_LEGAL_IN_FORCE: 'false' }))
+    ).toContain('data-testid="legal-draft"');
   });
 
   it('print the facts once they are set', () => {
@@ -79,6 +105,12 @@ describe('legal pages', () => {
     // what we process from the platforms, and the limits on it
     expect(html).toContain('Data from Facebook, Instagram and LinkedIn');
     expect(html).toContain('We do not sell, license or buy platform data.');
+    // LinkedIn covered by name, with what we receive and how we use it
+    expect(html).toContain('<strong>LinkedIn:</strong>');
+    expect(html).toContain('We use LinkedIn data only to manage the LinkedIn Pages');
+    expect(html).toContain('https://www.linkedin.com/legal/privacy-policy');
+    // payments go through Stripe, which is listed as a provider
+    expect(html).toContain('Stripe Payments UK, Ltd.');
     // AI disclosures (LinkedIn developer AI policy, section III)
     expect(html).toContain('AI can still make mistakes');
     // the right to complain to the ICO

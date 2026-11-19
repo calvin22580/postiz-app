@@ -64,18 +64,22 @@ visitor and crawler reaches them without an upstream change.
   `apps/frontend/src/ours/legal/SOURCES.md`.
 - Company facts: `legal.defaults.json`, each overridable by an environment
   variable (frontend build time). Empty values show as `[FILL IN: ...]`, and a
-  "Draft" notice shows until all are set and the pages are marked reviewed.
+  "Draft" notice shows while a required value is empty or the pages are not
+  marked in force. The ICO number is optional: the privacy policy only
+  mentions an ICO registration once it is set.
 
 | Variable | Default |
 |----------|---------|
 | `NEXT_PUBLIC_LEGAL_COMPANY_NAME` | `Steady Lamp Ltd` |
-| `NEXT_PUBLIC_LEGAL_COMPANY_NUMBER` | empty |
-| `NEXT_PUBLIC_LEGAL_REGISTERED_ADDRESS` | empty |
-| `NEXT_PUBLIC_LEGAL_ICO_NUMBER` | empty |
+| `NEXT_PUBLIC_LEGAL_COMPANY_NUMBER` | `17533499` |
+| `NEXT_PUBLIC_LEGAL_REGISTERED_ADDRESS` | `128 City Road, London, EC1V 2NX` |
+| `NEXT_PUBLIC_LEGAL_ICO_NUMBER` | empty (optional) |
 | `NEXT_PUBLIC_LEGAL_CONTACT_EMAIL` | `support@kanosena.com` |
 | `NEXT_PUBLIC_LEGAL_JURISDICTION` | `England and Wales` |
-| `NEXT_PUBLIC_LEGAL_LAST_UPDATED` | empty (DD/MM/YYYY) |
-| `NEXT_PUBLIC_LEGAL_REVIEWED` | `false`; set `true` after a solicitor's review |
+| `NEXT_PUBLIC_LEGAL_LAST_UPDATED` | `19/11/2026` (DD/MM/YYYY) |
+| `NEXT_PUBLIC_LEGAL_EFFECTIVE_DATE` | `19/11/2026` (DD/MM/YYYY) |
+| `NEXT_PUBLIC_LEGAL_IN_FORCE` | `true`; `false` brings back the "Draft" notice |
+| `NEXT_PUBLIC_LEGAL_REVIEWED` | `false`; a record of a solicitor's review, nothing on the pages depends on it |
 
 Provider names and regions in the privacy policy (hosting, email, R2
 location, backups) are text in `privacy.policy.tsx`, not settings.

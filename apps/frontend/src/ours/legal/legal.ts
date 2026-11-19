@@ -12,6 +12,11 @@ export type LegalFacts = {
   contactEmail: string;
   jurisdiction: string;
   lastUpdated: string;
+  effectiveDate: string;
+  // The pages are published and in force. While false, a "Draft" notice shows.
+  inForce: boolean;
+  // A solicitor has reviewed the pages. A record only; nothing on the pages
+  // depends on it.
   reviewed: boolean;
 };
 
@@ -26,19 +31,24 @@ export const legalFacts = (
   contactEmail: env.NEXT_PUBLIC_LEGAL_CONTACT_EMAIL || defaults.contactEmail,
   jurisdiction: env.NEXT_PUBLIC_LEGAL_JURISDICTION || defaults.jurisdiction,
   lastUpdated: env.NEXT_PUBLIC_LEGAL_LAST_UPDATED || defaults.lastUpdated,
+  effectiveDate:
+    env.NEXT_PUBLIC_LEGAL_EFFECTIVE_DATE || defaults.effectiveDate,
+  inForce:
+    (env.NEXT_PUBLIC_LEGAL_IN_FORCE || String(defaults.inForce)) === 'true',
   reviewed:
     (env.NEXT_PUBLIC_LEGAL_REVIEWED || String(defaults.reviewed)) === 'true',
 });
 
-// The values a published page must not go out without.
+// The values a published page must not go out without. The ICO registration
+// number is optional: the privacy policy only mentions it once it is set.
 const REQUIRED: Array<keyof LegalFacts> = [
   'companyName',
   'companyNumber',
   'registeredAddress',
-  'icoNumber',
   'contactEmail',
   'jurisdiction',
   'lastUpdated',
+  'effectiveDate',
 ];
 
 export const missingFacts = (facts: LegalFacts) =>

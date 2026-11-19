@@ -1,7 +1,7 @@
 // OURS: our privacy policy. Written for UK GDPR and the Data Protection Act
 // 2018, and for what Meta's Platform Terms (section 4) and LinkedIn's API Terms
 // (section 5) ask a privacy policy to cover. Sources are listed in
-// SOURCES.md (this folder). Needs a solicitor's review before launch.
+// SOURCES.md (this folder).
 import { FC } from 'react';
 import { brand } from '@gitroom/frontend/ours/brand/brand';
 import { LegalFacts, legalPaths } from '@gitroom/frontend/ours/legal/legal';
@@ -65,10 +65,13 @@ export const PrivacyPolicy: FC<{ facts: LegalFacts }> = ({ facts }) => {
         </p>
         <p>
           {facts.companyName} is the controller of the personal data described
-          in this policy, except where section 9 says otherwise. We are
-          registered with the Information Commissioner&apos;s Office (ICO)
-          under registration number{' '}
-          <Fact value={facts.icoNumber} label="ICO registration number" />.
+          in this policy, except where section 9 says otherwise.
+          {facts.icoNumber && (
+            <>
+              {' '}We are registered with the Information Commissioner&apos;s
+              Office (ICO) under registration number {facts.icoNumber}.
+            </>
+          )}
         </p>
         <p>
           For anything about your personal data, email {email}. We have not
@@ -122,23 +125,39 @@ export const PrivacyPolicy: FC<{ facts: LegalFacts }> = ({ facts }) => {
         <p>
           When you connect a social media account, you sign in on that
           platform&apos;s own page and choose what to allow. We never see your
-          password for those platforms. Depending on the platform and what you
-          allow, we receive:
+          password for those platforms. From every platform you connect, we
+          receive:
         </p>
         <List>
           <li>
             an access token that lets us post for you, and its expiry date;
-          </li>
-          <li>
-            the name, ID and profile picture of your account and of the
-            Facebook Pages, Instagram professional accounts or LinkedIn Pages
-            you manage and choose to connect;
           </li>
           <li>the ID of and link to each post we publish for you;</li>
           <li>
             statistics about your posts and pages, such as reach, likes and
             comment counts, where the platform provides them and you use the
             analytics features.
+          </li>
+        </List>
+        <p>And, depending on the platform and what you allow:</p>
+        <List>
+          <li>
+            <strong>Facebook:</strong> your Facebook user ID and name, and the
+            name, ID and profile picture of the Facebook Pages you manage and
+            choose to connect.
+          </li>
+          <li>
+            <strong>Instagram:</strong> the username, ID and profile picture of
+            the Instagram professional account linked to the Facebook Page you
+            connect.
+          </li>
+          <li>
+            <strong>LinkedIn:</strong> your LinkedIn member ID, name, profile
+            picture and public profile name, and the name, ID and logo of the
+            LinkedIn Pages you administer and choose to connect. We use your
+            permission to post to those Pages (or to your own profile, if you
+            connect it), and to read the posts on them and how those posts
+            performed.
           </li>
         </List>
         <p>
@@ -168,8 +187,18 @@ export const PrivacyPolicy: FC<{ facts: LegalFacts }> = ({ facts }) => {
 
         <p className="font-[600]">Payments</p>
         <p>
-          We do not take payments yet. We will update this policy before we
-          do.
+          Paid plans are handled by Stripe (see section 6). You enter your
+          card details on Stripe&apos;s own payment page, so we never see or
+          store your card details. Stripe collects your card and billing
+          details itself, under{' '}
+          <a
+            href="https://stripe.com/gb/privacy"
+            className="text-btnPrimary underline underline-offset-2"
+          >
+            its own privacy policy
+          </a>
+          . From Stripe we receive only your plan and the status of your
+          subscription and payments.
         </p>
       </Section>
 
@@ -196,6 +225,10 @@ export const PrivacyPolicy: FC<{ facts: LegalFacts }> = ({ facts }) => {
             [
               'Publish the posts you approve to the accounts you connect, and show how they performed',
               'Contract',
+            ],
+            [
+              'Take payment for a paid plan and keep billing records',
+              'Contract, and legal obligation for the tax records we must keep',
             ],
             [
               'Send service emails, such as sign-in links, approval reminders and notices about your account',
@@ -285,6 +318,13 @@ export const PrivacyPolicy: FC<{ facts: LegalFacts }> = ({ facts }) => {
             account, and never pass it to other customers.
           </li>
           <li>
+            We use LinkedIn data only to manage the LinkedIn Pages, and the
+            profile, that you connect. We do not combine it with data from
+            other sources, and we do not use it to build profiles of LinkedIn
+            members.
+          </li>
+
+          <li>
             We delete it when you ask us to, when you close your account, when
             we no longer need it to provide the service, or when the platform
             asks us to.
@@ -306,7 +346,21 @@ export const PrivacyPolicy: FC<{ facts: LegalFacts }> = ({ facts }) => {
         <p>
           {name} is not affiliated with, endorsed by or supported by Meta or
           LinkedIn. Their own privacy policies cover what they do with your
-          posts once they are published.
+          posts once they are published: see{' '}
+          <a
+            href="https://www.facebook.com/privacy/policy/"
+            className="text-btnPrimary underline underline-offset-2"
+          >
+            Meta&apos;s privacy policy
+          </a>{' '}
+          and{' '}
+          <a
+            href="https://www.linkedin.com/legal/privacy-policy"
+            className="text-btnPrimary underline underline-offset-2"
+          >
+            LinkedIn&apos;s privacy policy
+          </a>
+          .
         </p>
       </Section>
 
@@ -343,6 +397,11 @@ export const PrivacyPolicy: FC<{ facts: LegalFacts }> = ({ facts }) => {
               'Cloudflare, Inc. (R2 storage)',
               'Stores the images and media you upload',
               'Western Europe',
+            ],
+            [
+              'Stripe Payments UK, Ltd.',
+              'Takes payments for paid plans',
+              'United Kingdom, with some processing in the United States',
             ],
           ]}
         />
@@ -411,7 +470,7 @@ export const PrivacyPolicy: FC<{ facts: LegalFacts }> = ({ facts }) => {
             ],
             ['Support messages', '2 years after our last contact with you'],
             [
-              'Billing and tax records (once we take payments)',
+              'Billing and tax records',
               '6 years after the end of the financial year they relate to, as UK law requires',
             ],
             [
