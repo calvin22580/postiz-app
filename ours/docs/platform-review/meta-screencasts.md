@@ -1,5 +1,7 @@
 # Meta screencast scripts
 
+**Recorded 19/11/2026** (`kanosena-meta-video-1.mov` to `-4.mov`, kept on Calvin's Mac, not in the repo). As recorded, the videos skip "What worked" (empty for test posts) and the post Preview page (still shows the upstream logo); video 3 and the end of video 4 show the post Statistics window only. Video 4 is one file.
+
 Meta wants one screencast per permission showing "the end-to-end user experience for that specific permission", showing "only how your app uses that permission", UI in English, with captions explaining anything that isn't obvious. Meta lets one video be attached to several permissions, so we record **four videos**, and attach each to the permissions it covers.
 
 ## Before recording
