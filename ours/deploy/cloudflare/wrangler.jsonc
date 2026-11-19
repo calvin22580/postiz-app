@@ -64,7 +64,11 @@
     // Meta no longer offers Instagram Login to new apps (17/11/2026), so the
     // Instagram (Standalone) channel can't work for us. Instagram goes through
     // a linked Facebook Page instead. See ours/docs/platform-review/meta.md.
-    "HIDDEN_PROVIDERS": "instagram-standalone"
+    // Our LinkedIn app has only the Community Management API, which LinkedIn
+    // won't put next to OpenID Connect, so the personal LinkedIn channel
+    // (openid/profile) can't work: we offer LinkedIn Page only. See
+    // ours/docs/platform-review/linkedin.md.
+    "HIDDEN_PROVIDERS": "instagram-standalone,linkedin"
   },
   "secrets": {
     "required": [
