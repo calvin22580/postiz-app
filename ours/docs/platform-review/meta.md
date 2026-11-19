@@ -9,6 +9,19 @@ Sources, checked 16/11/2026:
 - Data deletion: https://developers.facebook.com/documentation/development/create-an-app/app-dashboard/data-deletion-callback
 - Data handling questions: https://developers.facebook.com/docs/resp-plat-initiatives/individual-processes/data-handling-questions/questions-preview
 
+## Submission state and plan (19/11/2026)
+
+This section is the current state. Older dated notes below are history.
+
+- **Ready:** app `Kanosena` (App ID 1614622909955028) on app.kanosena.com. Basic settings (privacy, terms, data deletion URLs, contact support@kanosena.com, teal K icon) set 19/11. Legal pages in force (PR #24). Test Page "Kanosena" and Instagram "kanosena.app" connected as channels on the review account (review@steadylamp.com, Growth plan).
+- **Request exactly 11 permissions:** pages_show_list, business_management, pages_manage_posts, pages_manage_engagement, pages_read_engagement, read_insights, pages_read_user_content (Meta dependency), instagram_basic, instagram_content_publish, instagram_manage_comments, instagram_manage_insights. The Facebook channel needs the first six (`checkScopes` is all-or-nothing), the Instagram channel needs the four instagram_* plus pages_show_list, pages_read_engagement and business_management.
+- **Blocker 1, Business Verification:** Meta: Business Verification "is required for all apps making requests for Advanced Access" ([permissions reference](https://developers.facebook.com/docs/facebook-login/permissions)). The data handling questions only appear once it is approved ([submission guide](https://developers.facebook.com/documentation/resp-plat-initiatives/individual-processes/app-review/submission-guide)). Steady Lamp Ltd is not verified; it needs a business phone number from Calvin.
+- **Blocker 2, API calls:** "Request advanced access" stays greyed out until each permission has a successful call in the last 30 days. Connecting covered the list/basic permissions. Publishing, commenting and insights calls happen when the screencasts are recorded (a real test post on the Kanosena Page and Instagram, which Calvin approves).
+- **Blocker 3, screencasts:** four videos, see `meta-screencasts.md`. 1080p or better, English UI, no audio, show the permission being granted.
+- **Tech Provider:** we serve other businesses, so we are a Tech Provider. Meta says the choice can't be undone: Calvin confirms when the dashboard asks.
+- **Channel slots:** the review account is on Growth (4 channels) and already has Sandbox, Facebook and Instagram. A reviewer who connects their own Page and Instagram would need 5. The reviewer instructions say the test channels are already connected so they can test publishing without connecting.
+- **Chrome prompt:** `chrome-meta-app-review.txt` (also in project files as `kanosena/chrome-meta-app-review-submit.txt`) fills in the whole submission and stops before "Submit for Review".
+
 ## What Meta requires, in short
 
 - We serve many businesses, so we are a **Tech Provider**: every permission needs **App Review for Advanced Access**, plus **Business Verification** of the Steady Lamp Ltd business portfolio and **Tech Provider access verification**.

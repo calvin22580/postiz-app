@@ -1,0 +1,132 @@
+You are filling in Meta App Review for the Meta developer app "Kanosena" (App ID 1614622909955028), a social media scheduling service run by Steady Lamp Ltd (UK). Work in a new tab at developers.facebook.com/apps/1614622909955028.
+
+RULES
+- NEVER click "Submit for Review", "Submit", "Publish", "Go Live" or switch the app to Live mode. Stop before the final Submit and ask Calvin in chat. Only Calvin's own "yes, submit" in chat allows it.
+- NEVER choose "Tech Provider" (or any irreversible business type choice), start Business Verification, or accept new terms without asking Calvin first in chat. Read him the exact wording.
+- NEVER type the test password. Where a password is needed, put the text <PASSWORD> and ask Calvin to replace it himself.
+- Do not publish, schedule or delete any post on Facebook, Instagram or app.kanosena.com.
+- If a site isn't logged in, open its login page, ask Calvin in chat to log in, and wait for "done".
+- If anything asks for a detail not given here, stop and ask Calvin.
+- If a screen differs from these steps, do the closest equivalent and tell Calvin what you did.
+- Save drafts as you go (Meta keeps the submission as a draft until it is submitted).
+
+FACTS
+- App: Kanosena, App ID 1614622909955028, Business app, Development mode. Business portfolio: Steady Lamp Ltd (ID 896366080169225).
+- Company: Steady Lamp Ltd, company number 17533499, registered office 128 City Road, London, EC1V 2NX.
+- Website: https://app.kanosena.com (public page https://app.kanosena.com/about.html)
+- Privacy: https://app.kanosena.com/privacy.html  Terms: https://app.kanosena.com/terms.html  Data deletion: https://app.kanosena.com/data-deletion.html
+- Contact / business email: support@kanosena.com. Category: Business and pages. Icon: teal K (already uploaded).
+- Test login for reviewers: review@steadylamp.com, password <PASSWORD> (Calvin types it). The account is on the Growth plan. Facebook Page "Kanosena" and Instagram "kanosena.app" are already connected as channels, plus a "Sandbox" channel.
+
+PERMISSIONS TO REQUEST (Advanced Access), exactly these 11, nothing else:
+pages_show_list, business_management, pages_manage_posts, pages_manage_engagement, pages_read_engagement, read_insights, pages_read_user_content, instagram_basic, instagram_content_publish, instagram_manage_comments, instagram_manage_insights.
+(public_profile is automatic; do not request messaging, ads or any other permission.)
+
+STEP 1. Pre-flight check (report only, change nothing)
+a. Business Verification: Business settings for Steady Lamp Ltd (business.facebook.com/settings → Security Centre / Business info). Is it Verified, In review, or Not started? If not verified, list exactly what Meta asks for.
+b. App Dashboard: is there a "Become a Tech Provider" / "Access verification" item? Its status? Read Calvin the wording if it asks for a choice. Do not choose.
+c. App Review → Permissions and Features: for each of the 11 permissions, note whether "Request advanced access" is clickable or greyed out (greyed out means no successful API call in the last 30 days), and any "requires access verification" or "requires business verification" note.
+Tell Calvin the results of a, b and c in chat, then continue with step 2 (it is only drafting).
+
+STEP 2. Start the request
+In App Review → Permissions and Features, click "Request advanced access" for each of the 11 permissions that allows it, then "Continue the Request". If Meta prompts for Business Verification here, do NOT start it: note the wording and carry on with the steps it still allows.
+
+STEP 3. Complete App Settings (row "Complete App Settings")
+Check/fill: App icon (should already be the teal K), Privacy Policy URL, App Category "Business and pages", App Purpose: if asked whether the app is for "Yourself or your own business" or for "Clients", choose "Clients" (Kanosena publishes for other small businesses); if the options differ, ask Calvin, Primary contact / business email support@kanosena.com. Save.
+
+STEP 4. Complete App Verification (row "Complete App Verification")
+- "Can app users sign in with Meta's authentication?" → Yes (Facebook Login for Business).
+- Platform: Website, https://app.kanosena.com
+- Test credentials: review@steadylamp.com / <PASSWORD> (ask Calvin to replace <PASSWORD> himself; wait for "done").
+- Reviewer instructions: paste the text between the lines below exactly, then ask Calvin to replace <PASSWORD>.
+----------
+Website: https://app.kanosena.com
+Test login: review@steadylamp.com / <PASSWORD>
+
+Kanosena lets a small business owner approve social media posts, which we then publish at the planned time. Nothing is published without the owner's approval.
+
+The test account already has our test Facebook Page "Kanosena" and its linked Instagram professional account "kanosena.app" connected, so you can test publishing straight away (steps 4 to 13). A "Sandbox" channel is also connected; it is a simulated channel that never publishes anywhere and can be ignored.
+
+Connect a Facebook Page (pages_show_list, business_management)
+1. Log in at https://app.kanosena.com/auth/login with the test login.
+2. In the left sidebar, click "Add Channel", then "Facebook Page".
+3. Log in with Facebook and allow access. Choose a Page from the list (this list uses pages_show_list; Pages owned through a business portfolio come from business_management). The Page appears in the sidebar.
+
+Publish a post (pages_manage_posts) with a first comment (pages_manage_engagement)
+4. Click "Create Post". Select the Facebook Page avatar at the top.
+5. Type some text and, optionally, add a photo with "Insert Media".
+6. Click "Add comment" under the editor and type a comment.
+7. Click "Post now". The post is published to the Page, then the comment is added to it.
+8. Open the Page on Facebook to see the post and the comment, posted as the Page.
+
+See results (pages_read_engagement, read_insights)
+9. Back in Kanosena, open the post in the calendar and click "Statistics" to see reach and engagement read from the Page. Insights can take a few minutes to appear.
+10. Click "What worked" in the left menu to see results summarised.
+
+Instagram (instagram_basic, instagram_content_publish, instagram_manage_comments, instagram_manage_insights)
+11. Click "Add Channel", then "Instagram (Facebook Business)". Log in with Facebook and choose the Instagram professional account linked to your Page.
+12. Click "Create Post", select the Instagram avatar, add a photo (Instagram requires one) and a caption, add a first comment with "Add comment", then "Post now". The post and comment appear on the Instagram account.
+13. Open the post in the calendar and click "Statistics", or open "What worked", to see insights.
+
+pages_read_user_content is requested only because Meta requires it for pages_manage_engagement and instagram_basic.
+
+The "Weekly posts" screen is how owners normally get posts: it drafts a week of posts from their business profile, they approve each one, and approved posts are scheduled to their connected channels in the same way as above.
+----------
+Save.
+
+STEP 5. Each permission: description, allowed-usage tick, screencast
+Open each permission row under "Requested Permissions and Features". Paste its text below into "How will your app use this permission?" (or similar), tick the allowed-usage agreement box, and attach the screencast named. Screencasts: look in Downloads for kanosena-meta-video-1.mp4, -2, -3, -4. If a file is missing, leave the upload empty and list it in the report. Do not record or create videos yourself.
+
+pages_show_list (video 1):
+Kanosena is a social media scheduling service for small businesses. After the business owner logs in with Facebook from our "Add Channel" screen, we use pages_show_list to list the Facebook Pages they manage, so they can choose which Page Kanosena should publish to. We store only the chosen Page's ID, name and picture. The owner can disconnect the Page at any time, which deletes its tokens and details. For Instagram, we also use it to find the Page the owner's Instagram professional account is linked to.
+
+business_management (video 1):
+Many small businesses manage their Facebook Page through a Meta business portfolio rather than directly. We use business_management only to read the Pages owned by the business portfolios the owner belongs to (/me/businesses and /{business-id}/owned_pages), so those Pages, and the Instagram accounts linked to them, appear in the list they choose from. We do not create, change or read any other business assets.
+
+pages_manage_posts (video 2):
+This is the core of our product. The business owner approves each post in Kanosena (text with an optional photo or video), and at the scheduled time we publish it to the Page they connected. Nothing is ever published without the owner's explicit approval in our app. We also use it to show the owner the post's link once it is live.
+
+pages_manage_engagement (video 2):
+When writing a post in Kanosena, the owner can add a first comment (for example a link or extra details) using "Add comment" in the post editor. Right after the approved post is published, we publish that comment on the post as the Page. We only post comments the owner has written and approved; we do not reply to, hide or delete other people's comments.
+
+pages_read_user_content (video 2):
+Meta requires this permission for pages_manage_engagement and instagram_basic, which we use to post the owner's own first comment on their published post and to identify their linked Instagram account. Kanosena does not read, store or display posts, comments or reviews written by other people on the Page. The only comment content we handle is the comment the owner wrote and approved in Kanosena.
+
+pages_read_engagement (video 3):
+We read the connected Page's basic details (name, picture) and the engagement on posts published through Kanosena (reactions, comments and shares counts), so we can show the owner how their approved posts performed on our "What worked" screen and in each post's Statistics. For Instagram, we use it to read which Instagram professional account is linked to the Page. It is also required by read_insights and pages_manage_posts.
+
+read_insights (video 3):
+We read post-level insights (reach and impressions) for posts published through Kanosena, and show them to the business owner on our "What worked" screen and in each post's Statistics window. This helps them see which kinds of posts work for their business. Insights are only shown to members of that business's Kanosena account and are deleted when the Page is disconnected or the account is closed.
+
+instagram_basic (video 4):
+After the business owner logs in with Facebook from our "Add Channel" screen and picks "Instagram (Facebook Business)", we use instagram_basic to read the Instagram professional account linked to their Facebook Page (username, name and profile picture), so they can confirm it is the right account. We store only that account's ID, username and picture.
+
+instagram_content_publish (video 4):
+This is the core of our product. The business owner approves each Instagram post in Kanosena (a photo, carousel, Reel or Story with a caption), and at the scheduled time we publish it to their Instagram professional account. Nothing is ever published without the owner's explicit approval in our app.
+
+instagram_manage_comments (video 4):
+When writing a post, the owner can add a first comment using "Add comment" in the post editor. Right after the approved post is published, we publish that comment on it. We only post comments the owner wrote and approved; we do not reply to, hide or delete other people's comments.
+
+instagram_manage_insights (video 4):
+We read insights (reach, likes, comments, saves) for posts published through Kanosena and show them to the business owner on our "What worked" screen and in each post's Statistics window, so they can see which kinds of posts work. Shown only to that business's Kanosena account; deleted when the account is disconnected or closed.
+
+STEP 6. Data handling questions (only if Meta shows them; they appear after Business Verification is approved)
+- Data processors with access to Platform Data: Yes.
+  * Cloudflare, Inc.: "IT solutions and services, including cloud storage and processing". Countries: United Kingdom and the EU countries listed.
+  * PlanetScale, Inc.: same category. Country: United Kingdom.
+  * Temporal Technologies, Inc.: same category. Country: United Kingdom.
+- Responsible entity: Steady Lamp Ltd, United Kingdom.
+- National security requests in the past 12 months: No.
+- Policies for public authority requests: STOP and ask Calvin which are true. Never tick one he hasn't confirmed.
+For any other question, stop and ask Calvin.
+
+STEP 7. Stop and report (no secrets, no password)
+Do NOT click "Submit for Review". Tell Calvin in chat:
+1. Business Verification status and what it needs.
+2. Tech Provider / access verification status and any choice Meta is asking for (exact wording).
+3. For each of the 11 permissions: added to the request? description pasted? usage box ticked? screencast attached or missing? any "greyed out / needs API call" note.
+4. App Settings and App Verification: saved? anything Meta flagged.
+5. Data handling: shown or not; what was filled; what is waiting for Calvin.
+6. What blocks "Submit for Review" right now (Meta usually shows the missing items next to the button).
+7. Anything that looked different from these steps.
+Then ask: "Everything is filled in. Shall I click Submit for Review? (yes/no)". Calvin will paste this report back to Claude.

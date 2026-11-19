@@ -8,7 +8,7 @@ Meta wants one screencast per permission showing "the end-to-end user experience
 - Calvin's Facebook account has a role (admin) on the Meta app, so Development mode allows every permission.
 - Facebook Page and linked Instagram professional account ready **[FILL IN: names]**. Use a test post text that is plainly a test, e.g. "Test post from Kanosena: please ignore". It goes live on the real Page, so Calvin approves that wording before recording.
 - Browser: a clean Chrome window at 1280×800 or larger, English UI, no other tabs or bookmarks bar showing, zoom 100%.
-- Record with macOS screen recording (Cmd+Shift+5, "Record selected portion", the Chrome window only). Export MP4.
+- Record with macOS screen recording (Cmd+Shift+5, "Record selected portion", the Chrome window only). Export MP4 at 1080p or better, named `kanosena-meta-video-1.mp4` to `-4.mp4` in Downloads (the App Review Chrome prompt looks for these names).
 - Add captions afterwards (iMovie titles, or any editor), one short line per step, as below. Captions are in quotes.
 - Keep each video under 5 minutes. No passwords visible: type them before starting, or blur.
 
@@ -54,6 +54,6 @@ Record at least an hour after video 2 (insights take time; the app rechecks afte
 5. Open the account on instagram.com, show the post and comment.
 6. (After an hour, can be a cut) Back in Kanosena: post "Statistics", then "What worked". Caption: "instagram_manage_insights: results for this post".
 
-## Narration (optional)
+## Audio
 
-Meta does not require narration. If Calvin wants it, read the captions aloud. Plain British English, no claims beyond what is on screen.
+No narration or audio: Meta's submission guide asks for recordings with no audio (19/11/2026). Captions carry the explanation.

@@ -16,10 +16,11 @@ Everything needed to set up the developer apps and submit the reviews for Facebo
 | [meta-screencasts.md](meta-screencasts.md) | One screencast script per Meta permission |
 | [linkedin.md](linkedin.md) | LinkedIn: products, form answers, use cases, reviewer instructions, screencast script |
 | [chrome-meta.md](chrome-meta.md) | Prompt to paste into Claude in Chrome after logging in to Meta |
+| [chrome-meta-app-review.txt](chrome-meta-app-review.txt) | Prompt that fills in Meta App Review and stops before Submit |
 | [chrome-linkedin.md](chrome-linkedin.md) | Prompt to paste into Claude in Chrome after logging in to LinkedIn |
 | `assets/app-icon-1024.png`, `assets/app-icon-300.png` | Kanosena app icon (Meta wants 1024×1024; LinkedIn wants a square logo) |
 
-**Meta status (17/11/2026):** app `Kanosena` (was `Tidepost`) (App ID `1614622909955028`) is set up in Development mode, secrets are on the Worker. See the Status section in `meta.md`. Business Verification, Tech Provider, icon and App Review still to do.
+**Meta status (19/11/2026):** app `Kanosena` (App ID `1614622909955028`) is set up, icon and URLs done, both test channels connected. App Review waits on Business Verification, the screencasts and their API calls. See "Submission state and plan" in `meta.md`; the fill-in prompt is `chrome-meta-app-review.txt`.
 
 ## The order
 
