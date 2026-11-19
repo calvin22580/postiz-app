@@ -39,11 +39,12 @@ import { WhopProvider } from '@gitroom/nestjs-libraries/integrations/social/whop
 import { MeweProvider } from '@gitroom/nestjs-libraries/integrations/social/mewe.provider';
 import { TumblrProvider } from '@gitroom/nestjs-libraries/integrations/social/tumblr.provider';
 import { oursSocialProviders } from '@gitroom/nestjs-libraries/ours/ours.social.providers'; // OURS (2026-11-15): our extra providers (Sandbox)
+import { OursLinkedinPageProvider } from '@gitroom/nestjs-libraries/ours/linkedin/linkedin.page.provider'; // OURS (2026-11-19): LinkedIn Page without OpenID Connect
 
 export const socialIntegrationList: Array<SocialAbstract & SocialProvider> = [
   new XProvider(),
   new LinkedinProvider(),
-  new LinkedinPageProvider(),
+  new OursLinkedinPageProvider(), // OURS (2026-11-19): was new LinkedinPageProvider(); our app has only the Community Management API, so no openid/profile scopes
   new RedditProvider(),
   new InstagramProvider(),
   new InstagramStandaloneProvider(),

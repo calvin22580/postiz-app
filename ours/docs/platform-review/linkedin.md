@@ -14,23 +14,20 @@ Sources, checked 16/11/2026:
 - **Standard tier** next, once the integration works: company and product overview, use case description, test credentials, a valid privacy policy, and a high-resolution, downloadable screencast of "all core functionality".
 - **A rejection at either tier means a new app.** "You will not be able to re-apply … with your existing app." So nothing is submitted until every field below is filled in and the legal pages are out of draft.
 
-## Products to add (and the clash to check)
+## Products and scopes (settled 19/11/2026)
 
-Our code requests, on one app, and refuses to connect if any is missing:
+The clash is real. With **Community Management API** requested, the Products tab greys out **Sign In with LinkedIn using OpenID Connect** and **Share on LinkedIn**: "Your application has another product requested or added to it which requires that it be the only product on the application for legal and security reasons."
 
-| Scope | Product it comes from |
+So we use our own LinkedIn Page provider (`libraries/nestjs-libraries/src/ours/linkedin/linkedin.page.provider.ts`, same `linkedin-page` identifier and redirect URL as upstream). It asks for Community Management API scopes only, and refuses to connect if any is missing:
+
+| Scope | Used for |
 |---|---|
-| `openid`, `profile` | Sign In with LinkedIn using OpenID Connect |
-| `w_member_social` | Share on LinkedIn, also part of Community Management API |
-| `r_basicprofile` | Not in LinkedIn's open permissions table. **[CHECK]** in the Auth tab once Community Management is granted |
-| `rw_organization_admin`, `w_organization_social`, `r_organization_social` | Community Management API |
+| `r_basicprofile` | The signed-in member's id, name and picture (`/v2/me`), until they pick a Page |
+| `rw_organization_admin` | Listing the Pages the member administers, Page details, Page and post analytics |
+| `w_organization_social` | Publishing approved posts as the Page |
+| `r_organization_social` | Reading the published posts' social action counts |
 
-**Plan:**
-1. Add **Community Management API** (request access). This is the product that matches what we do.
-2. Then try to add **Sign In with LinkedIn using OpenID Connect** and **Share on LinkedIn**.
-3. Record exactly what the Products tab allows, and the full scope list in the Auth tab.
-
-**If OpenID Connect can't sit next to Community Management** (as one developer reports), we need a small change in our own files: a LinkedIn Page provider that drops `openid` and `profile` and reads the member's id, name and picture with `r_basicprofile` (`/v2/me`) instead. That is a decision for after the Chrome run, because it can only be tested once the Development tier is granted.
+Not requested: `openid`, `profile` (OpenID Connect, not allowed on this app) and `w_member_social` (posting as the member, which the Page channel never does). The personal **LinkedIn** channel needs OpenID Connect, so it is hidden (`HIDDEN_PROVIDERS` in `ours/deploy/cloudflare/wrangler.jsonc`). Customers connect a **LinkedIn Page**.
 
 **Do not request the Advertising API.** Upstream's docs tell self-hosters to add it (for refresh tokens), but we don't run ads, and asking for a product whose use case we don't have risks a rejection and a new app.
 
