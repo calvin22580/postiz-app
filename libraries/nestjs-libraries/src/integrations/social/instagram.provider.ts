@@ -652,7 +652,7 @@ export class InstagramProvider
     return {
       id,
       name,
-      picture: profile_picture_url,
+      picture: profile_picture_url || '', // OURS (2026-11-19): with no Instagram picture, undefined kept the Facebook user's own photo
       access_token: access_token + '___' + accessToken,
       username,
     };
