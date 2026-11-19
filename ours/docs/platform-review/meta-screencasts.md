@@ -8,7 +8,7 @@ Meta wants one screencast per permission showing "the end-to-end user experience
 - Calvin's Facebook account has a role (admin) on the Meta app, so Development mode allows every permission.
 - Facebook Page and linked Instagram professional account ready **[FILL IN: names]**. Use a test post text that is plainly a test, e.g. "Test post from Kanosena: please ignore". It goes live on the real Page, so Calvin approves that wording before recording.
 - Browser: a clean Chrome window at 1280×800 or larger, English UI, no other tabs or bookmarks bar showing, zoom 100%.
-- Record with macOS screen recording (Cmd+Shift+5, "Record selected portion", the Chrome window only). Export MP4 at 1080p or better, named `kanosena-meta-video-1.mp4` to `-4.mp4` in Downloads (the App Review Chrome prompt looks for these names).
+- Record with macOS screen recording (Cmd+Shift+5, "Record selected portion", the Chrome window only). Save at 1080p or better (QuickTime .mov is fine), named `kanosena-meta-video-1` to `-4` in Downloads (the App Review Chrome prompt looks for these names).
 - Add captions afterwards (iMovie titles, or any editor), one short line per step, as below. Captions are in quotes.
 - Keep each video under 5 minutes. No passwords visible: type them before starting, or blur.
 

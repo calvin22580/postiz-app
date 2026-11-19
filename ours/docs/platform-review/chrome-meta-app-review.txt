@@ -75,7 +75,7 @@ The "Weekly posts" screen is how owners normally get posts: it drafts a week of 
 Save.
 
 STEP 5. Each permission: description, allowed-usage tick, screencast
-Open each permission row under "Requested Permissions and Features". Paste its text below into "How will your app use this permission?" (or similar), tick the allowed-usage agreement box, and attach the screencast named. Screencasts: look in Downloads for kanosena-meta-video-1.mp4, -2, -3, -4. If a file is missing, leave the upload empty and list it in the report. Do not record or create videos yourself.
+Open each permission row under "Requested Permissions and Features". Paste its text below into "How will your app use this permission?" (or similar), tick the allowed-usage agreement box, and attach the screencast named. Screencasts: look in Downloads for kanosena-meta-video-1, -2, -3, -4 (.mov or .mp4; if video 4 is in two parts, 4 and 4b, attach both to the Instagram permissions). If a file is missing, leave the upload empty and list it in the report. Do not record or create videos yourself.
 
 pages_show_list (video 1):
 Kanosena is a social media scheduling service for small businesses. After the business owner logs in with Facebook from our "Add Channel" screen, we use pages_show_list to list the Facebook Pages they manage, so they can choose which Page Kanosena should publish to. We store only the chosen Page's ID, name and picture. The owner can disconnect the Page at any time, which deletes its tokens and details. For Instagram, we also use it to find the Page the owner's Instagram professional account is linked to.
