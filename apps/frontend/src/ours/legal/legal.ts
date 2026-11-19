@@ -1,7 +1,7 @@
 // OURS: the facts our legal pages print about the company behind the service.
 // Every value can be overridden with an environment variable, like the brand.
 // An empty value is shown on the page as a visible [FILL IN] marker, never
-// guessed. See ours/README.md ("Legal pages").
+// guessed. The optional ICO number is left out of the page while empty. See ours/README.md ("Legal pages").
 import defaults from './legal.defaults.json';
 
 export type LegalFacts = {

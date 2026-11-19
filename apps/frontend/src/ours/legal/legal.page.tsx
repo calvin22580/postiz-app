@@ -139,8 +139,7 @@ export const LegalPage: FC<{
               data-testid="legal-draft"
               className="rounded-[10px] border border-[#F0D58A] bg-[#FFF4D6] px-[14px] py-[12px] text-[14px] text-[#5C3D00]"
             >
-              Draft. This page is waiting for company details and is not yet
-              in force.
+              Draft. This page is not yet in force.
             </div>
           )}
           {children}
