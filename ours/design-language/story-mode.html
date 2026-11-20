@@ -1,0 +1,463 @@
+<title>Kanosena Story Mode</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Caveat:wght@700&family=Instrument+Sans:wght@400;500;600;700&family=Young+Serif&family=Anton&family=Cormorant+Garamond:wght@700&family=Barlow+Condensed:wght@800&display=swap">
+<style>
+/* Page chrome tokens (theme-aware). Brand specimens below use fixed brand colours on purpose. */
+:root{
+  --bg:#F4F2FF;--fg:#121212;--muted:#5B5670;--panel:#FFFFFF;--line:#E3DEF7;--soft:#EAE5FF;
+  --violet:#6B3BFF;--violet-deep:#4F23D9;--butter:#FFE15A;--bubble:#FF5C8A;--pool:#2FD1E0;--cloud:#F4F2FF;--ink:#121212;--white:#FFFFFF;
+  --ui:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--display:"Dela Gothic One","Arial Black",sans-serif;--hand:Caveat,"Comic Sans MS",cursive;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F0D17;--fg:#F1EEFF;--muted:#ABA5C4;--panel:#1A1726;--line:#2E2942;--soft:#221E33;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F0D17;--fg:#F1EEFF;--muted:#ABA5C4;--panel:#1A1726;--line:#2E2942;--soft:#221E33;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--ui);font-size:16px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3,h4{margin:0;text-wrap:balance}
+p{margin:0}
+.d{font-family:var(--display);font-weight:400;letter-spacing:-.01em}
+.hl{display:inline;padding:.04em .2em;border-radius:.2em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.hand{font-family:var(--hand);font-weight:700}
+section{padding-block:44px;border-top:1px solid var(--line)}
+section>.head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px;margin-bottom:24px;align-items:end}
+section>.head h2{font-family:var(--display);font-weight:400;font-size:clamp(28px,4vw,44px);line-height:1.15}
+section>.head p{color:var(--muted);max-width:62ch}
+.num{font-size:13px;font-weight:700;color:var(--violet);display:block;margin-bottom:6px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .num{color:#A98BFF}}
+:root[data-theme="dark"] .num{color:#A98BFF}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:22px;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.lab{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+nav.toc{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav.toc .wrap{display:flex;gap:6px;overflow-x:auto;padding-block:10px;scrollbar-width:none}
+nav.toc a{flex:none;font-size:13px;font-weight:600;color:var(--fg);text-decoration:none;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel)}
+nav.toc a:hover{border-color:var(--violet)}
+
+/* Hero */
+.hero{background:#6B3BFF;color:#fff;padding-block:64px 56px}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:32px;align-items:center}
+.hero h1{font-family:var(--display);font-weight:400;font-size:clamp(40px,6.4vw,84px);line-height:1.34}
+.hero p{font-size:18px;max-width:52ch;margin-top:18px;opacity:.95}
+.hero .tag{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;opacity:.85}
+.hero .scrib{font-family:var(--hand);font-weight:700;font-size:28px;color:#FFE15A;display:inline-block;transform:rotate(-4deg);margin-top:14px}
+.bigmark{width:min(320px,70%);margin-inline:auto;display:block;filter:drop-shadow(0 30px 40px rgba(0,0,0,.25))}
+
+/* Principles */
+.pr{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.pr .card{padding:18px}
+.pr b{display:block;font-family:var(--display);font-weight:400;font-size:17px;line-height:1.25;margin-bottom:8px}
+.pr p{font-size:14px;color:var(--muted)}
+
+/* Logo */
+.lk{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.wm{font-family:var(--display);font-size:clamp(22px,2.3vw,28px);letter-spacing:-.01em;white-space:nowrap}
+.lk{flex-wrap:nowrap}
+.lk svg{flex:none}
+.tile{border-radius:18px;display:grid;place-items:center;padding:28px;min-height:160px}
+.dont{position:relative}
+.dont::after{content:"";position:absolute;inset:10px;background:linear-gradient(to top right,transparent calc(50% - 2px),#D7263D calc(50% - 2px),#D7263D calc(50% + 2px),transparent calc(50% + 2px));border-radius:12px;opacity:.75;pointer-events:none}
+.cap{font-size:13.5px;color:var(--muted);margin-top:10px}
+
+/* Colour */
+.sw{border-radius:18px;padding:16px;min-height:150px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid rgba(0,0,0,.06)}
+.sw b{font-family:var(--display);font-weight:400;font-size:18px}
+.sw code{font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+.sw small{font-size:12.5px;line-height:1.35;display:block;margin-top:4px}
+.ratio{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.ratio div{border-radius:14px;padding:12px;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ratio span{font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.85);color:#121212}
+.prop{display:flex;height:34px;border-radius:12px;overflow:hidden;margin-top:14px}
+.prop i{display:block}
+
+/* Type */
+.tspec{display:grid;gap:18px}
+.trow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;align-items:baseline;padding-bottom:14px;border-bottom:1px dashed var(--line)}
+.trow:last-child{border:0;padding:0}
+.trow small{font-size:12.5px;color:var(--muted);display:block}
+
+/* Components */
+.btn{font:inherit;font-weight:700;font-size:14.5px;border:0;border-radius:999px;padding:12px 20px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:transform .12s ease,background .15s ease}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:3px solid #FFE15A;outline-offset:2px;box-shadow:0 0 0 6px #121212}
+.b-pri{background:#6B3BFF;color:#fff}.b-pri:hover{background:#4F23D9}
+.b-sec{background:#fff;color:#121212;box-shadow:inset 0 0 0 2px #121212}
+.b-cta{background:#FFE15A;color:#121212}
+.b-ghost{background:transparent;color:#fff;box-shadow:inset 0 0 0 2px #fff}
+.b-text{background:transparent;color:#121212;text-decoration:underline;text-underline-offset:3px;padding:8px}
+.b-dis{background:#E3DEF7;color:#6E6887;cursor:not-allowed}
+.stk{display:inline-block;font-family:var(--display);font-size:13px;line-height:1.2;padding:6px 11px;border-radius:11px;border:2.5px solid #121212;color:#121212;background:#fff}
+.stk.wait{transform:rotate(-3deg)}
+.stk.ok{background:#FFE15A;transform:rotate(4deg)}
+.stk.new{background:#FF5C8A;transform:rotate(-5deg)}
+.stk.out{background:#2FD1E0;transform:rotate(2deg)}
+.stk.err{background:#fff;border-color:#B3123A;color:#B3123A;transform:none}
+.segs{display:flex;gap:6px;max-width:320px}
+.segs i{flex:1;height:6px;border-radius:3px;background:#121212;opacity:.14}
+.segs i.on{background:#6B3BFF;opacity:1}
+.surface{background:#F4F2FF;color:#121212;border-radius:18px;padding:18px}
+.input{display:grid;gap:6px}
+.input label{font-weight:600;font-size:14px}
+.input input{font:inherit;padding:12px 14px;border-radius:14px;border:2px solid #D6CFF5;background:#fff;color:#121212}
+.input input:focus{outline:none;border-color:#6B3BFF;box-shadow:0 0 0 4px rgba(107,59,255,.18)}
+.input .help{font-size:13px;color:#5B5670}
+.input.bad input{border-color:#B3123A}
+.input.bad .help{color:#B3123A;font-weight:600}
+.post{background:#fff;color:#121212;border-radius:18px;overflow:hidden;box-shadow:0 1px 3px rgba(18,18,18,.08);display:flex;flex-direction:column;min-width:0}
+.post .art{aspect-ratio:1;position:relative;overflow:hidden;container-type:inline-size}
+.post .bd{padding:12px 14px;display:grid;gap:5px}
+.post .wh{font-size:12px;font-weight:600;color:#5B5670}
+.post .cp{font-size:13.5px}
+.post .act{padding:0 14px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.post .act .btns{margin-left:auto;display:flex;gap:6px}
+.post .act .btn{font-size:13px;padding:9px 15px}
+.goes{font-weight:700;font-size:13.5px}
+.toast{display:flex;align-items:center;gap:12px;background:#121212;color:#fff;border-radius:16px;padding:12px 16px;font-weight:600;font-size:14px;max-width:420px}
+.state{display:grid;gap:10px;justify-items:start;align-content:start;background:#F4F2FF;color:#121212;border-radius:18px;padding:20px;min-height:220px}
+.skel{background:linear-gradient(90deg,#E8E3FF 0%,#F7F5FF 50%,#E8E3FF 100%);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:10px}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* Motion demo */
+.demo{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:20px;align-items:center}
+.tick{width:46px;height:40px}
+.tick path{stroke-dasharray:90;stroke-dashoffset:90}
+.done .tick path{animation:draw .42s cubic-bezier(.6,0,.3,1) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.slap{opacity:0;transform:scale(1.5) rotate(14deg)}
+.done .slap{animation:slap .38s cubic-bezier(.2,1.4,.4,1) .3s forwards}
+@keyframes slap{0%{opacity:0;transform:scale(1.5) rotate(14deg)}70%{opacity:1;transform:scale(.94) rotate(3deg)}100%{opacity:1;transform:scale(1) rotate(4deg)}}
+.done .segs i:nth-child(2){animation:fill .3s ease .55s forwards}
+@keyframes fill{to{background:#6B3BFF;opacity:1}}
+.mt{width:100%;border-collapse:collapse;font-size:14px}
+.mt th,.mt td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.mt th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.done .tick path{animation:none;stroke-dashoffset:0}.done .slap{animation:none;opacity:1;transform:rotate(4deg)}.done .segs i:nth-child(2){animation:none;background:#6B3BFF;opacity:1}.skel{animation:none}}
+
+/* Voice */
+.say{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.say div{border-radius:14px;padding:12px 14px;font-size:14.5px}
+.yes{background:#E9FBEF;color:#0F3D22}
+.no{background:#FDEAEE;color:#5C0A1F}
+.say b{display:block;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.words{display:flex;flex-wrap:wrap;gap:8px}
+.words span{font-size:14px;padding:6px 11px;border-radius:999px;background:var(--soft);border:1px solid var(--line)}
+.words s{opacity:.7}
+
+/* Applications */
+.frame{border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#fff;color:#121212}
+.frame .bar{display:flex;gap:6px;align-items:center;padding:9px 12px;background:#121212;color:#bbb;font-size:12px}
+.frame .bar i{width:9px;height:9px;border-radius:50%;background:#444}
+.mail{max-width:520px;margin:0 auto;background:#F4F2FF;padding:22px;color:#121212}
+.mail .in{background:#fff;border-radius:18px;padding:22px;display:grid;gap:12px}
+.thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.thumbs .art{aspect-ratio:1;border-radius:10px;overflow:hidden;position:relative;container-type:inline-size}
+.social{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:14px}
+.cover{background:#6B3BFF;color:#fff;border-radius:18px;aspect-ratio:3/1;padding:5%;display:flex;flex-direction:column;justify-content:center;container-type:inline-size;position:relative;overflow:hidden}
+.cover .d{font-size:6.4cqw;line-height:1.35}
+.avatar{border-radius:50%;aspect-ratio:1;background:#6B3BFF;display:grid;place-items:center;max-width:220px;margin:auto}
+
+/* Customer art (sample customers, their own brands) */
+.f-bak{font-family:"Young Serif",Georgia,serif}.f-est{font-family:"Cormorant Garamond",Georgia,serif;font-weight:700}.f-gym{font-family:Anton,Impact,sans-serif;text-transform:uppercase}.f-heat{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:800;text-transform:uppercase}
+
+/* Rollout */
+.road{display:grid;gap:10px;counter-reset:r}
+.road li{list-style:none;display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px}
+.road li::before{counter-increment:r;content:counter(r);font-family:var(--display);font-size:20px;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#FFE15A;color:#121212}
+.road b{display:block}
+.road p{font-size:14.5px;color:var(--muted)}
+.road em{font-style:normal;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--soft);border:1px solid var(--line);white-space:nowrap}
+pre{margin:0;background:#121212;color:#EDEAFF;border-radius:18px;padding:18px;font-size:12.5px;line-height:1.6;overflow:auto;max-height:420px}
+footer{padding-block:40px;color:var(--muted);font-size:14px;border-top:1px solid var(--line)}
+
+@media (max-width:980px){
+  .hero .wrap,section>.head,.demo,.social{grid-template-columns:1fr}
+  .pr{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid4,.ratio{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid3{grid-template-columns:1fr 1fr}
+}
+@media (max-width:640px){
+  .pr,.grid2,.grid3,.grid4,.say{grid-template-columns:1fr}
+  .trow{grid-template-columns:1fr;gap:4px}
+  .road li{grid-template-columns:40px minmax(0,1fr)}
+  .road em{grid-column:2;justify-self:start}
+}
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <span class="tag">Kanosena design language · v1 · 20/11/2026</span>
+      <h1><span class="hl" style="background:#FFE15A;color:#121212">Story Mode.</span></h1>
+      <p>Kanosena is built from the tools our customers already love: highlighted story text, stickers, scribbles and chunky type on electric violet. The fun lives in Kanosena's own screens. Every decision the owner makes is in plain words. Every customer post stays entirely their own.</p>
+      <span class="scrib">made by people who post every day ↘</span>
+    </div>
+    <svg class="bigmark" viewBox="0 0 100 100" role="img" aria-label="The Kanosena sticker K"><rect width="100" height="100" rx="28" fill="#5A2EEA"/><g transform="rotate(-6 50 50)"><rect x="18" y="22" width="64" height="56" rx="14" fill="#FFE15A" stroke="#121212" stroke-width="4"/><text x="50" y="68" text-anchor="middle" font-family="Dela Gothic One,sans-serif" font-size="46" fill="#121212">K</text></g><path d="M74 14 l3 7 7 1 -5 5 1 7 -6 -3 -6 3 1 -7 -5 -5 7 -1z" fill="#FF5C8A" stroke="#121212" stroke-width="2.5" stroke-linejoin="round"/></svg>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections"><div class="wrap">
+  <a href="#principles">Principles</a><a href="#logo">Logo</a><a href="#colour">Colour</a><a href="#type">Type</a><a href="#components">Components</a><a href="#motion">Motion</a><a href="#voice">Voice</a><a href="#apply">In use</a><a href="#tokens">Tokens</a><a href="#rollout">Rollout</a>
+</div></nav>
+
+<main class="wrap">
+
+<section id="principles" style="border-top:0">
+  <div class="head"><div><span class="num">01</span><h2>Five rules that make it Kanosena</h2></div><p>These came straight out of six rounds of testing with four customer personas. When a choice isn't covered elsewhere on this page, these decide it.</p></div>
+  <div class="pr">
+    <div class="card"><b>Our brand frames the work. Theirs fills it.</b><p>Stickers, highlights and scribbles never touch a customer's post. Their colours, fonts and photos always win.</p></div>
+    <div class="card"><b>Fun in the frame, calm at the decision.</b><p>Celebrate around the edges. At the moment of choosing, there's one clear button and plain words.</p></div>
+    <div class="card"><b>Say when it goes out.</b><p>Every approved post shows the day and time, written out: "Goes out Mon 23/11 at 07:30".</p></div>
+    <div class="card"><b>Stickers mean something.</b><p>A sticker is a status (waiting, approved, new, posted), never decoration. One per post at most.</p></div>
+    <div class="card"><b>Warm, quick, a bit cheeky. Never vague.</b><p>A creative friend who's great at social. British English, honest about what we did and what we need.</p></div>
+  </div>
+</section>
+
+<section id="logo">
+  <div class="head"><div><span class="num">02</span><h2>The sticker K</h2></div><p>The K is a sticker: butter yellow with an ink outline, tilted six degrees, with a small pink star. It peels, tilts and slaps onto Kanosena's own screens. The wordmark is set in Dela Gothic One.</p></div>
+  <div class="grid3">
+    <div class="card"><div class="lab">Primary lockup</div><div class="tile" style="background:#F4F2FF"><div class="lk"><svg width="64" height="64" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="28" fill="#6B3BFF"/><g transform="rotate(-6 50 50)"><rect x="18" y="22" width="64" height="56" rx="14" fill="#FFE15A" stroke="#121212" stroke-width="4"/><text x="50" y="68" text-anchor="middle" font-family="Dela Gothic One,sans-serif" font-size="46" fill="#121212">K</text></g><path d="M74 14 l3 7 7 1 -5 5 1 7 -6 -3 -6 3 1 -7 -5 -5 7 -1z" fill="#FF5C8A" stroke="#121212" stroke-width="2.5" stroke-linejoin="round"/></svg><span class="wm" style="color:#121212">Kanosena</span></div></div><p class="cap">Gap between mark and wordmark equals the K's stroke height. Clear space all round: half the mark's width.</p></div>
+    <div class="card"><div class="lab">On violet</div><div class="tile" style="background:#6B3BFF"><div class="lk"><svg width="64" height="64" viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-6 50 50)"><rect x="8" y="16" width="84" height="70" rx="16" fill="#FFE15A" stroke="#121212" stroke-width="4"/><text x="50" y="70" text-anchor="middle" font-family="Dela Gothic One,sans-serif" font-size="54" fill="#121212">K</text></g></svg><span class="wm" style="color:#fff">Kanosena</span></div></div><p class="cap">On violet, the sticker sits on its own, without the violet tile.</p></div>
+    <div class="card"><div class="lab">Small sizes</div><div class="tile" style="background:#F4F2FF;gap:16px;grid-auto-flow:column;justify-content:center;align-items:end"><svg width="48" height="48" viewBox="0 0 100 100" aria-label="48 pixels"><rect width="100" height="100" rx="26" fill="#FFE15A" stroke="#121212" stroke-width="6"/><text x="50" y="72" text-anchor="middle" font-family="Dela Gothic One,sans-serif" font-size="58" fill="#121212">K</text></svg><svg width="32" height="32" viewBox="0 0 100 100" aria-label="32 pixels"><rect width="100" height="100" rx="26" fill="#FFE15A" stroke="#121212" stroke-width="7"/><text x="50" y="72" text-anchor="middle" font-family="Dela Gothic One,sans-serif" font-size="58" fill="#121212">K</text></svg><svg width="16" height="16" viewBox="0 0 100 100" aria-label="16 pixels"><rect width="100" height="100" rx="22" fill="#FFE15A" stroke="#121212" stroke-width="10"/><text x="50" y="74" text-anchor="middle" font-family="Dela Gothic One,sans-serif" font-size="62" fill="#121212">K</text></svg></div><p class="cap">Below 48px, drop the tilt and the star. The favicon is the plain butter K.</p></div>
+  </div>
+  <div class="grid4" style="margin-top:14px">
+    <div class="card dont"><div class="tile" style="background:#fff;min-height:110px"><span class="stk ok">Approved!</span></div><p class="cap">Never put a sticker or the K on a customer's post.</p></div>
+    <div class="card dont"><div class="tile" style="background:#fff;min-height:110px"><svg width="60" height="60" viewBox="0 0 100 100" aria-hidden="true"><rect x="10" y="20" width="80" height="60" rx="14" fill="#2FD1E0" stroke="#121212" stroke-width="4"/><text x="50" y="66" text-anchor="middle" font-family="Dela Gothic One" font-size="44" fill="#121212">K</text></svg></div><p class="cap">Don't recolour the sticker. It is always butter and ink.</p></div>
+    <div class="card dont"><div class="tile" style="background:#fff;min-height:110px"><span class="wm" style="font-family:Georgia;color:#121212;font-size:28px">Kanosena</span></div><p class="cap">Don't set the wordmark in any other typeface.</p></div>
+    <div class="card dont"><div class="tile" style="background:#FF5C8A;min-height:110px"><span class="wm" style="color:#FFE15A;font-size:26px">Kanosena</span></div><p class="cap">Don't put butter text on pink, or any pairing below the contrast rules.</p></div>
+  </div>
+  <p class="cap" style="margin-top:12px">The app icons on Facebook, Instagram and LinkedIn keep today's teal K until Meta finishes its review. Then they switch to the sticker K.</p>
+</section>
+
+<section id="colour">
+  <div class="head"><div><span class="num">03</span><h2>Electric violet, butter, and a little pink</h2></div><p>Violet is Kanosena. Butter is for highlights and celebration. Pink and pool are small accents for stickers and scribbles. Most screens are cloud and white, so the customer's own colours stand out.</p></div>
+  <div class="grid4">
+    <div class="sw" style="background:#6B3BFF;color:#fff"><div><b>Electric violet</b><small>Brand, main actions, active states</small></div><code>#6B3BFF · --k-violet</code></div>
+    <div class="sw" style="background:#FFE15A;color:#121212"><div><b>Butter</b><small>Highlights, the K, "Approved!", calls to action on violet</small></div><code>#FFE15A · --k-butter</code></div>
+    <div class="sw" style="background:#FF5C8A;color:#121212"><div><b>Bubblegum</b><small>Scribbled ticks, "New" stickers, the star</small></div><code>#FF5C8A · --k-bubble</code></div>
+    <div class="sw" style="background:#2FD1E0;color:#121212"><div><b>Pool</b><small>"Posted" stickers, links in emails, charts</small></div><code>#2FD1E0 · --k-pool</code></div>
+    <div class="sw" style="background:#F4F2FF;color:#121212"><div><b>Cloud</b><small>App and email backgrounds</small></div><code>#F4F2FF · --k-cloud</code></div>
+    <div class="sw" style="background:#FFFFFF;color:#121212"><div><b>White</b><small>Cards and surfaces</small></div><code>#FFFFFF · --k-white</code></div>
+    <div class="sw" style="background:#121212;color:#fff"><div><b>Ink</b><small>Text, outlines, sidebar</small></div><code>#121212 · --k-ink</code></div>
+    <div class="sw" style="background:#4F23D9;color:#fff"><div><b>Deep violet</b><small>Hover and pressed, violet text on white</small></div><code>#4F23D9 · --k-violet-deep</code></div>
+  </div>
+  <div class="grid3" style="margin-top:14px">
+    <div class="sw" style="background:#5B5670;color:#fff;min-height:100px"><div><b>Muted</b><small>Secondary text, 6.3:1 on cloud</small></div><code>#5B5670 · --k-muted</code></div>
+    <div class="sw" style="background:#17763F;color:#fff;min-height:100px"><div><b>Success</b><small>Connected, saved. Text, not fills.</small></div><code>#17763F · --k-success</code></div>
+    <div class="sw" style="background:#B3123A;color:#fff;min-height:100px"><div><b>Problem</b><small>Errors only. Never on an Approve button.</small></div><code>#B3123A · --k-problem</code></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="lab">How much of each, on a typical screen</div>
+    <div class="prop" aria-label="Proportions: cloud and white 70%, ink 12%, violet 10%, butter 5%, pink and pool 3%"><i style="flex:70;background:#F4F2FF;border:1px solid #E3DEF7"></i><i style="flex:12;background:#121212"></i><i style="flex:10;background:#6B3BFF"></i><i style="flex:5;background:#FFE15A"></i><i style="flex:2;background:#FF5C8A"></i><i style="flex:1;background:#2FD1E0"></i></div>
+    <p class="cap">Cloud and white 70%, ink 12%, violet 10%, butter 5%, pink and pool 3%. The homepage hero and emails can flip this and go full violet.</p>
+    <div class="lab" style="margin-top:18px">Contrast (WCAG 2.2)</div>
+    <div class="ratio">
+      <div style="background:#6B3BFF;color:#fff">White on violet <span>5.7 AA</span></div>
+      <div style="background:#FFE15A;color:#121212">Ink on butter <span>14.4 AAA</span></div>
+      <div style="background:#FF5C8A;color:#121212">Ink on pink <span>6.4 AA</span></div>
+      <div style="background:#F4F2FF;color:#6B3BFF;border:1px solid #E3DEF7">Violet on cloud <span>5.1 AA</span></div>
+      <div style="background:#6B3BFF;color:#FFE15A">Butter on violet <span>4.4 large only</span></div>
+      <div style="background:#2FD1E0;color:#121212">Ink on pool <span>10.1 AAA</span></div>
+      <div style="background:#F4F2FF;color:#5B5670;border:1px solid #E3DEF7">Muted on cloud <span>6.3 AA</span></div>
+      <div style="background:#6B3BFF;color:#121212">Ink on violet <span style="background:#FDEAEE">3.3 never</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="type">
+  <div class="head"><div><span class="num">04</span><h2>Chunky, plain, and a scribble</h2></div><p>Three typefaces, each with one job. All three are free Google Fonts, licensed under the SIL Open Font License, so we can host them ourselves.</p></div>
+  <div class="grid2">
+    <div class="card tspec">
+      <div class="trow"><div><b>Display</b><small>Dela Gothic One</small></div><div class="d" style="font-size:44px;line-height:1.3"><span class="hl" style="background:#FFE15A;color:#121212">Your week</span>, ready</div></div>
+      <div class="trow"><div><b>Interface</b><small>Instrument Sans</small></div><div style="font-size:20px;font-weight:600">Weekend sourdough is back. Order by Friday.</div></div>
+      <div class="trow"><div><b>Scribble</b><small>Caveat Bold</small></div><div class="hand" style="font-size:30px;color:#6B3BFF">this one's yours ↗</div></div>
+    </div>
+    <div class="card">
+      <div class="lab">Scale and rules</div>
+      <table class="mt">
+        <tr><th>Style</th><th>Size / line</th><th>Use</th></tr>
+        <tr><td class="d">Hero</td><td>56–84 / 1.34</td><td>Homepage only, always on highlight blocks</td></tr>
+        <tr><td class="d">Title</td><td>28–44 / 1.2</td><td>Page titles, one highlighted word</td></tr>
+        <tr><td class="d" style="font-size:15px">Heading</td><td>18–22 / 1.3</td><td>Cards, sections</td></tr>
+        <tr><td style="font-weight:600">Body</td><td>16 / 1.55</td><td>Everything you read</td></tr>
+        <tr><td style="font-weight:600">Small</td><td>13–14 / 1.45</td><td>Meta, times, help text</td></tr>
+        <tr><td class="hand" style="font-size:20px">Scribble</td><td>20–30</td><td>Four words at most, never instructions</td></tr>
+      </table>
+      <p class="cap">Dela Gothic One is never used below 13px or for body text. Times always use tabular figures so they line up.</p>
+    </div>
+  </div>
+</section>
+
+<section id="components">
+  <div class="head"><div><span class="num">05</span><h2>The pieces</h2></div><p>Buttons are pills. Cards are soft, with 18px corners. Stickers are the only tilted things on screen, and each one means a status. Every piece below has its empty, loading and problem state designed too.</p></div>
+  <div class="grid2">
+    <div class="card"><div class="lab">Buttons</div>
+      <div class="surface" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center"><button class="btn b-pri" type="button">Approve</button><button class="btn b-sec" type="button">Edit</button><button class="btn b-text" type="button">Edit this post</button><button class="btn b-dis" type="button" disabled>Approve</button></div>
+      <div class="surface" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:#6B3BFF;margin-top:10px"><button class="btn b-cta" type="button">Make my first week</button><button class="btn b-ghost" type="button">See an example</button></div>
+      <p class="cap">Violet means "do it". There is one violet button per decision. Edit always sits beside Approve. Approve is never red.</p>
+    </div>
+    <div class="card"><div class="lab">Status stickers</div>
+      <div class="surface" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center"><span class="stk wait">Waiting for you</span><span class="stk ok">Approved!</span><span class="stk out">Posted</span><span class="stk new">New</span><span class="stk err">Didn't post</span></div>
+      <p class="cap">"Posted" appears only once a post is live. A problem is never a sticker joke: it's an outlined label with a plain fix next to it.</p>
+      <div class="lab" style="margin-top:16px">Week progress</div>
+      <div class="surface" style="display:grid;gap:8px"><div class="segs" aria-label="2 of 5 approved"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div><span style="font-size:13.5px;font-weight:600">2 of 5 approved</span></div>
+    </div>
+    <div class="card"><div class="lab">Post card: waiting and approved</div>
+      <div class="surface"><div class="grid2" id="cards"></div></div>
+      <p class="cap">The status, the time and the buttons sit below the post, never on top of it.</p>
+    </div>
+    <div class="card"><div class="lab">Fields</div>
+      <div class="surface" style="display:grid;gap:14px">
+        <div class="input"><label for="w">Your website</label><input id="w" value="www.yourbakery.co.uk"><span class="help">We'll read it to learn your opening hours, menu and tone.</span></div>
+        <div class="input bad"><label for="w2">Your website</label><input id="w2" value="yourbakery" aria-invalid="true"><span class="help">That doesn't look like a web address. Try www.yourbakery.co.uk</span></div>
+      </div>
+      <div class="lab" style="margin-top:16px">Confirmation</div>
+      <div class="toast" role="status"><span class="stk ok" style="font-size:11px;padding:3px 8px">Approved!</span>Goes out Mon 23/11 at 07:30. <button class="btn b-text" type="button" style="color:#FFE15A;padding:0 0 0 4px">Undo</button></div>
+    </div>
+  </div>
+  <div class="grid3" style="margin-top:14px">
+    <div class="state"><span class="lab" style="margin:0">Empty</span><span class="d" style="font-size:20px;line-height:1.3"><span class="hl" style="background:#FFE15A">Nothing to approve.</span></span><p style="font-size:14px">Your next week arrives on Sunday evening. We'll email you when it's ready.</p><span class="hand" style="font-size:22px;color:#6B3BFF">put the kettle on ☕</span></div>
+    <div class="state" aria-busy="true"><span class="lab" style="margin:0">Loading</span><div class="segs" style="width:100%"><i class="on"></i><i class="on"></i><i></i></div><p style="font-size:14px">Writing your week… reading your website and picking photos.</p><div class="skel" style="width:100%;height:70px"></div><div class="skel" style="width:70%;height:12px"></div></div>
+    <div class="state"><span class="lab" style="margin:0">Problem</span><span class="stk err">Didn't post</span><p style="font-size:14px"><b>Instagram didn't accept Wednesday's post.</b> Your Instagram connection has expired. Reconnect it and we'll post straight away.</p><button class="btn b-pri" type="button">Reconnect Instagram</button></div>
+  </div>
+</section>
+
+<section id="motion">
+  <div class="head"><div><span class="num">06</span><h2>The moment you say yes</h2></div><p>Kanosena moves like a story: quick, springy, and finished in under a second. Motion only ever celebrates something the owner did. Nothing moves on its own while they're reading.</p></div>
+  <div class="demo">
+    <div class="card" id="demo" style="padding:16px">
+      <div class="surface" style="display:grid;gap:12px">
+        <div class="segs" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:46px"><svg class="tick" viewBox="0 0 46 40" aria-hidden="true"><path d="M5 22 C10 26 14 31 18 36 C24 24 32 13 42 4" fill="none" stroke="#FF5C8A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="stk ok slap">Approved!</span></div>
+        <span class="goes" id="goes">Waiting for you</span>
+        <div style="display:flex;gap:8px"><button class="btn b-sec" type="button" id="reset">Reset</button><button class="btn b-pri" type="button" id="go">Approve</button></div>
+      </div>
+    </div>
+    <table class="mt">
+      <tr><th>Moment</th><th>Movement</th><th>Timing</th></tr>
+      <tr><td>Tick</td><td>A pink tick scribbles itself in</td><td>420ms, ease in-out</td></tr>
+      <tr><td>Sticker slap</td><td>Lands from 150% with a small overshoot, settles at 4°</td><td>380ms spring, 300ms after the tick starts</td></tr>
+      <tr><td>Week bar</td><td>The next segment fills with violet</td><td>300ms, after the slap</td></tr>
+      <tr><td>Whole week done</td><td>Every sticker wiggles once: "That's your week. Nice."</td><td>Under 1 second, once</td></tr>
+      <tr><td>Reduced motion</td><td>Everything appears in its end state, with no movement</td><td>Instant</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="voice">
+  <div class="head"><div><span class="num">07</span><h2>A creative friend who's great at social</h2></div><p>Warm, quick, a little cheeky, still plain and honest. British English and UK dates. We say what we did and what we need, and we never invent facts about a business.</p></div>
+  <div class="grid2">
+    <div class="card"><div class="lab">Say this, not that</div>
+      <div class="say">
+        <div class="yes"><b>Say</b>Your week's ready. Three posts, about two minutes of your time.</div><div class="no"><b>Not</b>Your AI-generated content calendar is now available for review.</div>
+        <div class="yes"><b>Say</b>Goes out Mon 23/11 at 07:30.</div><div class="no"><b>Not</b>Scheduled · 2026-11-23T07:30Z</div>
+        <div class="yes"><b>Say</b>Instagram didn't accept this one. Reconnect and we'll try again.</div><div class="no"><b>Not</b>Error 190: OAuthException.</div>
+        <div class="yes"><b>Say</b>Nothing goes out until you say yes.</div><div class="no"><b>Not</b>Supercharge your socials with AI magic.</div>
+      </div>
+    </div>
+    <div class="card"><div class="lab">Our words</div>
+      <div class="words"><span>Approve</span><span>Edit</span><span>Waiting for you</span><span>Goes out</span><span>Posted</span><span>Your week</span><span>Your brand</span><span>Say yes</span></div>
+      <div class="lab" style="margin-top:16px">Words we avoid</div>
+      <div class="words"><span><s>Publish</s></span><span><s>Content</s></span><span><s>Leverage</s></span><span><s>Supercharge</s></span><span><s>AI magic</s></span><span><s>Workflow</s></span><span><s>Franked</s></span><span><s>Submit</s></span></div>
+      <div class="lab" style="margin-top:16px">Email subject lines</div>
+      <p style="font-size:14.5px">"Your week's ready: 3 posts for The Loaf"<br>"All approved. That's your week."<br>"One post needs a quick look"</p>
+    </div>
+  </div>
+</section>
+
+<section id="apply">
+  <div class="head"><div><span class="num">08</span><h2>In use</h2></div><p>The homepage can go loud. The app stays calm. Emails sit in between. Customer posts always look like the customer.</p></div>
+  <div class="grid2" style="align-items:start">
+    <div class="frame"><div class="bar"><i></i><i></i><i></i><span style="margin-left:8px">kanosena.com</span></div>
+      <div style="background:#6B3BFF;color:#fff;padding:26px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:center">
+        <div><div class="d" style="font-size:clamp(22px,2.6vw,32px);line-height:1.36"><span class="hl" style="background:#FFE15A;color:#121212">You approve.</span><br><span class="hl" style="background:#fff;color:#121212">We handle</span><br><span class="hl" style="background:#fff;color:#121212">the rest.</span></div><p style="font-size:13.5px;margin-top:12px">A week of social posts in your own colours. Tap yes and they go out.</p><div style="margin-top:12px"><button class="btn b-cta" type="button" style="font-size:13px;padding:9px 14px">Make my first week</button></div></div>
+        <div class="thumbs" id="heroThumbs" style="grid-template-columns:1fr 1fr"></div>
+      </div>
+    </div>
+    <div class="frame"><div class="bar"><i></i><i></i><i></i><span style="margin-left:8px">Email · Sunday 18:00</span></div>
+      <div class="mail"><div class="in">
+        <div style="display:flex;align-items:center;gap:8px"><svg width="26" height="26" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="26" fill="#FFE15A" stroke="#121212" stroke-width="6"/><text x="50" y="72" text-anchor="middle" font-family="Dela Gothic One" font-size="58" fill="#121212">K</text></svg><b style="font-family:var(--display);font-weight:400">Kanosena</b></div>
+        <div class="d" style="font-size:24px;line-height:1.35"><span class="hl" style="background:#FFE15A">Your week's ready.</span></div>
+        <p style="font-size:14.5px">Morning Priya. Three posts for The Loaf, about two minutes of your time. Nothing goes out until you say yes.</p>
+        <div class="thumbs" id="mailThumbs"></div>
+        <div><button class="btn b-pri" type="button">Review my week</button></div>
+        <p style="font-size:12px;color:#5B5670">Kanosena · Steady Lamp Ltd · 128 City Road, London EC1V 2NX · You get this because you have a Kanosena account.</p>
+      </div></div>
+    </div>
+  </div>
+  <div class="social" style="margin-top:14px">
+    <div><div class="cover"><div class="d"><span class="hl" style="background:#FFE15A;color:#121212">You approve.</span> <span class="hl" style="background:#fff;color:#121212">We handle the rest.</span></div><span class="hand" style="font-size:4.4cqw;color:#FFE15A;margin-top:2cqw">social media for UK small businesses ↗</span></div><p class="cap">Our own social cover. Kanosena's channels are the one place our stickers and highlights appear on a post.</p></div>
+    <div><div class="avatar"><svg width="62%" viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-6 50 50)"><rect x="8" y="16" width="84" height="70" rx="16" fill="#FFE15A" stroke="#121212" stroke-width="4"/><text x="50" y="70" text-anchor="middle" font-family="Dela Gothic One,sans-serif" font-size="54" fill="#121212">K</text></g></svg></div><p class="cap" style="text-align:center">Profile picture, after Meta's review.</p></div>
+  </div>
+</section>
+
+<section id="tokens">
+  <div class="head"><div><span class="num">09</span><h2>Tokens</h2></div><p>One file that the homepage, the app and the emails all read from. In the app these sit over upstream's colours through our brand style file, so no upstream component has to change.</p></div>
+<pre id="tok">:root {
+  /* colour */
+  --k-violet: #6B3BFF;      --k-violet-deep: #4F23D9;
+  --k-butter: #FFE15A;      --k-bubble: #FF5C8A;      --k-pool: #2FD1E0;
+  --k-cloud: #F4F2FF;       --k-white: #FFFFFF;       --k-ink: #121212;
+  --k-muted: #5B5670;       --k-line: #E3DEF7;
+  --k-success: #17763F;     --k-problem: #B3123A;
+
+  /* type */
+  --k-font-display: "Dela Gothic One", "Arial Black", sans-serif;
+  --k-font-ui: "Instrument Sans", system-ui, sans-serif;
+  --k-font-hand: "Caveat", cursive;
+
+  /* shape */
+  --k-radius-xl: 28px;  --k-radius-lg: 22px;  --k-radius-md: 18px;
+  --k-radius-sm: 12px;  --k-radius-sticker: 11px;  --k-radius-pill: 999px;
+  --k-sticker-border: 2.5px solid var(--k-ink);
+  --k-shadow-card: 0 1px 3px rgba(18,18,18,.08);
+  --k-shadow-lift: 0 18px 30px -16px rgba(18,18,18,.45);
+
+  /* space (4px base) */
+  --k-space-1: 4px;  --k-space-2: 8px;  --k-space-3: 12px;  --k-space-4: 16px;
+  --k-space-5: 24px; --k-space-6: 32px; --k-space-7: 48px;  --k-space-8: 64px;
+
+  /* motion */
+  --k-ease-spring: cubic-bezier(.2, 1.4, .4, 1);
+  --k-ease-draw: cubic-bezier(.6, 0, .3, 1);
+  --k-dur-tick: 420ms;  --k-dur-slap: 380ms;  --k-dur-fill: 300ms;
+}</pre>
+</section>
+
+<section id="rollout">
+  <div class="head"><div><span class="num">10</span><h2>Rollout</h2></div><p>Small pull requests, our own files only, following the fork's rules. Nothing goes live without your OK.</p></div>
+  <ol class="road" style="padding:0;margin:0">
+    <li><div><b>Tokens and fonts</b><p>One shared token file, plus self-hosted Dela Gothic One, Instrument Sans and Caveat.</p></div><em>First</em></li>
+    <li><div><b>Homepage, kanosena.com</b><p>Rebuild ours/site in Story Mode: violet hero, four captioned customer posts, plain pricing.</p></div><em>Needs your OK to go live</em></li>
+    <li><div><b>App theme</b><p>Switch the brand colour to violet and add sticker statuses, story-segment week progress, Edit beside Approve and "Goes out" times on our approval screens.</p></div><em>Needs your OK to go live</em></li>
+    <li><div><b>Emails</b><p>The weekly "Your week's ready" email and our other emails in the new style.</p></div><em>After the app</em></li>
+    <li><div><b>Social profiles and app icon</b><p>New profile pictures and covers, and the sticker K as the app icon.</p></div><em>After Meta's review</em></li>
+  </ol>
+</section>
+</main>
+<footer><div class="wrap">Kanosena design language, version 1, 20/11/2026. The sample businesses on this page are made up. Their posts use their own colours and type.</div></footer>
+
+<script>
+(function(){
+  var C={bak:['#F2A541','#3B2416','#FFF4E0'],est:['#C9A45C','#1C2B4A','#F7F5F0'],gym:['#E63B2E','#111111','#F2F2F2'],heat:['#FF8A00','#0E5AA7','#FFFFFF']};
+  function art(k){
+    if(k==='bak'){var c=C.bak;return '<div style="position:absolute;inset:0;background:'+c[2]+'"></div><svg viewBox="0 0 100 100" style="position:absolute;inset:0;width:100%;height:100%"><ellipse cx="50" cy="60" rx="36" ry="20" fill="'+c[0]+'"/><path d="M28 56 q6 -8 12 0 M44 54 q6 -8 12 0 M60 56 q6 -8 12 0" fill="none" stroke="'+c[1]+'" stroke-width="3" stroke-linecap="round"/></svg><div style="position:absolute;left:0;right:0;bottom:0;background:'+c[1]+';color:'+c[2]+';padding:6cqw 7cqw"><div class="f-bak" style="font-size:11cqw;line-height:1">Fresh from 7am</div></div>';}
+    if(k==='est'){var c=C.est;return '<div style="position:absolute;inset:0;background:'+c[1]+'"></div><svg viewBox="0 0 100 100" style="position:absolute;left:7%;right:7%;top:7%;width:86%;height:56%" preserveAspectRatio="xMidYMid slice"><rect width="100" height="100" fill="#BFD3E6"/><rect y="78" width="100" height="22" fill="#8FB07A"/><path d="M22 50 L50 24 L78 50 Z" fill="#6B4A3A"/><rect x="28" y="50" width="44" height="30" fill="#C98C6E"/><rect x="45" y="62" width="10" height="18" fill="#1C2B4A"/></svg><div style="position:absolute;left:7cqw;right:7cqw;bottom:6cqw;color:'+c[2]+'"><div class="f-est" style="font-size:10cqw;line-height:1">3-bed terrace</div></div>';}
+    if(k==='gym'){var c=C.gym;return '<div style="position:absolute;inset:0;background:'+c[1]+'"></div><div style="position:absolute;left:7cqw;top:7cqw;right:7cqw;color:'+c[2]+'"><div class="f-gym" style="font-size:16cqw;line-height:.9">6am class.<br><span style="color:'+c[0]+'">Spaces left.</span></div></div><svg viewBox="0 0 100 100" style="position:absolute;inset:0;width:100%;height:100%"><circle cx="72" cy="74" r="14" fill="#3A3A3A"/><path d="M61 64 C61 50 83 50 83 64" fill="none" stroke="#4A4A4A" stroke-width="5"/></svg>';}
+    var c=C.heat;return '<div style="position:absolute;inset:0;background:#DCE6EE"></div><div style="position:absolute;left:0;right:0;top:0;background:'+c[1]+';color:'+c[2]+';padding:6cqw 7cqw"><div class="f-heat" style="font-size:11cqw;line-height:.95">Boiler service<br><span style="color:'+c[0]+'">before winter</span></div></div><svg viewBox="0 0 100 100" style="position:absolute;inset:0;width:100%;height:100%"><rect x="12" y="52" width="56" height="26" rx="3" fill="#fff"/><path d="M68 58 H82 L90 68 V78 H68Z" fill="#fff"/><rect x="12" y="62" width="56" height="5" fill="'+c[0]+'"/><circle cx="26" cy="80" r="7" fill="#111"/><circle cx="78" cy="80" r="7" fill="#111"/></svg>';
+  }
+  function tile(k){return '<div class="art">'+art(k)+'</div>';}
+  document.getElementById('heroThumbs').innerHTML=['bak','est','gym','heat'].map(tile).join('');
+  document.getElementById('mailThumbs').innerHTML=['bak','bak','bak'].map(function(k,i){return '<div class="art">'+art(k)+'</div>'}).join('');
+  document.getElementById('cards').innerHTML=
+   '<article class="post"><div class="art">'+art('gym')+'</div><div class="bd"><span class="wh">Instagram · Wed 25/11</span><p class="cp">Early birds, there are 4 spaces left in tomorrow\'s 6am class.</p></div><div class="act"><span class="stk wait" style="font-size:11px;padding:4px 8px">Waiting for you</span><span class="btns"><button class="btn b-sec" type="button">Edit</button><button class="btn b-pri" type="button">Approve</button></span></div></article>'+
+   '<article class="post"><div class="art">'+art('heat')+'</div><div class="bd"><span class="wh">Facebook · Mon 23/11</span><p class="cp">Book your boiler service now, before the cold sets in.</p></div><div class="act"><span class="stk ok" style="font-size:11px;padding:4px 8px">Approved!</span><span class="goes" style="font-size:12.5px">Goes out Mon 23/11 at 07:30</span></div></article>';
+  var demo=document.getElementById('demo'),goes=document.getElementById('goes');
+  document.getElementById('go').addEventListener('click',function(){demo.classList.remove('done');void demo.offsetWidth;demo.classList.add('done');goes.textContent='Goes out Mon 23/11 at 07:30';});
+  document.getElementById('reset').addEventListener('click',function(){demo.classList.remove('done');goes.textContent='Waiting for you';});
+})();
+</script>
