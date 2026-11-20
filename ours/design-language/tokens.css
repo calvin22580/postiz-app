@@ -1,0 +1,32 @@
+/* Kanosena design tokens, Story Mode v1 (20/11/2026).
+   Single source for the homepage (ours/site), the app (apps/frontend/src/ours/brand) and emails.
+   See story-mode.html for how each token is used. */
+:root {
+  /* colour */
+  --k-violet: #6B3BFF;      --k-violet-deep: #4F23D9;
+  --k-butter: #FFE15A;      --k-bubble: #FF5C8A;      --k-pool: #2FD1E0;
+  --k-cloud: #F4F2FF;       --k-white: #FFFFFF;       --k-ink: #121212;
+  --k-muted: #5B5670;       --k-line: #E3DEF7;
+  --k-success: #17763F;     --k-problem: #B3123A;
+
+  /* type */
+  --k-font-display: "Dela Gothic One", "Arial Black", sans-serif;
+  --k-font-ui: "Instrument Sans", system-ui, sans-serif;
+  --k-font-hand: "Caveat", cursive;
+
+  /* shape */
+  --k-radius-xl: 28px;  --k-radius-lg: 22px;  --k-radius-md: 18px;
+  --k-radius-sm: 12px;  --k-radius-sticker: 11px;  --k-radius-pill: 999px;
+  --k-sticker-border: 2.5px solid var(--k-ink);
+  --k-shadow-card: 0 1px 3px rgba(18,18,18,.08);
+  --k-shadow-lift: 0 18px 30px -16px rgba(18,18,18,.45);
+
+  /* space (4px base) */
+  --k-space-1: 4px;  --k-space-2: 8px;  --k-space-3: 12px;  --k-space-4: 16px;
+  --k-space-5: 24px; --k-space-6: 32px; --k-space-7: 48px;  --k-space-8: 64px;
+
+  /* motion */
+  --k-ease-spring: cubic-bezier(.2, 1.4, .4, 1);
+  --k-ease-draw: cubic-bezier(.6, 0, .3, 1);
+  --k-dur-tick: 420ms;  --k-dur-slap: 380ms;  --k-dur-fill: 300ms;
+}

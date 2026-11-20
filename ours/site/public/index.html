@@ -1,6 +1,7 @@
 <!doctype html>
-<!-- OURS: the public homepage at kanosena.com. Plain static HTML, no cookies,
-     no trackers, no third-party requests. Prices and allowances come from
+<!-- OURS: the public homepage at kanosena.com, in the Story Mode design
+     language (ours/design-language). Plain static HTML, no cookies, no
+     trackers, no third-party requests. Prices and allowances come from
      libraries/nestjs-libraries/src/ours/plans/plans.config.ts: change them
      there first, then here. Details: ours/site/README.md -->
 <html lang="en-GB">
@@ -15,148 +16,182 @@
 <meta property="og:title" content="Kanosena: you approve, we handle the rest">
 <meta property="og:description" content="Social media posts for UK small businesses, written from your own website and published only when you approve them.">
 <meta property="og:url" content="https://kanosena.com/">
-<meta name="theme-color" content="#1F5F5B">
-<link rel="preload" href="/fonts/PlusJakartaSans-ExtraBold.woff2" as="font" type="font/woff2" crossorigin>
+<meta name="theme-color" content="#6B3BFF">
+<link rel="preload" href="/fonts/DelaGothicOne-Regular-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/InstrumentSans-Variable-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-@font-face{font-family:"Plus Jakarta Sans";src:url(/fonts/PlusJakartaSans-Medium.woff2) format("woff2");font-weight:400 600;font-display:swap}
-@font-face{font-family:"Plus Jakarta Sans";src:url(/fonts/PlusJakartaSans-ExtraBold.woff2) format("woff2");font-weight:700 800;font-display:swap}
+@font-face{font-family:"Dela Gothic One";src:url(/fonts/DelaGothicOne-Regular-latin.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Instrument Sans";src:url(/fonts/InstrumentSans-Variable-latin.woff2) format("woff2");font-weight:400 700;font-display:swap}
+@font-face{font-family:"Caveat";src:url(/fonts/Caveat-Bold-latin.woff2) format("woff2");font-weight:700;font-display:swap}
+/* Tokens: copied from ours/design-language/tokens.css */
 :root{
-  --teal:#1F5F5B;--teal-dark:#174A47;--teal-soft:#E8F0EF;--teal-line:#CFE0DE;
-  --ink:#16201F;--muted:#55625F;--line:#E3E8E7;--bg:#FAFBFA;--card:#FFFFFF;
-  --radius:14px;--max:1080px;
+  --k-violet:#6B3BFF;--k-violet-deep:#4F23D9;--k-butter:#FFE15A;--k-bubble:#FF5C8A;--k-pool:#2FD1E0;
+  --k-cloud:#F4F2FF;--k-white:#FFFFFF;--k-ink:#121212;--k-muted:#5B5670;--k-line:#E3DEF7;
+  --k-font-display:"Dela Gothic One","Arial Black",sans-serif;--k-font-ui:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--k-font-hand:"Caveat",cursive;
+  --k-radius-lg:22px;--k-radius-md:18px;--k-radius-sticker:11px;
+  --k-shadow-card:0 1px 3px rgba(18,18,18,.08);--k-shadow-lift:0 18px 30px -16px rgba(18,18,18,.45);
+  --max:1120px;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font:500 17px/1.6 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-a{color:var(--teal)}
-a:focus-visible,.btn:focus-visible{outline:3px solid #7FB3AE;outline-offset:3px}
-h1,h2,h3{font-weight:800;line-height:1.15;letter-spacing:-.02em;margin:0}
+body{margin:0;background:var(--k-cloud);color:var(--k-ink);font:400 17px/1.6 var(--k-font-ui)}
+a{color:var(--k-violet-deep)}
+a:focus-visible,.btn:focus-visible,summary:focus-visible{outline:3px solid var(--k-butter);outline-offset:2px;box-shadow:0 0 0 6px var(--k-ink)}
+h1,h2,h3{margin:0;text-wrap:balance}
 p{margin:0}
-.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 max(20px,env(safe-area-inset-left,0px))}
 .skip{position:absolute;left:-999px}.skip:focus{left:16px;top:16px;background:#fff;padding:8px 12px;z-index:10}
+.d{font-family:var(--k-font-display);font-weight:400;letter-spacing:-.01em}
+.hl{display:inline;padding:.04em .2em;border-radius:.2em;-webkit-box-decoration-break:clone;box-decoration-break:clone;background:var(--k-butter);color:var(--k-ink)}
+.hl.w{background:#fff}
+.hand{font-family:var(--k-font-hand);font-weight:700}
 
 /* header */
-header{position:sticky;top:0;z-index:5;background:rgba(250,251,250,.92);backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid transparent}
-header.scrolled{border-bottom-color:var(--line)}
+header{position:sticky;top:0;z-index:5;background:rgba(107,59,255,.94);backdrop-filter:saturate(1.3) blur(8px);color:#fff}
+header.scrolled{box-shadow:0 1px 0 rgba(0,0,0,.15)}
 .bar{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:800;font-size:19px;letter-spacing:-.01em}
-.brand svg{width:32px;height:32px;flex:none}
-nav{display:flex;align-items:center;gap:26px}
-nav a{color:var(--ink);text-decoration:none;font-size:15px}
-nav a:hover{color:var(--teal)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;padding:12px 20px;font:700 16px/1.2 inherit;font-family:inherit;text-decoration:none;border:1px solid transparent;cursor:pointer;white-space:nowrap}
-.btn-primary{background:var(--teal);color:#fff}
-.btn-primary:hover{background:var(--teal-dark)}
-.btn-quiet{background:transparent;color:var(--teal);border-color:var(--teal-line)}
-.btn-quiet:hover{background:var(--teal-soft)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;font-family:var(--k-font-display);font-size:21px;letter-spacing:-.01em}
+.brand svg{width:36px;height:36px;flex:none}
+nav{display:flex;align-items:center;gap:24px}
+nav a{color:#fff;text-decoration:none;font-size:15px;font-weight:600;white-space:nowrap}
+nav a:hover{text-decoration:underline;text-underline-offset:4px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:13px 22px;font:700 16px/1.2 var(--k-font-ui);text-decoration:none;border:0;cursor:pointer;white-space:nowrap;transition:transform .12s ease,background .15s ease}
+.btn:active{transform:scale(.97)}
+.btn-butter{background:var(--k-butter);color:var(--k-ink)}
+.btn-butter:hover{background:#FFEA8A}
+.btn-ghost{background:transparent;color:#fff;box-shadow:inset 0 0 0 2px #fff}
+.btn-ghost:hover{background:rgba(255,255,255,.12)}
+.btn-violet{background:var(--k-violet);color:#fff}
+.btn-violet:hover{background:var(--k-violet-deep)}
+.btn-line{background:#fff;color:var(--k-ink);box-shadow:inset 0 0 0 2px var(--k-ink)}
 .btn-sm{padding:9px 16px;font-size:15px}
-@media (max-width:760px){nav .hide-sm{display:none}nav{gap:16px}}
+nav .btn-butter{color:var(--k-ink)}
+nav .btn-butter:hover{text-decoration:none}
+@media (max-width:760px){nav .hide-sm{display:none}nav{gap:14px}}
+@media (max-width:400px){.brand{font-size:18px;gap:8px}.brand svg{width:30px;height:30px}nav{gap:10px}nav .btn-butter{padding-left:14px;padding-right:14px}}
 
 /* hero */
-.hero{padding:72px 0 88px}
-.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
-.eyebrow{display:inline-block;font-size:14px;font-weight:600;color:var(--teal);background:var(--teal-soft);border-radius:999px;padding:5px 12px;margin-bottom:22px}
-.hero h1{font-size:clamp(38px,5.4vw,58px)}
-.hero h1 span{color:var(--teal)}
-.lede{font-size:19px;color:var(--muted);margin:22px 0 32px;max-width:34em}
+.hero{background:var(--k-violet);color:#fff;padding:56px 0 84px;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:center}
+.eyebrow{display:inline-block;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.9;margin-bottom:20px}
+.hero h1{font-family:var(--k-font-display);font-weight:400;font-size:clamp(36px,5vw,62px);line-height:1.36}
+.lede{font-size:19px;margin:24px 0 30px;max-width:33em}
 .ctas{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.small{font-size:14px;color:var(--muted)}
+.small{font-size:14.5px;opacity:.9}
 .ctas + .small{margin-top:16px}
-
-/* example approval card */
-.example{position:relative}
-.example-label{font-size:13px;color:var(--muted);margin:0 0 10px 4px}
-.post{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 1px 2px rgba(22,32,31,.04),0 12px 32px rgba(22,32,31,.07);overflow:hidden}
-.post-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px}
-.post-head strong{font-weight:700}
-.pill{font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;background:#FFF4DC;color:#7A5A12}
-.post-image{margin:16px 18px 0;aspect-ratio:4/3;border-radius:12px;background:var(--teal);color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:22px}
-.post-image b{font-size:24px;line-height:1.2;font-weight:800;max-width:11em}
-.post-image i{font-style:normal;font-size:13px;opacity:.8;margin-top:8px}
-.post-body{padding:14px 18px 4px;font-size:15px;line-height:1.55}
-.post-source{margin:8px 18px 0;font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:flex-start}
-.post-source svg{flex:none;margin-top:2px}
-.post-actions{display:flex;gap:8px;padding:16px 18px 18px}
-.post-actions span{flex:1;text-align:center;font-size:14px;font-weight:700;border-radius:9px;padding:9px 0;border:1px solid var(--line);color:var(--ink)}
-.post-actions span.ok{background:var(--teal);border-color:var(--teal);color:#fff}
+.sheet{display:grid;grid-template-columns:1fr 1fr;gap:20px 18px}
+.sf{margin:0;background:#fff;border-radius:var(--k-radius-md);padding:8px 8px 0;box-shadow:var(--k-shadow-lift);color:var(--k-ink)}
+.sf:nth-child(1){transform:rotate(-3deg)}.sf:nth-child(2){transform:rotate(2deg)}.sf:nth-child(3){transform:rotate(2.5deg)}.sf:nth-child(4){transform:rotate(-2deg)}
+.sf figcaption{padding:8px 4px 10px;font-size:12.5px;font-weight:600}
+.art{aspect-ratio:1;border-radius:12px;overflow:hidden;position:relative;container-type:inline-size}
+.art svg{position:absolute;inset:0;width:100%;height:100%}
+.examples-note{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:22px;flex-wrap:wrap}
+.examples-note .hand{font-size:26px;color:var(--k-butter);transform:rotate(-3deg);display:inline-block}
+.examples-note small{font-size:13px;opacity:.85}
+/* sample customers' own type (they are made-up businesses with their own brands) */
+.c-bak{font-family:Georgia,"Times New Roman",serif;font-weight:700}
+.c-est{font-family:Georgia,"Times New Roman",serif;font-style:italic}
+.c-gym{font-family:Impact,"Arial Narrow Bold","Arial Black",sans-serif;text-transform:uppercase}
+.c-heat{font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif;font-weight:800;text-transform:uppercase}
 
 /* sections */
-section{scroll-margin-top:68px;padding:88px 0;border-top:1px solid var(--line)}
-.section-head{max-width:640px;margin-bottom:44px}
-.section-head h2{font-size:clamp(28px,3.6vw,38px)}
-.section-head p{color:var(--muted);margin-top:14px;font-size:18px}
-.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;counter-reset:step;list-style:none;margin:0;padding:0}
-.steps li{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
-.steps li::before{counter-increment:step;content:counter(step);display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--teal-soft);color:var(--teal);font-weight:800;margin-bottom:16px}
-.steps h3{font-size:18px;margin-bottom:8px}
-.steps p{color:var(--muted);font-size:15.5px}
+section{padding:88px 0}
+.section-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:24px;align-items:end;margin-bottom:40px}
+.section-head h2{font-family:var(--k-font-display);font-weight:400;font-size:clamp(30px,4.2vw,46px);line-height:1.3}
+.section-head p{color:var(--k-muted);font-size:18px;max-width:34em}
 
-.promises{display:grid;grid-template-columns:repeat(2,1fr);gap:20px 48px;list-style:none;margin:0;padding:0}
-.promises li{display:flex;gap:14px}
-.promises svg{flex:none;margin-top:3px}
-.promises h3{font-size:18px;margin-bottom:4px}
-.promises p{color:var(--muted);font-size:15.5px}
+/* example week */
+.week{background:#fff;border-radius:28px;padding:28px;box-shadow:var(--k-shadow-card);display:grid;gap:20px}
+.week-top{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap}
+.week-top h3{font-family:var(--k-font-display);font-weight:400;font-size:26px;line-height:1.3}
+.segs{display:flex;gap:6px;width:min(320px,100%);margin-top:12px}
+.segs i{flex:1;height:6px;border-radius:3px;background:var(--k-ink);opacity:.14}
+.segs i.on{background:var(--k-violet);opacity:1}
+.week-top small{color:var(--k-muted);font-size:14px;font-weight:600}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card{background:var(--k-cloud);border-radius:var(--k-radius-md);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.card .art{border-radius:0}
+.card .bd{padding:14px 16px;display:grid;gap:6px}
+.card .wh{font-size:13px;font-weight:600;color:var(--k-muted)}
+.card .cp{font-size:15px}
+.card .src{font-size:12.5px;color:var(--k-muted)}
+.card .act{padding:0 16px 16px;margin-top:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.card .act .btns{margin-left:auto;display:flex;gap:6px}
+.card .act .btn{font-size:14px;padding:9px 15px}
+.stk{display:inline-block;font-family:var(--k-font-display);font-size:12.5px;line-height:1.2;padding:5px 10px;border-radius:var(--k-radius-sticker);border:2.5px solid var(--k-ink);color:var(--k-ink);background:#fff}
+.stk.wait{transform:rotate(-3deg)}
+.stk.ok{background:var(--k-butter);transform:rotate(4deg)}
+.goes{font-weight:700;font-size:14px}
+.week-note{font-size:14px;color:var(--k-muted)}
 
-.platforms{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
-.platforms span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:15px;font-weight:600}
+/* steps */
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;counter-reset:s}
+.steps li{background:#fff;border-radius:var(--k-radius-lg);padding:24px;box-shadow:var(--k-shadow-card);position:relative}
+.steps li::before{counter-increment:s;content:counter(s);display:inline-grid;place-items:center;width:44px;height:44px;border-radius:12px;border:2.5px solid var(--k-ink);background:var(--k-butter);font-family:var(--k-font-display);font-size:20px;color:var(--k-ink);margin-bottom:16px;transform:rotate(-4deg)}
+.steps li:nth-child(3){background:var(--k-violet);color:#fff}
+.steps li:nth-child(3) p{color:#fff;opacity:.92}
+.steps h3{font-family:var(--k-font-display);font-weight:400;font-size:20px;line-height:1.3;margin-bottom:8px}
+.steps p{color:var(--k-muted);font-size:15.5px}
+
+/* promises */
+.promises{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.promises li{display:flex;gap:16px;background:#fff;border-radius:var(--k-radius-lg);padding:24px;box-shadow:var(--k-shadow-card)}
+.promises svg{flex:none;margin-top:2px}
+.promises h3{font-family:var(--k-font-display);font-weight:400;font-size:19px;line-height:1.3;margin-bottom:6px}
+.promises p{color:var(--k-muted);font-size:15.5px}
+.platforms{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.platforms span{background:#fff;border:2px solid var(--k-ink);border-radius:999px;padding:7px 14px;font-weight:600;font-size:15px}
 
 /* pricing */
-.notice{background:var(--teal-soft);border:1px solid var(--teal-line);border-radius:var(--radius);padding:18px 22px;margin-bottom:28px;font-size:16px}
-.notice strong{font-weight:700}
-.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.plan{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:28px;display:flex;flex-direction:column}
-.plan.featured{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal)}
-.plan h3{font-size:20px}
-.plan .price{color:var(--ink);margin:14px 0 6px;font-size:40px;font-weight:800;letter-spacing:-.02em}
-.plan .price small{font-size:16px;font-weight:500;color:var(--muted);letter-spacing:0}
-.plan .summary{color:var(--muted);font-size:15.5px;min-height:3.1em}
-.plan ul{list-style:none;padding:0;margin:20px 0 0;border-top:1px solid var(--line)}
-.plan li{padding:11px 0;border-bottom:1px solid var(--line);font-size:15px;display:flex;justify-content:space-between;gap:12px}
-.plan li b{font-weight:700;white-space:nowrap}
-.fine{margin-top:20px;font-size:14px;color:var(--muted)}
+.notice{background:var(--k-butter);border-radius:var(--k-radius-md);padding:18px 22px;font-size:16px;margin-bottom:24px}
+.plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.plan{background:#fff;border-radius:var(--k-radius-lg);padding:28px;box-shadow:var(--k-shadow-card);display:flex;flex-direction:column;gap:10px;position:relative}
+.plan.featured{box-shadow:inset 0 0 0 3px var(--k-violet),var(--k-shadow-card)}
+.plan h3{font-family:var(--k-font-display);font-weight:400;font-size:22px}
+.price{font-family:var(--k-font-display);font-size:40px;line-height:1.1}
+.price small{font-family:var(--k-font-ui);font-size:15px;font-weight:600;color:var(--k-muted)}
+.summary{color:var(--k-muted);font-size:15.5px}
+.plan ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px;font-size:15.5px}
+.plan li{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--k-line);padding-top:8px}
+.fine{font-size:14px;color:var(--k-muted);margin-top:18px}
 
 /* faq */
-.faq{max-width:760px}
-.faq details{border-bottom:1px solid var(--line);padding:4px 0}
-.faq summary{cursor:pointer;list-style:none;padding:18px 36px 18px 0;font-weight:700;font-size:17.5px;position:relative}
+.faq{display:grid;gap:10px;max-width:820px}
+.faq details{background:#fff;border-radius:var(--k-radius-md);padding:18px 22px;box-shadow:var(--k-shadow-card)}
+.faq summary{cursor:pointer;font-weight:700;font-size:17px;list-style:none;display:flex;justify-content:space-between;gap:16px}
 .faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:"";position:absolute;right:8px;top:26px;width:10px;height:10px;border-right:2px solid var(--teal);border-bottom:2px solid var(--teal);transform:rotate(45deg);transition:transform .15s}
-.faq details[open] summary::after{transform:rotate(-135deg);top:30px}
-.faq details p{color:var(--muted);padding:0 0 20px;font-size:16px}
+.faq summary::after{content:"+";font-family:var(--k-font-display);font-size:20px;line-height:1;color:var(--k-violet)}
+.faq details[open] summary::after{content:"–"}
+.faq p{margin-top:10px;color:var(--k-muted)}
 
 /* closing */
-.closing{background:var(--teal);color:#fff;border-top:0}
-.closing h2{font-size:clamp(28px,3.6vw,38px)}
-.closing p{opacity:.88;margin:14px 0 28px;font-size:18px;max-width:36em}
-.closing .btn-primary{background:#fff;color:var(--teal)}
-.closing .btn-primary:hover{background:var(--teal-soft)}
-.closing .btn-quiet{color:#fff;border-color:rgba(255,255,255,.4)}
-.closing .btn-quiet:hover{background:rgba(255,255,255,.08)}
+.closing{background:var(--k-violet);color:#fff;text-align:center}
+.closing h2{font-family:var(--k-font-display);font-weight:400;font-size:clamp(30px,4.6vw,52px);line-height:1.36}
+.closing p{max-width:34em;margin:20px auto 28px;font-size:18px}
+.closing .ctas{justify-content:center}
 
-footer{padding:48px 0 56px;font-size:14px;color:var(--muted)}
-.foot{display:flex;justify-content:space-between;gap:32px;flex-wrap:wrap}
-.foot-links{display:flex;flex-wrap:wrap;gap:8px 22px}
-.foot-links a{color:var(--muted)}
-.foot-links a:hover{color:var(--teal)}
-.legal{margin-top:18px;max-width:46em}
+/* footer */
+footer{background:var(--k-ink);color:#EDEAFF;padding:48px 0 40px}
+.foot{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+footer .brand{color:#fff}
+.foot-links{display:flex;flex-wrap:wrap;gap:18px}
+.foot-links a{color:#EDEAFF;font-size:14.5px}
+.legal{font-size:13px;color:#B9B3D6;margin-top:28px}
 
-@media (max-width:900px){
-  .hero{padding:48px 0 64px}
-  .hero-grid{grid-template-columns:1fr;gap:44px}
-  .example{max-width:440px}
-  .steps{grid-template-columns:repeat(2,1fr)}
-  .plans{grid-template-columns:1fr;max-width:480px}
-  .plan .summary{min-height:0}
+@media (max-width:980px){
+  .hero-grid,.section-head{grid-template-columns:1fr}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cards{grid-template-columns:1fr 1fr}
+  .cards .card:nth-child(3){display:none}
 }
-@media (max-width:600px){
-  body{font-size:16px}
-  .wrap{padding:0 16px}
+@media (max-width:680px){
   section{padding:64px 0}
-  .steps,.promises{grid-template-columns:1fr}
-  .lede{font-size:17.5px}
-  .ctas .btn{flex:1 1 auto}
+  .steps,.promises,.plans,.cards{grid-template-columns:1fr}
+  .cards .card:nth-child(3){display:flex}
+  .week{padding:18px;border-radius:22px}
+  .sheet{gap:14px 12px}
 }
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn{transition:none}}
 </style>
 </head>
 <body>
@@ -165,14 +200,14 @@ footer{padding:48px 0 56px;font-size:14px;color:var(--muted)}
 <header id="top">
   <div class="wrap bar">
     <a class="brand" href="/" aria-label="Kanosena home">
-      <svg viewBox="0 0 1080 1080" aria-hidden="true"><rect width="1080" height="1080" rx="240" fill="#1F5F5B"/><path fill="#fff" d="M324 305h108v191l173-191h150L556 520l209 253H617L466 587l-34 35v151H324z"/></svg>
+      <svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-6 50 50)"><rect x="8" y="14" width="84" height="72" rx="17" fill="#FFE15A" stroke="#121212" stroke-width="5"/><path fill="#121212" transform="translate(-10 -9) scale(.11)" d="M324 305h108v191l173-191h150L556 520l209 253H617L466 587l-34 35v151H324z"/></g></svg>
       <span>Kanosena</span>
     </a>
     <nav aria-label="Main">
       <a class="hide-sm" href="#how">How it works</a>
       <a class="hide-sm" href="#pricing">Pricing</a>
       <a href="https://app.kanosena.com/auth/login">Log in</a>
-      <a class="btn btn-primary btn-sm" href="https://app.kanosena.com/auth">Get started</a>
+      <a class="btn btn-butter btn-sm" href="https://app.kanosena.com/auth">Get started</a>
     </nav>
   </div>
 </header>
@@ -182,29 +217,39 @@ footer{padding:48px 0 56px;font-size:14px;color:var(--muted)}
     <div class="wrap hero-grid">
       <div>
         <span class="eyebrow">For UK businesses with 1 to 20 staff</span>
-        <h1>Social media, done for you. <span>You approve. We handle the rest.</span></h1>
-        <p class="lede">Kanosena reads your website, writes a week of posts with branded graphics, and schedules them to Facebook, Instagram and LinkedIn. Nothing goes out until you have said yes.</p>
+        <h1><span class="hl">You approve.</span><br><span class="hl w">We handle</span><br><span class="hl w">the rest.</span></h1>
+        <p class="lede">Kanosena reads your website, writes a week of social media posts with branded graphics in your own colours, and schedules them to Facebook, Instagram and LinkedIn. Nothing goes out until you have said yes.</p>
         <div class="ctas">
-          <a class="btn btn-primary" href="https://app.kanosena.com/auth">Get started free</a>
-          <a class="btn btn-quiet" href="#how">See how it works</a>
+          <a class="btn btn-butter" href="https://app.kanosena.com/auth">Get started free</a>
+          <a class="btn btn-ghost" href="#how">See how it works</a>
         </div>
         <p class="small">Free while we test with our first businesses. No card needed to start.</p>
       </div>
-
-      <div class="example" aria-label="Example of a post waiting for approval">
-        <p class="example-label">Example of a post waiting for your approval</p>
-        <div class="post">
-          <div class="post-head"><strong>Tuesday, 10:00 · Instagram</strong><span class="pill">Waiting for you</span></div>
-          <div class="post-image"><b>Fresh bread, baked here every morning from 7am</b><i>Your business name</i></div>
-          <p class="post-body">Our ovens are on before the town is awake. Pop in on your way to work and pick up a loaf while it's still warm.</p>
-          <p class="post-source"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path fill="#55625F" d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm1.2 8H6.8v-1h.7V8h-.7V7h1.9v4h.5v1z"/></svg>Source: “Open from 7am” on your website’s opening hours page</p>
-          <div class="post-actions" aria-hidden="true"><span class="ok">Approve</span><span>Edit</span><span>Rewrite</span></div>
-        </div>
+      <div aria-label="Example posts for four made-up businesses">
+        <div class="sheet" id="sheet"></div>
+        <div class="examples-note"><span class="hand">four businesses, four looks</span><small>Examples for made-up businesses</small></div>
       </div>
     </div>
   </div>
 
-  <section id="how">
+  <section id="week">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Your week, <span class="hl">ready to go</span></h2>
+        <p>Each week you get a short list of posts to look at. Approve the ones you like, edit anything you want to change, and we post them at the right time.</p>
+      </div>
+      <div class="week" aria-label="Example of the weekly approval screen">
+        <div class="week-top">
+          <div><h3>This week's posts</h3><div class="segs" aria-hidden="true"><i class="on"></i><i></i><i></i></div></div>
+          <small>Example bakery · 1 of 3 approved</small>
+        </div>
+        <div class="cards" id="cards"></div>
+        <p class="week-note">Every post shows where its facts came from on your own website. Edit any word before you approve it, or ask for a new version.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" style="padding-top:0">
     <div class="wrap">
       <div class="section-head">
         <h2>How it works</h2>
@@ -214,31 +259,31 @@ footer{padding:48px 0 56px;font-size:14px;color:var(--muted)}
         <li><h3>We read your website</h3><p>Give us your web address. We build a short profile of your business, and every fact shows where it came from. You can edit any of it.</p></li>
         <li><h3>We write your week</h3><p>A week of posts and simple branded graphics, in your colours, written only from your profile. UK dates and seasons are taken into account.</p></li>
         <li><h3>You approve</h3><p>Approve, edit, reject or ask for a new version of each post. Only the posts you approve are scheduled.</p></li>
-        <li><h3>We publish and report back</h3><p>Approved posts go out at the planned time to the accounts you connected, and we show you how they did.</p></li>
+        <li><h3>We post and report back</h3><p>Approved posts go out at the planned time to the accounts you connected, and we show you how they did.</p></li>
       </ol>
     </div>
   </section>
 
-  <section id="control">
+  <section id="control" style="padding-top:0">
     <div class="wrap">
       <div class="section-head">
-        <h2>You stay in charge</h2>
+        <h2>You stay <span class="hl">in charge</span></h2>
         <p>It's your business and your name. We built Kanosena around that.</p>
       </div>
       <ul class="promises">
-        <li><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E8F0EF"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#1F5F5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><h3>Nothing goes out without your yes</h3><p>Every post waits for your approval. You can change or cancel a scheduled post any time before it goes out.</p></div></li>
-        <li><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E8F0EF"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#1F5F5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><h3>No made-up facts</h3><p>Posts are written from what your own website says. We don't invent prices, offers, reviews or claims about your business.</p></div></li>
-        <li><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E8F0EF"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#1F5F5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><h3>Your accounts stay yours</h3><p>You connect your accounts through each platform's own login screen, and you can disconnect them at any time.</p></div></li>
-        <li><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E8F0EF"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#1F5F5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><h3>Your data isn't for sale</h3><p>We never send messages on your behalf, and never use your platform data for advertising or to train AI models.</p></div></li>
+        <li><svg width="36" height="36" viewBox="0 0 40 40" aria-hidden="true"><rect x="3" y="3" width="34" height="34" rx="10" fill="#FFE15A" stroke="#121212" stroke-width="2.5" transform="rotate(-5 20 20)"/><path d="M12 21 l5 5 l11 -12" fill="none" stroke="#121212" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><h3>Nothing goes out without your yes</h3><p>Every post waits for your approval. You can change or cancel a scheduled post any time before it goes out.</p></div></li>
+        <li><svg width="36" height="36" viewBox="0 0 40 40" aria-hidden="true"><rect x="3" y="3" width="34" height="34" rx="10" fill="#FFE15A" stroke="#121212" stroke-width="2.5" transform="rotate(4 20 20)"/><path d="M12 21 l5 5 l11 -12" fill="none" stroke="#121212" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><h3>No made-up facts</h3><p>Posts are written from what your own website says. We don't invent prices, offers, reviews or claims about your business.</p></div></li>
+        <li><svg width="36" height="36" viewBox="0 0 40 40" aria-hidden="true"><rect x="3" y="3" width="34" height="34" rx="10" fill="#FFE15A" stroke="#121212" stroke-width="2.5" transform="rotate(-3 20 20)"/><path d="M12 21 l5 5 l11 -12" fill="none" stroke="#121212" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><h3>Your accounts stay yours</h3><p>You connect your accounts through each platform's own login screen, and you can disconnect them at any time.</p></div></li>
+        <li><svg width="36" height="36" viewBox="0 0 40 40" aria-hidden="true"><rect x="3" y="3" width="34" height="34" rx="10" fill="#FFE15A" stroke="#121212" stroke-width="2.5" transform="rotate(5 20 20)"/><path d="M12 21 l5 5 l11 -12" fill="none" stroke="#121212" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><h3>Your data isn't for sale</h3><p>We never send messages on your behalf, and never use your platform data for advertising or to train AI models.</p></div></li>
       </ul>
-      <div style="margin-top:48px">
-        <p class="small" style="margin-bottom:10px">Where your posts go</p>
+      <div style="margin-top:40px">
+        <p style="font-weight:700">Where your posts go</p>
         <div class="platforms"><span>Facebook Pages</span><span>Instagram business accounts</span><span>LinkedIn Pages</span></div>
       </div>
     </div>
   </section>
 
-  <section id="pricing">
+  <section id="pricing" style="padding-top:0">
     <div class="wrap">
       <div class="section-head">
         <h2>Simple monthly plans</h2>
@@ -281,7 +326,7 @@ footer{padding:48px 0 56px;font-size:14px;color:var(--muted)}
     </div>
   </section>
 
-  <section id="questions">
+  <section id="questions" style="padding-top:0">
     <div class="wrap">
       <div class="section-head"><h2>Questions</h2></div>
       <div class="faq">
@@ -297,11 +342,11 @@ footer{padding:48px 0 56px;font-size:14px;color:var(--muted)}
 
   <section class="closing">
     <div class="wrap">
-      <h2>Get your first week of posts</h2>
+      <h2><span class="hl">Get your first week</span><br><span class="hl w">of posts</span></h2>
       <p>Tell us your web address and we'll draft a week of posts for you to review. Nothing is published until you approve it.</p>
       <div class="ctas">
-        <a class="btn btn-primary" href="https://app.kanosena.com/auth">Get started free</a>
-        <a class="btn btn-quiet" href="mailto:support@kanosena.com">Email us a question</a>
+        <a class="btn btn-butter" href="https://app.kanosena.com/auth">Get started free</a>
+        <a class="btn btn-ghost" href="mailto:support@kanosena.com">Email us a question</a>
       </div>
     </div>
   </section>
@@ -311,7 +356,7 @@ footer{padding:48px 0 56px;font-size:14px;color:var(--muted)}
   <div class="wrap">
     <div class="foot">
       <a class="brand" href="/" aria-label="Kanosena home">
-        <svg viewBox="0 0 1080 1080" aria-hidden="true"><rect width="1080" height="1080" rx="240" fill="#1F5F5B"/><path fill="#fff" d="M324 305h108v191l173-191h150L556 520l209 253H617L466 587l-34 35v151H324z"/></svg>
+        <svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-6 50 50)"><rect x="8" y="14" width="84" height="72" rx="17" fill="#FFE15A" stroke="#FFE15A" stroke-width="5"/><path fill="#121212" transform="translate(-10 -9) scale(.11)" d="M324 305h108v191l173-191h150L556 520l209 253H617L466 587l-34 35v151H324z"/></g></svg>
         Kanosena
       </a>
       <nav class="foot-links" aria-label="Footer">
@@ -328,12 +373,42 @@ footer{padding:48px 0 56px;font-size:14px;color:var(--muted)}
 </footer>
 
 <script>
-  // a hairline under the header once the page scrolls
-  (function () {
-    var h = document.querySelector('header');
-    var on = function () { h.classList.toggle('scrolled', window.scrollY > 4); };
-    window.addEventListener('scroll', on, { passive: true }); on();
-  })();
+(function () {
+  // a shadow under the header once the page scrolls
+  var h = document.querySelector('header');
+  var on = function () { h.classList.toggle('scrolled', window.scrollY > 4); };
+  window.addEventListener('scroll', on, { passive: true }); on();
+
+  // Example posts for four made-up businesses, each in its own colours and type.
+  // Kanosena's own stickers never go on these images.
+  var C = { bak: ['#F2A541', '#3B2416', '#FFF4E0'], est: ['#C9A45C', '#1C2B4A', '#F7F5F0'], gym: ['#E63B2E', '#111111', '#F2F2F2'], heat: ['#FF8A00', '#0E5AA7', '#FFFFFF'] };
+  function art(k) {
+    var c = C[k];
+    if (k === 'bak') return '<div style="position:absolute;inset:0;background:' + c[2] + '"></div><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M38 22 q-4 6 0 12 M50 18 q-4 6 0 12 M62 22 q-4 6 0 12" fill="none" stroke="' + c[1] + '" stroke-opacity=".35" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="50" cy="58" rx="36" ry="19" fill="' + c[0] + '"/><path d="M30 55 q6 -8 12 0 M44 53 q6 -8 12 0 M58 55 q6 -8 12 0" fill="none" stroke="' + c[1] + '" stroke-width="3" stroke-linecap="round"/></svg><div class="c-bak" style="position:absolute;left:0;right:0;bottom:0;background:' + c[1] + ';color:' + c[2] + ';padding:6cqw 7cqw;font-size:11cqw;line-height:1.05">Fresh from 7am</div>';
+    if (k === 'bak1') { c = C.bak; return '<div style="position:absolute;inset:0;background:' + c[2] + '"></div><svg viewBox="0 0 100 100" aria-hidden="true"><rect y="84" width="100" height="16" fill="' + c[0] + '" opacity=".3"/><ellipse cx="50" cy="80" rx="30" ry="15" fill="' + c[0] + '"/><path d="M34 78 q5 -7 10 0 M46 76 q5 -7 10 0 M58 78 q5 -7 10 0" fill="none" stroke="' + c[1] + '" stroke-width="2.6" stroke-linecap="round"/></svg><div style="position:absolute;left:7cqw;top:7cqw;right:7cqw;color:' + c[1] + '"><div style="font:700 4cqw/1 Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:' + c[0] + ';margin-bottom:2cqw">Weekend sourdough</div><div class="c-bak" style="font-size:12cqw;line-height:1">Order by Friday</div></div>'; }
+    if (k === 'bak2') { c = C.bak; var face = function (x, y, shirt, apron) { return '<path d="M' + (x - 22) + ' 100 C' + (x - 22) + ' ' + (y + 26) + ' ' + (x + 22) + ' ' + (y + 26) + ' ' + (x + 22) + ' 100Z" fill="' + shirt + '"/><path d="M' + (x - 8) + ' ' + (y + 30) + ' h16 v' + (70 - y) + ' h-16z" fill="' + apron + '"/><circle cx="' + x + '" cy="' + y + '" r="10" fill="#E8B48A"/><rect x="' + (x - 9) + '" y="' + (y - 13) + '" width="18" height="7" fill="#fff"/><circle cx="' + (x - 5) + '" cy="' + (y - 16) + '" r="6" fill="#fff"/><circle cx="' + (x + 5) + '" cy="' + (y - 17) + '" r="6.5" fill="#fff"/><circle cx="' + (x - 3.5) + '" cy="' + (y + 1) + '" r="1.2" fill="' + c[1] + '"/><circle cx="' + (x + 3.5) + '" cy="' + (y + 1) + '" r="1.2" fill="' + c[1] + '"/><path d="M' + (x - 4) + ' ' + (y + 5) + ' q4 3.5 8 0" fill="none" stroke="' + c[1] + '" stroke-width="1.3" stroke-linecap="round"/>'; }; return '<div style="position:absolute;inset:0;background:' + c[0] + '"></div><svg viewBox="0 0 100 100" aria-hidden="true">' + face(34, 58, c[1], c[2]) + face(68, 62, c[2], c[1]) + '</svg><div class="c-bak" style="position:absolute;left:6cqw;top:6cqw;background:' + c[2] + ';color:' + c[1] + ';border-radius:3cqw;padding:3cqw 4cqw;font-size:8cqw;line-height:1">Meet the bakers</div>'; }
+    if (k === 'est') return '<div style="position:absolute;inset:0;background:' + c[1] + '"></div><svg viewBox="0 0 100 100" aria-hidden="true"><rect x="8" y="8" width="84" height="56" fill="#BFD3E6" stroke="' + c[0] + '" stroke-width="1.6"/><rect x="8.8" y="52" width="82.4" height="11.2" fill="#8FB07A"/><path d="M26 38 L50 18 L74 38 Z" fill="#6B4A3A"/><rect x="31" y="38" width="38" height="20" fill="#C98C6E"/><rect x="46" y="44" width="8" height="14" fill="' + c[1] + '"/><rect x="35" y="42" width="7" height="6" fill="#EEF3F8"/><rect x="58" y="42" width="7" height="6" fill="#EEF3F8"/></svg><div style="position:absolute;left:8cqw;right:8cqw;bottom:7cqw;color:' + c[2] + '"><div style="font:600 3.6cqw/1 Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:' + c[0] + ';margin-bottom:1.5cqw">Just listed</div><div class="c-est" style="font-size:10cqw;line-height:1">3-bed terrace</div></div>';
+    if (k === 'gym') return '<div style="position:absolute;inset:0;background:' + c[1] + '"></div><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M60 64 C60 48 84 48 84 64" fill="none" stroke="#4A4A4A" stroke-width="5"/><circle cx="72" cy="74" r="15" fill="#3A3A3A"/><path d="M62 68 a12 12 0 0 1 8 -8" fill="none" stroke="' + c[0] + '" stroke-width="2.5" stroke-linecap="round"/></svg><div class="c-gym" style="position:absolute;left:7cqw;top:7cqw;right:7cqw;color:' + c[2] + ';font-size:16cqw;line-height:.92">6am class.<br><span style="color:' + c[0] + '">Spaces left.</span></div>';
+    return '<div style="position:absolute;inset:0;background:#DCE6EE"></div><svg viewBox="0 0 100 100" aria-hidden="true"><rect y="80" width="100" height="20" fill="#9AA6AE"/><rect x="10" y="50" width="58" height="28" rx="3" fill="#fff"/><path d="M68 56 H82 L90 66 V78 H68Z" fill="#fff"/><rect x="10" y="60" width="58" height="5" fill="' + c[0] + '"/><rect x="10" y="66" width="58" height="3" fill="' + c[1] + '"/><circle cx="24" cy="80" r="7" fill="#111"/><circle cx="78" cy="80" r="7" fill="#111"/></svg><div class="c-heat" style="position:absolute;left:0;right:0;top:0;background:' + c[1] + ';color:' + c[2] + ';padding:6cqw 7cqw;font-size:11cqw;line-height:.95">Boiler service<br><span style="color:' + c[0] + '">before winter</span></div>';
+  }
+  var sheet = [['bak', 'Bakery · Instagram'], ['est', 'Estate agency · Facebook'], ['gym', 'Gym · Instagram'], ['heat', 'Heating firm · Facebook']];
+  document.getElementById('sheet').innerHTML = sheet.map(function (s) {
+    return '<figure class="sf"><div class="art" role="img" aria-label="Example post for a made-up ' + s[1].split(' ·')[0].toLowerCase() + '">' + art(s[0]) + '</div><figcaption>' + s[1] + '</figcaption></figure>';
+  }).join('');
+
+  var EDIT = '<span class="btn btn-line">Edit</span>';
+  var cards = [
+    { k: 'bak', wh: 'Mon 23/11 · 07:30 · Instagram', cp: 'Our ovens are on before the town is awake. Pop in on your way to work and pick up a loaf while it’s still warm.', src: 'Source: “Open from 7am” on your opening hours page', ok: true },
+    { k: 'bak1', wh: 'Wed 25/11 · 12:30 · Facebook', cp: 'Weekend sourdough is back. Order by Friday so we can bake yours.', src: 'Source: your “Order” page' },
+    { k: 'bak2', wh: 'Fri 27/11 · 17:30 · LinkedIn', cp: 'Behind every loaf is a small team who start before dawn.', src: 'Source: your “About us” page' }
+  ];
+  document.getElementById('cards').innerHTML = cards.map(function (p) {
+    var act = p.ok
+      ? '<span class="stk ok">Approved!</span><span class="goes">Goes out Mon 23/11 at 07:30</span>'
+      : '<span class="stk wait">Waiting for you</span><span class="btns">' + EDIT + '<span class="btn btn-violet">Approve</span></span>';
+    return '<article class="card"><div class="art" role="img" aria-label="Example bakery post">' + art(p.k) + '</div><div class="bd"><span class="wh">' + p.wh + '</span><p class="cp">' + p.cp + '</p><span class="src">' + p.src + '</span></div><div class="act" aria-hidden="true">' + act + '</div></article>';
+  }).join('');
+})();
 </script>
 </body>
 </html>
