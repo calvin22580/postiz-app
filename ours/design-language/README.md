@@ -12,3 +12,8 @@ The rules that matter most:
 3. Every approved post says when it goes out, for example "Goes out Mon 23/11 at 07:30".
 4. Fonts: Dela Gothic One (display), Instrument Sans (interface), Caveat (scribbles, four words at most). All SIL Open Font License.
 5. Platform app icons keep the current teal K until Meta's app review is finished.
+
+Where it lives:
+
+- Homepage: `ours/site/public` (tokens copied into the page's `:root`).
+- App: `apps/frontend/src/ours/brand`. `brand.defaults.json` sets the violet, `brand.style.tsx` restyles upstream's purple and adds the fonts and the `k-display`, `k-hand` and `k-sticker` classes our own screens use, `sticker.k.tsx` is the mark, and `brand.fonts.ts` loads the fonts. No upstream file changed for the theme.

@@ -5,7 +5,16 @@
 // 2. Upstream also hard-codes its purple (#612BD3) and pinks (#FC69FF, #D82D7E)
 //    in Tailwind arbitrary-value classes such as bg-[#612BD3]. We restyle those
 //    generated classes here, so no upstream component has to change.
+//
+// 3. Story Mode (ours/design-language): our fonts for the whole app, and a few
+//    classes our own screens use for headings and status stickers.
 import { brand, shade } from '@gitroom/frontend/ours/brand/brand';
+import { jakartaSans } from '@gitroom/frontend/fonts/plus-jakarta-sans/plus.jakarta.sans.font';
+import {
+  caveat,
+  delaGothic,
+  instrumentSans,
+} from '@gitroom/frontend/ours/brand/brand.fonts';
 
 const PURPLES = ['612BD3', '612bd3', '7B3FF2'];
 const DARK_PURPLES = ['5520CB'];
@@ -63,9 +72,42 @@ export const brandCss = (c: string) => {
   return rules.join('\n');
 };
 
+// Fonts and status stickers. Stickers are statuses only, never decoration, and
+// never go on a customer's post or graphic.
+// Upstream also puts its font class on the app shell, so we override that too.
+export const storyCss = (fonts: {
+  ui: string;
+  display: string;
+  hand: string;
+  fallback: string;
+  fallbackClass: string;
+}) =>
+  [
+    `html:root body, html:root .${fonts.fallbackClass} { font-family: ${fonts.ui}, ${fonts.fallback}, system-ui, sans-serif; }`,
+    `.k-display { font-family: ${fonts.display}, 'Arial Black', sans-serif; font-weight: 400; letter-spacing: -0.01em; }`,
+    `.k-hand { font-family: ${fonts.hand}, cursive; font-weight: 700; }`,
+    `.k-sticker { display: inline-block; font-family: ${fonts.display}, 'Arial Black', sans-serif; font-weight: 400; font-size: 12px; line-height: 1.2; padding: 5px 10px; border-radius: 11px; border: 2.5px solid #121212; color: #121212; background: #fff; white-space: nowrap; }`,
+    `.k-sticker-wait { transform: rotate(-3deg); }`,
+    `.k-sticker-ok { background: #FFE15A; transform: rotate(3deg); }`,
+    `.k-sticker-off { background: transparent; border-color: currentColor; color: inherit; opacity: .75; }`,
+    `@media (prefers-reduced-motion: no-preference) { .k-sticker-slap { animation: k-slap 380ms cubic-bezier(.2, 1.4, .4, 1); } }`,
+    `@keyframes k-slap { from { transform: scale(1.5) rotate(0deg); opacity: 0; } to { transform: rotate(3deg); opacity: 1; } }`,
+  ].join('\n');
+
 export const BrandStyle = () => (
   <style
     id="brand-tokens"
-    dangerouslySetInnerHTML={{ __html: brandCss(brand.colour) }}
+    dangerouslySetInnerHTML={{
+      __html: [
+        brandCss(brand.colour),
+        storyCss({
+          ui: instrumentSans.style.fontFamily,
+          display: delaGothic.style.fontFamily,
+          hand: caveat.style.fontFamily,
+          fallback: jakartaSans.style.fontFamily,
+          fallbackClass: jakartaSans.className,
+        }),
+      ].join('\n'),
+    }}
   />
 );

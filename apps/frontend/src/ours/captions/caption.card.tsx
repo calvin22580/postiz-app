@@ -2,7 +2,7 @@
 // OURS: one post on the review screen. While it waits for the owner it can be
 // approved, edited, rewritten or rejected; a rejected post can be brought
 // back; an approved post is scheduled and no longer changes here.
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
@@ -31,7 +31,7 @@ export const SecondaryButton: FC<{
     disabled={disabled}
     data-testid={testId}
     className={clsx(
-      'h-[38px] px-[14px] rounded-[8px] border border-newBorder text-[14px] whitespace-nowrap hover:bg-newBgColorInner',
+      'h-[38px] px-[16px] rounded-full border-[2px] border-newBorder text-[14px] font-[600] whitespace-nowrap hover:bg-newBgColorInner',
       disabled && 'opacity-60'
     )}
   >
@@ -51,7 +51,7 @@ export const PrimarySmallButton: FC<{
     disabled={disabled}
     data-testid={testId}
     className={clsx(
-      'h-[38px] px-[16px] rounded-[8px] bg-btnPrimary text-white text-[14px] font-[500]',
+      'h-[38px] px-[18px] rounded-full bg-btnPrimary text-white text-[14px] font-[600]',
       disabled && 'opacity-60'
     )}
   >
@@ -82,6 +82,11 @@ export const CaptionCard: FC<{
   const [note, setNote] = useState('');
   const approved = caption.status === 'APPROVED';
   const rejected = caption.status === 'REJECTED';
+  // the Approved sticker slaps on only when the owner approves it here, not
+  // every time the page loads
+  const firstStatus = useRef(caption.status);
+  const justApproved = approved && firstStatus.current !== 'APPROVED';
+  const goesOut = newDayjs(caption.scheduledFor).format('ddd L [at] LT');
   const platform = PLATFORMS[caption.platform];
   // Milestone 6: UK dates are shown apart from profile facts, with their source
   const ukDates = caption.facts.filter((f) => f.field === 'seasonal');
@@ -167,10 +172,9 @@ export const CaptionCard: FC<{
       <span
         data-testid="caption-status"
         className={clsx(
-          'rounded-full px-[10px] py-[3px] text-[13px] border',
-          approved
-            ? 'border-btnPrimary text-btnPrimary'
-            : 'border-newBorder text-textItemBlur'
+          'k-sticker',
+          approved ? 'k-sticker-ok' : rejected ? 'k-sticker-off' : 'k-sticker-wait',
+          justApproved && 'k-sticker-slap'
         )}
       >
         {approved ? 'Approved and scheduled' : rejected ? 'Rejected' : 'Waiting for your approval'}
@@ -181,7 +185,7 @@ export const CaptionCard: FC<{
   if (rejected) {
     return (
       <article
-        className="flex flex-col gap-[10px] rounded-[14px] border border-dashed border-newBorder p-[16px]"
+        className="flex flex-col gap-[10px] rounded-[18px] border border-dashed border-newBorder p-[16px]"
         data-testid="caption-card"
         data-platform={caption.platform}
         data-status={caption.status}
@@ -213,7 +217,7 @@ export const CaptionCard: FC<{
 
   return (
     <article
-      className="flex flex-col gap-[14px] rounded-[14px] border border-newBorder bg-newBgColor p-[20px]"
+      className="flex flex-col gap-[14px] rounded-[18px] border border-newBorder bg-newBgColor p-[20px]"
       data-testid="caption-card"
       data-platform={caption.platform}
       data-status={caption.status}
@@ -326,9 +330,14 @@ export const CaptionCard: FC<{
       )}
 
       {approved ? (
-        <p className="text-[13px] text-textItemBlur">
-          Scheduled on a Sandbox channel (test only). It will not be published to any real account.
-        </p>
+        <div className="flex flex-col gap-[2px]">
+          <p className="text-[15px] font-[600]" data-testid="caption-goes-out">
+            Goes out {goesOut}
+          </p>
+          <p className="text-[13px] text-textItemBlur">
+            Scheduled on a Sandbox channel (test only). It will not be published to any real account.
+          </p>
+        </div>
       ) : mode === 'edit' ? (
         <div className="flex gap-[10px] flex-wrap">
           <PrimarySmallButton
