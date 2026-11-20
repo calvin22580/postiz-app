@@ -1,5 +1,7 @@
 # Meta screencast scripts
 
+**Recorded 19/11/2026** (`kanosena-meta-video-1.mov` to `-4.mov`, kept on Calvin's Mac, not in the repo). As recorded, the videos skip "What worked" (empty for test posts) and the post Preview page (still shows the upstream logo); video 3 and the end of video 4 show the post Statistics window only. Video 4 is one file.
+
 Meta wants one screencast per permission showing "the end-to-end user experience for that specific permission", showing "only how your app uses that permission", UI in English, with captions explaining anything that isn't obvious. Meta lets one video be attached to several permissions, so we record **four videos**, and attach each to the permissions it covers.
 
 ## Before recording
@@ -8,7 +10,7 @@ Meta wants one screencast per permission showing "the end-to-end user experience
 - Calvin's Facebook account has a role (admin) on the Meta app, so Development mode allows every permission.
 - Facebook Page and linked Instagram professional account ready **[FILL IN: names]**. Use a test post text that is plainly a test, e.g. "Test post from Kanosena: please ignore". It goes live on the real Page, so Calvin approves that wording before recording.
 - Browser: a clean Chrome window at 1280×800 or larger, English UI, no other tabs or bookmarks bar showing, zoom 100%.
-- Record with macOS screen recording (Cmd+Shift+5, "Record selected portion", the Chrome window only). Export MP4.
+- Record with macOS screen recording (Cmd+Shift+5, "Record selected portion", the Chrome window only). Save at 1080p or better (QuickTime .mov is fine), named `kanosena-meta-video-1` to `-4` in Downloads (the App Review Chrome prompt looks for these names).
 - Add captions afterwards (iMovie titles, or any editor), one short line per step, as below. Captions are in quotes.
 - Keep each video under 5 minutes. No passwords visible: type them before starting, or blur.
 
@@ -54,6 +56,6 @@ Record at least an hour after video 2 (insights take time; the app rechecks afte
 5. Open the account on instagram.com, show the post and comment.
 6. (After an hour, can be a cut) Back in Kanosena: post "Statistics", then "What worked". Caption: "instagram_manage_insights: results for this post".
 
-## Narration (optional)
+## Audio
 
-Meta does not require narration. If Calvin wants it, read the captions aloud. Plain British English, no claims beyond what is on screen.
+No narration or audio: Meta's submission guide asks for recordings with no audio (19/11/2026). Captions carry the explanation.

@@ -9,6 +9,19 @@ Sources, checked 16/11/2026:
 - Data deletion: https://developers.facebook.com/documentation/development/create-an-app/app-dashboard/data-deletion-callback
 - Data handling questions: https://developers.facebook.com/docs/resp-plat-initiatives/individual-processes/data-handling-questions/questions-preview
 
+## Submission state and plan (19/11/2026)
+
+This section is the current state. Older dated notes below are history.
+
+- **Ready:** app `Kanosena` (App ID 1614622909955028) on app.kanosena.com. Basic settings (privacy, terms, data deletion URLs, contact support@kanosena.com, teal K icon) set 19/11. Legal pages in force (PR #24). Test Page "Kanosena" and Instagram "kanosena.app" connected as channels on the review account (review@steadylamp.com, Growth plan).
+- **Request exactly 11 permissions:** pages_show_list, business_management, pages_manage_posts, pages_manage_engagement, pages_read_engagement, read_insights, pages_read_user_content (Meta dependency), instagram_basic, instagram_content_publish, instagram_manage_comments, instagram_manage_insights. The Facebook channel needs the first six (`checkScopes` is all-or-nothing), the Instagram channel needs the four instagram_* plus pages_show_list, pages_read_engagement and business_management.
+- **Business Verification: APPROVED (19/11/2026).** Background: Meta: Business Verification "is required for all apps making requests for Advanced Access" ([permissions reference](https://developers.facebook.com/docs/facebook-login/permissions)). The data handling questions only appear once it is approved ([submission guide](https://developers.facebook.com/documentation/resp-plat-initiatives/individual-processes/app-review/submission-guide)). 
+- **API calls: done** by recording the screencasts (19/11). Background: "Request advanced access" stays greyed out until each permission has a successful call in the last 30 days. Connecting covered the list/basic permissions. Publishing, commenting and insights calls happen when the screencasts are recorded (a real test post on the Kanosena Page and Instagram, which Calvin approves).
+- **Screencasts: recorded 19/11** by Calvin: `kanosena-meta-video-1.mov` (1:50, connect Page), `-2.mov` (1:48, Facebook post and first comment), `-3.mov` (0:51, Facebook post Statistics), `-4.mov` (4:34, Instagram connect, post, comment, Statistics). They leave out "What worked" (it shows nothing for test posts) and the post Preview page (it still shows the upstream logo; to fix before launch). The post Statistics windows cover the insights permissions.
+- **Tech Provider:** we serve other businesses, so we are a Tech Provider. Meta says the choice can't be undone: Calvin confirms when the dashboard asks.
+- **Channel slots:** the review account is on Growth (4 channels) and already has Sandbox, Facebook and Instagram. A reviewer who connects their own Page and Instagram would need 5. The reviewer instructions say the test channels are already connected so they can test publishing without connecting.
+- **Chrome prompt:** `chrome-meta-app-review.txt` (also in project files as `kanosena/chrome-meta-app-review-submit.txt`) fills in the whole submission and stops before "Submit for Review".
+
 ## What Meta requires, in short
 
 - We serve many businesses, so we are a **Tech Provider**: every permission needs **App Review for Advanced Access**, plus **Business Verification** of the Steady Lamp Ltd business portfolio and **Tech Provider access verification**.
@@ -115,6 +128,8 @@ Tick the "I agree that I will use this permission in compliance with its allowed
 
 ## Reviewer instructions (paste into App Review → "Reviewer instructions")
 
+The exact text to paste, matching the recorded videos, is in `chrome-meta-app-review.txt` (step 4). The version below is the original draft.
+
 Replace `<password>` with the test password from the password manager when pasting. Do not save it in this file.
 
 > **Website:** https://app.kanosena.com
@@ -135,13 +150,12 @@ Replace `<password>` with the test password from the password manager when pasti
 > 8. Open the Page on Facebook to see the post and comment.
 >
 > **See results (pages_read_engagement, read_insights)**
-> 9. Back in Kanosena, open the post in the calendar and click "Statistics" to see reach and engagement read from the Page. Insights can take a few minutes to appear after publishing.
-> 10. Click "What worked" in the left menu to see the same results summarised.
+> 9. Back in Kanosena, find the post in the calendar and click "Statistics" to see reach and engagement read from the Page. Insights can take an hour to appear after publishing.
 >
 > **Instagram (instagram_basic, instagram_content_publish, instagram_manage_comments, instagram_manage_insights)**
-> 11. Click "Add Channel", then "Instagram (Facebook Business)". Log in with Facebook and choose the Instagram professional account linked to your Page.
-> 12. Click "Create Post", select the Instagram avatar, add a photo (required by Instagram) and a caption, add a first comment with "Add comment", then "Post now". The post and comment appear on the Instagram account.
-> 13. Open the post in the calendar and click "Statistics", or open "What worked", to see insights.
+> 10. Click "Add Channel", then "Instagram (Facebook Business)". Log in with Facebook and choose the Instagram professional account linked to your Page.
+> 11. Click "Create Post", select the Instagram avatar, add a photo (required by Instagram) and a caption, add a first comment with "Add comment", then "Post now". The post and comment appear on the Instagram account.
+> 12. Find the Instagram post in the calendar and click "Statistics" to see its insights (allow up to an hour).
 >
 > A "Sandbox" channel is also connected to the test account. It is a simulated channel for demonstrations and never publishes anywhere; you can ignore it.
 >
