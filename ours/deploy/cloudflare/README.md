@@ -38,7 +38,7 @@ Plain settings are in `wrangler.jsonc` under `vars`. Secrets are set on the Work
 
 Every string var and secret on the Worker is passed to the container as an environment variable, so a new app setting only needs `vars` or a new secret. No code change is needed.
 
-This environment is a **demo for platform app reviews**: `SANDBOX_CHANNEL_ENABLED=true` (always labelled), `OURS_BILLING_MODE=stripe` with a Stripe sandbox key (test cards only, labelled "Test payments"), `DISABLE_REGISTRATION=true`. There are no Facebook, Instagram or LinkedIn keys until approvals land, and no `ANTHROPIC_API_KEY` yet (AI features use their demo fallbacks).
+This environment is a **demo for platform app reviews**: `SANDBOX_CHANNEL_ENABLED=true` (always labelled), `OURS_BILLING_MODE=stripe` with a Stripe sandbox key (test cards only, labelled "Test payments"), `DISABLE_REGISTRATION=true`. There are no Facebook, Instagram or LinkedIn keys until approvals land, and AI uses the `ANTHROPIC_API_KEY` sent by the GitHub deploy (see below). Without it, AI features use their demo fallbacks.
 
 ## One-time Temporal Cloud setup
 
@@ -80,4 +80,4 @@ It needs two repository secrets (Settings → Secrets and variables → Actions)
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`: an account API token created from the "Edit Cloudflare Workers" template, plus **Containers: Edit** if it's listed separately, scoped to this account and the `kanosena.com` and `steadylamp.com` zones.
 
-The app's secrets stay on the Worker. The workflow never sees them.
+The app's secrets stay on the Worker. The workflow never sees them, with one exception: if the repository secret `ANTHROPIC_API_KEY` is set, the workflow sends it with the deploy (`wrangler deploy --secrets-file`). Other Worker secrets are left as they are. To rotate the key, update the repository secret and run the workflow again. Never change Worker settings in the dashboard or through the settings API: on 20/11/2026 that dropped the container and took the site down.
