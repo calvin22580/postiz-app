@@ -6,9 +6,15 @@ The app itself stays at `https://app.kanosena.com` (`ours/deploy/cloudflare`).
 - **What it is:** plain static files in `public/`, served by a Cloudflare
   Worker with static assets (`wrangler.jsonc`, Worker `kanosena-site`). No
   build step, no Worker code, no cookies, no analytics, no third-party
-  requests. Fonts are Plus Jakarta Sans (OFL, `public/fonts/OFL.txt`), the same
-  files as `libraries/nestjs-libraries/src/ours/graphics/fonts`, converted to
-  WOFF2.
+  requests.
+- **Design:** the page follows the Story Mode design language in
+  `ours/design-language` (colours, type, stickers and the rules on what may
+  touch a customer's post). The colour tokens are copied into the page's
+  `:root` block as `--k-*`, matching `ours/design-language/tokens.css`.
+- **Fonts** are self-hosted Latin subsets in `public/fonts`, all under the SIL
+  Open Font Licence (licence text beside each file): Dela Gothic One for
+  headings, Instrument Sans for everything else, and Caveat for the short
+  handwritten notes.
 - **Prices and allowances** on the page are copied from
   `libraries/nestjs-libraries/src/ours/plans/plans.config.ts`. When those
   change, change the pricing section of `public/index.html` too. The page says
