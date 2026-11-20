@@ -1,0 +1,339 @@
+<!doctype html>
+<!-- OURS: the public homepage at kanosena.com. Plain static HTML, no cookies,
+     no trackers, no third-party requests. Prices and allowances come from
+     libraries/nestjs-libraries/src/ours/plans/plans.config.ts: change them
+     there first, then here. Details: ours/site/README.md -->
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kanosena: social media for small businesses. You approve, we handle the rest.</title>
+<meta name="description" content="Kanosena reads your website, writes a week of social media posts with branded graphics, and schedules them to Facebook, Instagram and LinkedIn once you have approved them. For UK businesses with 1 to 20 staff.">
+<link rel="canonical" href="https://kanosena.com/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Kanosena: you approve, we handle the rest">
+<meta property="og:description" content="Social media posts for UK small businesses, written from your own website and published only when you approve them.">
+<meta property="og:url" content="https://kanosena.com/">
+<meta name="theme-color" content="#1F5F5B">
+<link rel="preload" href="/fonts/PlusJakartaSans-ExtraBold.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Plus Jakarta Sans";src:url(/fonts/PlusJakartaSans-Medium.woff2) format("woff2");font-weight:400 600;font-display:swap}
+@font-face{font-family:"Plus Jakarta Sans";src:url(/fonts/PlusJakartaSans-ExtraBold.woff2) format("woff2");font-weight:700 800;font-display:swap}
+:root{
+  --teal:#1F5F5B;--teal-dark:#174A47;--teal-soft:#E8F0EF;--teal-line:#CFE0DE;
+  --ink:#16201F;--muted:#55625F;--line:#E3E8E7;--bg:#FAFBFA;--card:#FFFFFF;
+  --radius:14px;--max:1080px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 17px/1.6 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--teal)}
+a:focus-visible,.btn:focus-visible{outline:3px solid #7FB3AE;outline-offset:3px}
+h1,h2,h3{font-weight:800;line-height:1.15;letter-spacing:-.02em;margin:0}
+p{margin:0}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.skip{position:absolute;left:-999px}.skip:focus{left:16px;top:16px;background:#fff;padding:8px 12px;z-index:10}
+
+/* header */
+header{position:sticky;top:0;z-index:5;background:rgba(250,251,250,.92);backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid transparent}
+header.scrolled{border-bottom-color:var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:800;font-size:19px;letter-spacing:-.01em}
+.brand svg{width:32px;height:32px;flex:none}
+nav{display:flex;align-items:center;gap:26px}
+nav a{color:var(--ink);text-decoration:none;font-size:15px}
+nav a:hover{color:var(--teal)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;padding:12px 20px;font:700 16px/1.2 inherit;font-family:inherit;text-decoration:none;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-primary:hover{background:var(--teal-dark)}
+.btn-quiet{background:transparent;color:var(--teal);border-color:var(--teal-line)}
+.btn-quiet:hover{background:var(--teal-soft)}
+.btn-sm{padding:9px 16px;font-size:15px}
+@media (max-width:760px){nav .hide-sm{display:none}nav{gap:16px}}
+
+/* hero */
+.hero{padding:72px 0 88px}
+.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
+.eyebrow{display:inline-block;font-size:14px;font-weight:600;color:var(--teal);background:var(--teal-soft);border-radius:999px;padding:5px 12px;margin-bottom:22px}
+.hero h1{font-size:clamp(38px,5.4vw,58px)}
+.hero h1 span{color:var(--teal)}
+.lede{font-size:19px;color:var(--muted);margin:22px 0 32px;max-width:34em}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.small{font-size:14px;color:var(--muted)}
+.ctas + .small{margin-top:16px}
+
+/* example approval card */
+.example{position:relative}
+.example-label{font-size:13px;color:var(--muted);margin:0 0 10px 4px}
+.post{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 1px 2px rgba(22,32,31,.04),0 12px 32px rgba(22,32,31,.07);overflow:hidden}
+.post-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px}
+.post-head strong{font-weight:700}
+.pill{font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;background:#FFF4DC;color:#7A5A12}
+.post-image{margin:16px 18px 0;aspect-ratio:4/3;border-radius:12px;background:var(--teal);color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:22px}
+.post-image b{font-size:24px;line-height:1.2;font-weight:800;max-width:11em}
+.post-image i{font-style:normal;font-size:13px;opacity:.8;margin-top:8px}
+.post-body{padding:14px 18px 4px;font-size:15px;line-height:1.55}
+.post-source{margin:8px 18px 0;font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:flex-start}
+.post-source svg{flex:none;margin-top:2px}
+.post-actions{display:flex;gap:8px;padding:16px 18px 18px}
+.post-actions span{flex:1;text-align:center;font-size:14px;font-weight:700;border-radius:9px;padding:9px 0;border:1px solid var(--line);color:var(--ink)}
+.post-actions span.ok{background:var(--teal);border-color:var(--teal);color:#fff}
+
+/* sections */
+section{scroll-margin-top:68px;padding:88px 0;border-top:1px solid var(--line)}
+.section-head{max-width:640px;margin-bottom:44px}
+.section-head h2{font-size:clamp(28px,3.6vw,38px)}
+.section-head p{color:var(--muted);margin-top:14px;font-size:18px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;counter-reset:step;list-style:none;margin:0;padding:0}
+.steps li{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
+.steps li::before{counter-increment:step;content:counter(step);display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--teal-soft);color:var(--teal);font-weight:800;margin-bottom:16px}
+.steps h3{font-size:18px;margin-bottom:8px}
+.steps p{color:var(--muted);font-size:15.5px}
+
+.promises{display:grid;grid-template-columns:repeat(2,1fr);gap:20px 48px;list-style:none;margin:0;padding:0}
+.promises li{display:flex;gap:14px}
+.promises svg{flex:none;margin-top:3px}
+.promises h3{font-size:18px;margin-bottom:4px}
+.promises p{color:var(--muted);font-size:15.5px}
+
+.platforms{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
+.platforms span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:15px;font-weight:600}
+
+/* pricing */
+.notice{background:var(--teal-soft);border:1px solid var(--teal-line);border-radius:var(--radius);padding:18px 22px;margin-bottom:28px;font-size:16px}
+.notice strong{font-weight:700}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.plan{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:28px;display:flex;flex-direction:column}
+.plan.featured{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal)}
+.plan h3{font-size:20px}
+.plan .price{color:var(--ink);margin:14px 0 6px;font-size:40px;font-weight:800;letter-spacing:-.02em}
+.plan .price small{font-size:16px;font-weight:500;color:var(--muted);letter-spacing:0}
+.plan .summary{color:var(--muted);font-size:15.5px;min-height:3.1em}
+.plan ul{list-style:none;padding:0;margin:20px 0 0;border-top:1px solid var(--line)}
+.plan li{padding:11px 0;border-bottom:1px solid var(--line);font-size:15px;display:flex;justify-content:space-between;gap:12px}
+.plan li b{font-weight:700;white-space:nowrap}
+.fine{margin-top:20px;font-size:14px;color:var(--muted)}
+
+/* faq */
+.faq{max-width:760px}
+.faq details{border-bottom:1px solid var(--line);padding:4px 0}
+.faq summary{cursor:pointer;list-style:none;padding:18px 36px 18px 0;font-weight:700;font-size:17.5px;position:relative}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"";position:absolute;right:8px;top:26px;width:10px;height:10px;border-right:2px solid var(--teal);border-bottom:2px solid var(--teal);transform:rotate(45deg);transition:transform .15s}
+.faq details[open] summary::after{transform:rotate(-135deg);top:30px}
+.faq details p{color:var(--muted);padding:0 0 20px;font-size:16px}
+
+/* closing */
+.closing{background:var(--teal);color:#fff;border-top:0}
+.closing h2{font-size:clamp(28px,3.6vw,38px)}
+.closing p{opacity:.88;margin:14px 0 28px;font-size:18px;max-width:36em}
+.closing .btn-primary{background:#fff;color:var(--teal)}
+.closing .btn-primary:hover{background:var(--teal-soft)}
+.closing .btn-quiet{color:#fff;border-color:rgba(255,255,255,.4)}
+.closing .btn-quiet:hover{background:rgba(255,255,255,.08)}
+
+footer{padding:48px 0 56px;font-size:14px;color:var(--muted)}
+.foot{display:flex;justify-content:space-between;gap:32px;flex-wrap:wrap}
+.foot-links{display:flex;flex-wrap:wrap;gap:8px 22px}
+.foot-links a{color:var(--muted)}
+.foot-links a:hover{color:var(--teal)}
+.legal{margin-top:18px;max-width:46em}
+
+@media (max-width:900px){
+  .hero{padding:48px 0 64px}
+  .hero-grid{grid-template-columns:1fr;gap:44px}
+  .example{max-width:440px}
+  .steps{grid-template-columns:repeat(2,1fr)}
+  .plans{grid-template-columns:1fr;max-width:480px}
+  .plan .summary{min-height:0}
+}
+@media (max-width:600px){
+  body{font-size:16px}
+  .wrap{padding:0 16px}
+  section{padding:64px 0}
+  .steps,.promises{grid-template-columns:1fr}
+  .lede{font-size:17.5px}
+  .ctas .btn{flex:1 1 auto}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header id="top">
+  <div class="wrap bar">
+    <a class="brand" href="/" aria-label="Kanosena home">
+      <svg viewBox="0 0 1080 1080" aria-hidden="true"><rect width="1080" height="1080" rx="240" fill="#1F5F5B"/><path fill="#fff" d="M324 305h108v191l173-191h150L556 520l209 253H617L466 587l-34 35v151H324z"/></svg>
+      <span>Kanosena</span>
+    </a>
+    <nav aria-label="Main">
+      <a class="hide-sm" href="#how">How it works</a>
+      <a class="hide-sm" href="#pricing">Pricing</a>
+      <a href="https://app.kanosena.com/auth/login">Log in</a>
+      <a class="btn btn-primary btn-sm" href="https://app.kanosena.com/auth">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">For UK businesses with 1 to 20 staff</span>
+        <h1>Social media, done for you. <span>You approve. We handle the rest.</span></h1>
+        <p class="lede">Kanosena reads your website, writes a week of posts with branded graphics, and schedules them to Facebook, Instagram and LinkedIn. Nothing goes out until you have said yes.</p>
+        <div class="ctas">
+          <a class="btn btn-primary" href="https://app.kanosena.com/auth">Get started free</a>
+          <a class="btn btn-quiet" href="#how">See how it works</a>
+        </div>
+        <p class="small">Free while we test with our first businesses. No card needed to start.</p>
+      </div>
+
+      <div class="example" aria-label="Example of a post waiting for approval">
+        <p class="example-label">Example of a post waiting for your approval</p>
+        <div class="post">
+          <div class="post-head"><strong>Tuesday, 10:00 · Instagram</strong><span class="pill">Waiting for you</span></div>
+          <div class="post-image"><b>Fresh bread, baked here every morning from 7am</b><i>Your business name</i></div>
+          <p class="post-body">Our ovens are on before the town is awake. Pop in on your way to work and pick up a loaf while it's still warm.</p>
+          <p class="post-source"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path fill="#55625F" d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm1.2 8H6.8v-1h.7V8h-.7V7h1.9v4h.5v1z"/></svg>Source: “Open from 7am” on your website’s opening hours page</p>
+          <div class="post-actions" aria-hidden="true"><span class="ok">Approve</span><span>Edit</span><span>Rewrite</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>How it works</h2>
+        <p>Four steps. The only one that needs you each week is the third.</p>
+      </div>
+      <ol class="steps">
+        <li><h3>We read your website</h3><p>Give us your web address. We build a short profile of your business, and every fact shows where it came from. You can edit any of it.</p></li>
+        <li><h3>We write your week</h3><p>A week of posts and simple branded graphics, in your colours, written only from your profile. UK dates and seasons are taken into account.</p></li>
+        <li><h3>You approve</h3><p>Approve, edit, reject or ask for a new version of each post. Only the posts you approve are scheduled.</p></li>
+        <li><h3>We publish and report back</h3><p>Approved posts go out at the planned time to the accounts you connected, and we show you how they did.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="control">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>You stay in charge</h2>
+        <p>It's your business and your name. We built Kanosena around that.</p>
+      </div>
+      <ul class="promises">
+        <li><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E8F0EF"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#1F5F5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><h3>Nothing goes out without your yes</h3><p>Every post waits for your approval. You can change or cancel a scheduled post any time before it goes out.</p></div></li>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E8F0EF"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#1F5F5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><h3>No made-up facts</h3><p>Posts are written from what your own website says. We don't invent prices, offers, reviews or claims about your business.</p></div></li>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E8F0EF"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#1F5F5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><h3>Your accounts stay yours</h3><p>You connect your accounts through each platform's own login screen, and you can disconnect them at any time.</p></div></li>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#E8F0EF"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#1F5F5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><h3>Your data isn't for sale</h3><p>We never send messages on your behalf, and never use your platform data for advertising or to train AI models.</p></div></li>
+      </ul>
+      <div style="margin-top:48px">
+        <p class="small" style="margin-bottom:10px">Where your posts go</p>
+        <div class="platforms"><span>Facebook Pages</span><span>Instagram business accounts</span><span>LinkedIn Pages</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Simple monthly plans</h2>
+        <p>One price a month, no setup fee.</p>
+      </div>
+      <p class="notice"><strong>Free while we test.</strong> Kanosena is free for our first businesses. These are the prices we plan to charge after that. We won't charge you anything without telling you the price and getting your agreement first.</p>
+      <div class="plans">
+        <div class="plan">
+          <h3>Starter</h3>
+          <p class="price">£79 <small>a month</small></p>
+          <p class="summary">A post every weekday on one platform.</p>
+          <ul>
+            <li>Posts scheduled each month <b>25</b></li>
+            <li>Connected accounts <b>2</b></li>
+            <li>New versions of a post <b>20</b></li>
+          </ul>
+        </div>
+        <div class="plan featured">
+          <h3>Growth</h3>
+          <p class="price">£149 <small>a month</small></p>
+          <p class="summary">A post every weekday on two platforms.</p>
+          <ul>
+            <li>Posts scheduled each month <b>50</b></li>
+            <li>Connected accounts <b>4</b></li>
+            <li>New versions of a post <b>60</b></li>
+          </ul>
+        </div>
+        <div class="plan">
+          <h3>Pro</h3>
+          <p class="price">£299 <small>a month</small></p>
+          <p class="summary">A post every weekday on all three platforms, with room to spare.</p>
+          <ul>
+            <li>Posts scheduled each month <b>100</b></li>
+            <li>Connected accounts <b>8</b></li>
+            <li>New versions of a post <b>150</b></li>
+          </ul>
+        </div>
+      </div>
+      <p class="fine">Every plan includes your business profile, branded graphics and a report on how your posts did. Planned prices, which may change before launch.</p>
+    </div>
+  </section>
+
+  <section id="questions">
+    <div class="wrap">
+      <div class="section-head"><h2>Questions</h2></div>
+      <div class="faq">
+        <details><summary>Do I need to write anything?</summary><p>No. You give us your web address and we write the posts. You read them, change anything you like, and approve the ones you're happy with.</p></details>
+        <details><summary>What if my website is out of date?</summary><p>You can edit your business profile at any time. Posts are written from the profile, so fixing a fact there fixes it for every post after that.</p></details>
+        <details><summary>Which accounts can I connect?</summary><p>Facebook Pages, Instagram business or creator accounts linked to a Facebook Page, and LinkedIn Pages. Personal profiles aren't supported.</p></details>
+        <details><summary>Can I stop at any time?</summary><p>Yes. You can disconnect your accounts whenever you like, and ask us to delete your data. See <a href="https://app.kanosena.com/data-deletion.html">how to delete your data</a>.</p></details>
+        <details><summary>Who is behind Kanosena?</summary><p>Kanosena is run by Steady Lamp Ltd, a company registered in England and Wales. You can reach us at <a href="mailto:support@kanosena.com">support@kanosena.com</a>.</p></details>
+        <details><summary>Is it open source?</summary><p>Yes. Kanosena is built on open-source software under the GNU Affero General Public License, and <a href="https://github.com/calvin22580/postiz-app">our source code</a> is public.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div class="wrap">
+      <h2>Get your first week of posts</h2>
+      <p>Tell us your web address and we'll draft a week of posts for you to review. Nothing is published until you approve it.</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="https://app.kanosena.com/auth">Get started free</a>
+        <a class="btn btn-quiet" href="mailto:support@kanosena.com">Email us a question</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <a class="brand" href="/" aria-label="Kanosena home">
+        <svg viewBox="0 0 1080 1080" aria-hidden="true"><rect width="1080" height="1080" rx="240" fill="#1F5F5B"/><path fill="#fff" d="M324 305h108v191l173-191h150L556 520l209 253H617L466 587l-34 35v151H324z"/></svg>
+        Kanosena
+      </a>
+      <nav class="foot-links" aria-label="Footer">
+        <a href="https://app.kanosena.com/about.html">About</a>
+        <a href="https://app.kanosena.com/privacy.html">Privacy policy</a>
+        <a href="https://app.kanosena.com/terms.html">Terms of service</a>
+        <a href="https://app.kanosena.com/data-deletion.html">Data deletion</a>
+        <a href="mailto:support@kanosena.com">support@kanosena.com</a>
+        <a href="https://github.com/calvin22580/postiz-app">Source code</a>
+      </nav>
+    </div>
+    <p class="legal">© 2026 Steady Lamp Ltd. Registered in England and Wales, company number 17533499. Registered office: 128 City Road, London, EC1V 2NX.</p>
+  </div>
+</footer>
+
+<script>
+  // a hairline under the header once the page scrolls
+  (function () {
+    var h = document.querySelector('header');
+    var on = function () { h.classList.toggle('scrolled', window.scrollY > 4); };
+    window.addEventListener('scroll', on, { passive: true }); on();
+  })();
+</script>
+</body>
+</html>

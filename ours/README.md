@@ -13,6 +13,7 @@ Everything in this fork that is ours rather than upstream Postiz. Read
 | Frontend code | `apps/frontend/src/ours/` (brand, locale, developer-tools, sandbox, profile, captions, graphics, seasonal) |
 | Frontend routes | `apps/frontend/src/app/(app)/(site)/{sandbox,business-profile,captions}/` (new files only) |
 | Browser tests | `ours/e2e/` (standalone package, outside the pnpm workspace) |
+| Homepage at kanosena.com (static, own Worker) | `ours/site/` (see its README) |
 
 ## Brand
 
