@@ -70,7 +70,7 @@ const Card: FC<{ children: React.ReactNode; className?: string; testId?: string 
 }) => (
   <section
     data-testid={testId}
-    className={clsx('flex flex-col gap-[16px] rounded-[18px] border border-newBorder bg-newBgColor p-[20px]', className)}
+    className={clsx('flex flex-col gap-[16px] rounded-[14px] border border-newBorder bg-newBgColor p-[20px]', className)}
   >
     {children}
   </section>
@@ -266,7 +266,7 @@ const PlanOption: FC<{
   return (
     <li
       className={clsx(
-        'flex flex-col gap-[14px] rounded-[18px] border bg-newBgColor p-[20px]',
+        'flex flex-col gap-[14px] rounded-[14px] border bg-newBgColor p-[20px]',
         current ? 'border-btnPrimary' : 'border-newBorder'
       )}
       data-testid="plan-option"
@@ -300,7 +300,7 @@ const PlanOption: FC<{
               onClick={() => onChoose(card.key)}
               data-testid="plan-option-choose"
               className={clsx(
-                'h-[40px] px-[16px] rounded-full bg-btnPrimary text-white text-[14px] font-[500] whitespace-nowrap',
+                'h-[40px] px-[16px] rounded-[10px] bg-btnPrimary text-white text-[14px] font-[500] whitespace-nowrap',
                 busy && 'opacity-60'
               )}
             >
@@ -434,7 +434,7 @@ export const PlanPage: FC = () => {
   return (
     <Shell>
       <div className="flex flex-col gap-[6px]">
-        <h1 className="k-display text-[28px] leading-[1.15]" data-testid="plan-heading">
+        <h1 className="text-[26px] font-[600]" data-testid="plan-heading">
           Plan and usage
         </h1>
         <p className="text-[15px] leading-[1.6] text-textItemBlur">
@@ -450,8 +450,8 @@ export const PlanPage: FC = () => {
         </Notice>
       ) : !data ? (
         <div className="flex flex-col gap-[16px]" aria-busy="true">
-          <div className="h-[140px] rounded-[18px] bg-newBgLineColor animate-pulse" />
-          <div className="h-[260px] rounded-[18px] bg-newBgLineColor animate-pulse" />
+          <div className="h-[140px] rounded-[14px] bg-newBgLineColor animate-pulse" />
+          <div className="h-[260px] rounded-[14px] bg-newBgLineColor animate-pulse" />
         </div>
       ) : (
         <>

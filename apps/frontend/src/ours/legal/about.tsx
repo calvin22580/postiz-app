@@ -36,7 +36,7 @@ export const About: FC<{ facts: LegalFacts }> = ({ facts }) => {
       <p>
         <a
           href="/auth/login"
-          className="inline-block rounded-full bg-btnPrimary px-[18px] py-[10px] font-[600] text-white"
+          className="inline-block rounded-[8px] bg-btnPrimary px-[18px] py-[10px] font-[600] text-white"
         >
           Log in
         </a>

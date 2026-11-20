@@ -32,7 +32,7 @@ const SmallButton: FC<{
     onClick={onClick}
     disabled={disabled}
     className={clsx(
-      'h-[34px] px-[14px] rounded-full text-[14px] font-[600] whitespace-nowrap',
+      'h-[34px] px-[14px] rounded-[8px] text-[14px] font-[500] whitespace-nowrap',
       primary ? 'bg-btnPrimary text-white' : 'border border-newBorder',
       disabled && 'opacity-60'
     )}
@@ -75,7 +75,7 @@ export const BrandKitPanel: FC = () => {
 
   if (error) {
     return (
-      <div className="rounded-[18px] border border-newBorder bg-newBgColor p-[20px] text-[14px]">
+      <div className="rounded-[14px] border border-newBorder bg-newBgColor p-[20px] text-[14px]">
         We couldn’t load your graphic settings.{' '}
         <button type="button" className="underline" onClick={() => mutate()}>
           Try again
@@ -84,7 +84,7 @@ export const BrandKitPanel: FC = () => {
     );
   }
   if (!kit) {
-    return <div className="h-[132px] rounded-[18px] bg-newBgLineColor animate-pulse" />;
+    return <div className="h-[132px] rounded-[14px] bg-newBgLineColor animate-pulse" />;
   }
 
   const saved = async (res: Response, fallback: string) => {
@@ -139,7 +139,7 @@ export const BrandKitPanel: FC = () => {
 
   return (
     <section
-      className="flex flex-col gap-[16px] rounded-[18px] border border-newBorder bg-newBgColor p-[20px]"
+      className="flex flex-col gap-[16px] rounded-[14px] border border-newBorder bg-newBgColor p-[20px]"
       data-testid="brand-kit"
     >
       <div className="flex flex-col gap-[4px]">

@@ -2,7 +2,6 @@
 // OURS: replaces upstream's square logo (components/new-layout/logo) through a
 // module alias in ours/next/with-ours.mjs. Same footprint (60x60).
 import { brand } from '@gitroom/frontend/ours/brand/brand';
-import { StickerK } from '@gitroom/frontend/ours/brand/sticker.k';
 
 export const Logo = () => {
   if (brand.logoUrl) {
@@ -19,12 +18,12 @@ export const Logo = () => {
   }
   return (
     <div
-      role="img"
       aria-label={brand.name}
       title={brand.name}
-      className="mt-[8px] w-[60px] h-[60px] flex items-center justify-center select-none"
+      className="mt-[8px] w-[60px] h-[60px] rounded-[14px] flex items-center justify-center text-white text-[26px] font-[700] select-none"
+      style={{ backgroundColor: brand.colour }}
     >
-      <StickerK size={52} />
+      {brand.name.slice(0, 1).toUpperCase()}
     </div>
   );
 };

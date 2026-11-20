@@ -2,7 +2,6 @@
 // through a module alias in ours/next/with-ours.mjs.
 import React from 'react';
 import { brand } from '@gitroom/frontend/ours/brand/brand';
-import { StickerK } from '@gitroom/frontend/ours/brand/sticker.k';
 
 export const LogoTextComponent = () => {
   if (brand.logoUrl) {
@@ -13,8 +12,16 @@ export const LogoTextComponent = () => {
   }
   return (
     <div className="flex items-center gap-[10px] h-[33px] select-none">
-      <StickerK size={34} />
-      <span className="k-display text-[23px]">{brand.name}</span>
+      <span
+        className="w-[28px] h-[28px] rounded-[7px] flex items-center justify-center text-white text-[16px] font-[700]"
+        style={{ backgroundColor: brand.colour }}
+        aria-hidden="true"
+      >
+        {brand.name.slice(0, 1).toUpperCase()}
+      </span>
+      <span className="text-[24px] font-[600] tracking-[-0.01em]">
+        {brand.name}
+      </span>
     </div>
   );
 };
