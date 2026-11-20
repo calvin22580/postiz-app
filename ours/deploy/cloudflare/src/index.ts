@@ -13,7 +13,10 @@
 
 import { DurableObject } from 'cloudflare:workers';
 
-const INSTANCE_NAME = 'app';
+// Changed from 'app' on 20/11/2026: a settings-API edit left the 'app'
+// instance without a container (ctx.container undefined) even after
+// redeploys, so the app now runs in a fresh instance.
+const INSTANCE_NAME = 'app-2';
 const PORT = 5000;
 // Longer than the 1-minute cron, so the container never idles out between ticks.
 const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
@@ -77,7 +80,10 @@ export class AppContainer extends DurableObject<Env> {
 
   // Called every minute by the cron trigger.
   async keepAlive(): Promise<void> {
-    const container = this.ctx.container!;
+    const container = this.ctx.container;
+    if (!container) {
+      throw new Error('No container is attached to this Durable Object instance');
+    }
     const current = await fingerprint(container.images.base, containerEnv(this.env));
     const startedWith = await this.ctx.storage.get<string>('fingerprint');
     if (container.running && startedWith !== current) {
