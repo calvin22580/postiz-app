@@ -81,7 +81,7 @@ nav a:hover{color:var(--teal)}
 .post-actions span.ok{background:var(--teal);border-color:var(--teal);color:#fff}
 
 /* sections */
-section{padding:88px 0;border-top:1px solid var(--line)}
+section{scroll-margin-top:68px;padding:88px 0;border-top:1px solid var(--line)}
 .section-head{max-width:640px;margin-bottom:44px}
 .section-head h2{font-size:clamp(28px,3.6vw,38px)}
 .section-head p{color:var(--muted);margin-top:14px;font-size:18px}
@@ -107,9 +107,9 @@ section{padding:88px 0;border-top:1px solid var(--line)}
 .plan{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:28px;display:flex;flex-direction:column}
 .plan.featured{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal)}
 .plan h3{font-size:20px}
-.plan .price{margin:14px 0 6px;font-size:40px;font-weight:800;letter-spacing:-.02em}
+.plan .price{color:var(--ink);margin:14px 0 6px;font-size:40px;font-weight:800;letter-spacing:-.02em}
 .plan .price small{font-size:16px;font-weight:500;color:var(--muted);letter-spacing:0}
-.plan > p{color:var(--muted);font-size:15.5px;min-height:3.1em}
+.plan .summary{color:var(--muted);font-size:15.5px;min-height:3.1em}
 .plan ul{list-style:none;padding:0;margin:20px 0 0;border-top:1px solid var(--line)}
 .plan li{padding:11px 0;border-bottom:1px solid var(--line);font-size:15px;display:flex;justify-content:space-between;gap:12px}
 .plan li b{font-weight:700;white-space:nowrap}
@@ -146,7 +146,7 @@ footer{padding:48px 0 56px;font-size:14px;color:var(--muted)}
   .example{max-width:440px}
   .steps{grid-template-columns:repeat(2,1fr)}
   .plans{grid-template-columns:1fr;max-width:480px}
-  .plan > p{min-height:0}
+  .plan .summary{min-height:0}
 }
 @media (max-width:600px){
   body{font-size:16px}
@@ -249,7 +249,7 @@ footer{padding:48px 0 56px;font-size:14px;color:var(--muted)}
         <div class="plan">
           <h3>Starter</h3>
           <p class="price">£79 <small>a month</small></p>
-          <p>A post every weekday on one platform.</p>
+          <p class="summary">A post every weekday on one platform.</p>
           <ul>
             <li>Posts scheduled each month <b>25</b></li>
             <li>Connected accounts <b>2</b></li>
@@ -259,7 +259,7 @@ footer{padding:48px 0 56px;font-size:14px;color:var(--muted)}
         <div class="plan featured">
           <h3>Growth</h3>
           <p class="price">£149 <small>a month</small></p>
-          <p>A post every weekday on two platforms.</p>
+          <p class="summary">A post every weekday on two platforms.</p>
           <ul>
             <li>Posts scheduled each month <b>50</b></li>
             <li>Connected accounts <b>4</b></li>
@@ -269,7 +269,7 @@ footer{padding:48px 0 56px;font-size:14px;color:var(--muted)}
         <div class="plan">
           <h3>Pro</h3>
           <p class="price">£299 <small>a month</small></p>
-          <p>A post every weekday on all three platforms, with room to spare.</p>
+          <p class="summary">A post every weekday on all three platforms, with room to spare.</p>
           <ul>
             <li>Posts scheduled each month <b>100</b></li>
             <li>Connected accounts <b>8</b></li>
