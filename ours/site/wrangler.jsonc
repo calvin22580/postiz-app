@@ -1,0 +1,21 @@
+// OURS: the public homepage at kanosena.com. Static files only (no Worker
+// code), served by Cloudflare Workers static assets. Deploy steps: README.md.
+{
+  "$schema": "https://unpkg.com/wrangler@4.162.0/config-schema.json",
+  "name": "kanosena-site",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./public",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  // kanosena.com is the address customers see; www serves the same page (the
+  // page's canonical link points at kanosena.com). The app stays on
+  // app.kanosena.com (ours/deploy/cloudflare). workers.dev is kept on for
+  // previews before a change goes live.
+  "routes": [
+    { "pattern": "kanosena.com", "custom_domain": true },
+    { "pattern": "www.kanosena.com", "custom_domain": true }
+  ],
+  "workers_dev": true
+}
