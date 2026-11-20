@@ -128,6 +128,32 @@ describe('demo extractor', () => {
     expect(dropped).toBe(0);
     expect(out.usages).toEqual([]);
   });
+
+  // Seen on a real bakery site on 20/11/2026: a social call to action as the
+  // first heading, and links run straight into the text before them.
+  it('skips call-to-action headings and unglues links from emails', async () => {
+    const url = 'https://bakery.example/';
+    const pages = [
+      {
+        url,
+        title: 'OAK STREET BAKERY - HOME',
+        text: [
+          '## FOLLOW US ON INSTAGRAM (https://www.instagram.com/oak.bakery/)',
+          'Welcome to OAK STREET BAKERY, a family bakery baking fresh bread every day for the town.',
+          'Email: info@oakbakery.example.co.ukhttps://instagram.com/oak.bakeryhttps://facebook.com/oakbakery',
+        ].join('\n'),
+      },
+    ];
+    const out = await new DemoProfileExtractor().extract(pages as any);
+    const { fields } = groundExtraction(out.raw, pages as any);
+    expect(fields.businessName.claims.map((c) => c.value)).toEqual(['OAK STREET BAKERY']);
+    expect(fields.email.claims.map((c) => c.value)).toEqual(['info@oakbakery.example.co.uk']);
+    expect(fields.socialLinks.claims.map((c) => c.value)).toEqual([
+      'https://www.instagram.com/oak.bakery/',
+      'https://instagram.com/oak.bakery',
+      'https://facebook.com/oakbakery',
+    ]);
+  });
 });
 
 // The model returns one flat list of claims, each naming its field.

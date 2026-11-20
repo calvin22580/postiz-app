@@ -21,6 +21,14 @@ const claim = (value: string, url: string, quote: string) => ({
 
 const lines = (page: ExtractorPage) => page.text.split('\n').map((l) => l.trim());
 
+// Some sites run a link straight into the text before it ("…co.ukhttps://…"),
+// which glued an email to "https" and two social links together. Split them
+// apart before matching; each piece is still a substring of the page.
+const unglue = (l: string) => l.replace(/(\S)(https?:\/\/)/g, '$1 $2');
+
+// Headings that are calls to action or links, not the business's name.
+const NOT_A_NAME = /https?:\/\/|www\.|\b(follow us|sign up|subscribe|contact us|get in touch|book now|order now|shop now|welcome to)\b/i;
+
 export class DemoProfileExtractor implements ProfileExtractor {
   readonly name = 'demo' as const;
 
@@ -32,7 +40,7 @@ export class DemoProfileExtractor implements ProfileExtractor {
     const home = pages[0];
 
     // name: the first heading, or the title before any separator
-    const heading = home && lines(home).find((l) => l.startsWith('## '));
+    const heading = home && lines(home).find((l) => l.startsWith('## ') && !NOT_A_NAME.test(l));
     if (heading) {
       const name = heading.replace(/^## /, '');
       add('businessName', claim(name, home.url, name));
@@ -64,7 +72,7 @@ export class DemoProfileExtractor implements ProfileExtractor {
           add('services', claim(item, page.url, item));
         }
       }
-      for (const l of ls) {
+      for (const l of ls.map(unglue)) {
         const email = l.match(EMAIL)?.[0];
         if (email) add('email', claim(email, page.url, email));
         const phone = l.match(UK_PHONE)?.[0];

@@ -68,7 +68,10 @@
     // won't put next to OpenID Connect, so the personal LinkedIn channel
     // (openid/profile) can't work: we offer LinkedIn Page only. See
     // ours/docs/platform-review/linkedin.md.
-    "HIDDEN_PROVIDERS": "instagram-standalone,linkedin"
+    // Everything else we don't offer (and have no developer app for) is hidden
+    // too, so the add-channel list shows only Facebook Page, Instagram,
+    // LinkedIn Page and the labelled Sandbox (20/11/2026).
+    "HIDDEN_PROVIDERS": "instagram-standalone,linkedin,x,reddit,threads,youtube,gmb,tiktok,tiktok-business,pinterest,dribbble,discord,slack,kick,twitch,mastodon,bluesky,lemmy,wrapcast,telegram,nostr,vk,medium,devto,hashnode,wordpress,listmonk,moltbook,whop,skool,mewe,tumblr"
   },
   "secrets": {
     "required": [
