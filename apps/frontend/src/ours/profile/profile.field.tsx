@@ -128,7 +128,7 @@ export const ProfileFieldCard: FC<{
               onClick={save}
               disabled={saving}
               className={clsx(
-                'h-[38px] px-[18px] rounded-[8px] bg-btnPrimary text-white text-[14px] font-[500]',
+                'h-[38px] px-[18px] rounded-full bg-btnPrimary text-white text-[14px] font-[500]',
                 saving && 'opacity-60'
               )}
             >

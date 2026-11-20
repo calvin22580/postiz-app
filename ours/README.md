@@ -22,10 +22,11 @@ The brand is Kanosena (chosen 17/11/2026). It is driven by environment variables
 | Variable | Used by | Default |
 |----------|---------|---------|
 | `NEXT_PUBLIC_BRAND_NAME` | frontend (build time), backend emails | `Kanosena` |
-| `NEXT_PUBLIC_BRAND_COLOUR` | frontend colour tokens, logo tile | `#1F5F5B` |
-| `NEXT_PUBLIC_BRAND_LOGO_URL` | optional image logo; text wordmark if empty | empty |
+| `NEXT_PUBLIC_BRAND_COLOUR` | frontend colour tokens (buttons, links, focus), email header band | `#6B3BFF` |
+| `NEXT_PUBLIC_BRAND_LOGO_URL` | optional image logo; without it the app shows the Kanosena sticker K and the name in Dela Gothic One | empty |
 | `NEXT_PUBLIC_SOURCE_CODE_URL` | "Source code" link | our GitHub fork |
 | `EMAIL_FROM_NAME` | upstream's email sender name | set to the brand name |
+| `OURS_EMAIL_LAYOUT` | backend: `upstream` puts upstream's email frame back instead of ours (`libraries/nestjs-libraries/src/ours/email/email.layout.ts`) | ours |
 
 Defaults live in `apps/frontend/src/ours/brand/brand.defaults.json`.
 

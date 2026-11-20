@@ -115,7 +115,7 @@ const StartForm: FC<{
           type="submit"
           disabled={submitting || !url.trim()}
           className={clsx(
-            'h-[48px] px-[22px] rounded-[10px] bg-btnPrimary text-white text-[15px] font-[500] whitespace-nowrap',
+            'h-[48px] px-[22px] rounded-full bg-btnPrimary text-white text-[15px] font-[500] whitespace-nowrap',
             (submitting || !url.trim()) && 'opacity-60'
           )}
         >
@@ -153,7 +153,7 @@ const Progress: FC<{ profile: BusinessProfile }> = ({ profile }) => {
   const current = STEPS.findIndex((s) => s.key === stage);
   return (
     <div
-      className="flex flex-col gap-[18px] rounded-[14px] border border-newBorder p-[28px]"
+      className="flex flex-col gap-[18px] rounded-[18px] border border-newBorder p-[28px]"
       data-testid="profile-progress"
       aria-live="polite"
     >
@@ -198,7 +198,7 @@ const LoadingState = () => (
   <div className="flex flex-col gap-[16px]" aria-busy="true">
     <div className="h-[28px] w-[260px] rounded-[6px] bg-newBgLineColor animate-pulse" />
     <div className="h-[16px] w-[420px] max-w-full rounded-[6px] bg-newBgLineColor animate-pulse" />
-    <div className="h-[220px] rounded-[14px] bg-newBgLineColor animate-pulse" />
+    <div className="h-[220px] rounded-[18px] bg-newBgLineColor animate-pulse" />
   </div>
 );
 
@@ -233,13 +233,13 @@ export const BusinessProfilePage: FC = () => {
   if (error) {
     return (
       <Shell>
-        <h1 className="text-[26px] font-[600]">Your business profile</h1>
-        <div className="flex flex-col gap-[12px] rounded-[14px] border border-newBorder p-[24px]">
+        <h1 className="k-display text-[28px] leading-[1.15]">Your business profile</h1>
+        <div className="flex flex-col gap-[12px] rounded-[18px] border border-newBorder p-[24px]">
           <div className="text-[15px]">We couldn’t load your profile just now.</div>
           <button
             type="button"
             onClick={() => mutate()}
-            className="self-start h-[38px] px-[18px] rounded-[8px] bg-btnPrimary text-white text-[14px]"
+            className="self-start h-[38px] px-[18px] rounded-full bg-btnPrimary text-white text-[14px]"
           >
             Try again
           </button>
@@ -252,7 +252,7 @@ export const BusinessProfilePage: FC = () => {
     return (
       <Shell>
         <div className="flex flex-col gap-[10px]">
-          <h1 className="text-[26px] font-[600]">Let’s get to know your business</h1>
+          <h1 className="k-display text-[28px] leading-[1.15]">Let’s get to know your business</h1>
           <p className="text-[16px] leading-[1.6] text-textItemBlur">
             Start with your website. We’ll put together a short profile of your
             business for you to check, so everything we write later sounds like
@@ -271,7 +271,7 @@ export const BusinessProfilePage: FC = () => {
   if (isBuilding(profile)) {
     return (
       <Shell>
-        <h1 className="text-[26px] font-[600]">Your business profile</h1>
+        <h1 className="k-display text-[28px] leading-[1.15]">Your business profile</h1>
         <Progress profile={profile} />
       </Shell>
     );
@@ -282,7 +282,7 @@ export const BusinessProfilePage: FC = () => {
     <Shell>
       <div className="flex items-start justify-between gap-[16px] mobile:flex-col">
         <div className="flex flex-col gap-[8px]">
-          <h1 className="text-[26px] font-[600]">Your business profile</h1>
+          <h1 className="k-display text-[28px] leading-[1.15]">Your business profile</h1>
           <p className="text-[15px] leading-[1.6] text-textItemBlur" data-testid="profile-summary">
             Built from {profile.pages.length} {profile.pages.length === 1 ? 'page' : 'pages'} on{' '}
             {hostOf(profile.websiteUrl)}. We found {found} of{' '}
@@ -317,7 +317,7 @@ export const BusinessProfilePage: FC = () => {
       {GROUPS.map((group) => (
         <section
           key={group.title}
-          className="flex flex-col rounded-[14px] border border-newBorder px-[24px] py-[8px]"
+          className="flex flex-col rounded-[18px] border border-newBorder px-[24px] py-[8px]"
         >
           <h2 className="pt-[16px] pb-[4px] text-[18px] font-[600]">{group.title}</h2>
           {group.fields.map((f) => (
