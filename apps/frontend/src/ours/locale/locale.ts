@@ -5,6 +5,7 @@
 // upstream's behaviour back (the browser decides).
 import dayjs from 'dayjs';
 import enGb from 'dayjs/locale/en-gb';
+import localizedFormat from 'dayjs/plugin/localizedFormat';
 import defaults from './locale.defaults.json';
 
 export const localeSettings = {
@@ -44,4 +45,7 @@ export const defaultClock = (locale = localeSettings.locale) => {
   return locale.toLowerCase() === 'en-us' ? 'US' : 'GLOBAL';
 };
 
+// Locale formats (L, LT, LLL...) wherever this module loads, not only on
+// screens that happen to import upstream's calendar (which also extends it).
+dayjs.extend(localizedFormat);
 applyDateLocale();
