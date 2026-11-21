@@ -42,7 +42,7 @@ const fakeStripe = (
   opts: {
     prices?: Stripe.Price[];
     sub?: Stripe.Subscription | 'missing';
-    customers?: { id: string }[];
+    customers?: { id: string; email?: string | null }[];
     subs?: Stripe.Subscription[];
   } = {}
 ) => {
@@ -57,13 +57,14 @@ const fakeStripe = (
     list: vi.fn(async (_p: Stripe.SubscriptionListParams) => ({ data: opts.subs ?? [] })),
     search: vi.fn(async (_p: Stripe.CustomerSearchParams) => ({ data: opts.customers ?? [] })),
     createCustomer: vi.fn(async (_p: Stripe.CustomerCreateParams) => ({ id: 'cus_new' })),
+    updateCustomer: vi.fn(async (id: string, _p: Stripe.CustomerUpdateParams) => ({ id })),
   };
   const stripe = {
     checkout: { sessions: { create: calls.checkout } },
     billingPortal: { sessions: { create: calls.portal } },
     prices: { list: calls.prices },
     subscriptions: { retrieve: calls.retrieve, list: calls.list },
-    customers: { search: calls.search, create: calls.createCustomer },
+    customers: { search: calls.search, create: calls.createCustomer, update: calls.updateCustomer },
   } as unknown as Stripe;
   return { stripe, calls };
 };
@@ -122,6 +123,27 @@ describe('StripePaymentProvider', () => {
       cancel_url: 'https://app.example.test/plan?checkout=cancelled',
     });
     expect(params.automatic_tax).toBeUndefined();
+  });
+
+  it('puts the signed-in admin’s email on a new customer, so receipts go to the account', async () => {
+    const { stripe, calls } = fakeStripe();
+    await new StripePaymentProvider(stripe).changePlan('org-1', growth, null, 'owner@bakery.test');
+    expect(calls.createCustomer).toHaveBeenCalledWith({
+      metadata: { organizationId: 'org-1' },
+      email: 'owner@bakery.test',
+    });
+    expect(calls.checkout.mock.calls[0][0].customer).toBe('cus_new');
+  });
+
+  it('gives an existing customer with no email the admin’s email, and leaves one that has an email alone', async () => {
+    const bare = fakeStripe({ customers: [{ id: 'cus_old', email: null }] });
+    await new StripePaymentProvider(bare.stripe).changePlan('org-1', growth, null, 'owner@bakery.test');
+    expect(bare.calls.updateCustomer).toHaveBeenCalledWith('cus_old', { email: 'owner@bakery.test' });
+    expect(bare.calls.createCustomer).not.toHaveBeenCalled();
+
+    const kept = fakeStripe({ customers: [{ id: 'cus_old', email: 'billing@bakery.test' }] });
+    await new StripePaymentProvider(kept.stripe).changePlan('org-1', growth, null, 'owner@bakery.test');
+    expect(kept.calls.updateCustomer).not.toHaveBeenCalled();
   });
 
   it('adds VAT at checkout when the plan cards say "+ VAT"', async () => {

@@ -66,10 +66,15 @@ export class StripePaymentProvider implements PlanPaymentProvider {
     return stripeTestKey();
   }
 
-  async changePlan(orgId: string, plan: PlanDefinition, current: CurrentBilling | null): Promise<PlanChangeResult> {
+  async changePlan(
+    orgId: string,
+    plan: PlanDefinition,
+    current: CurrentBilling | null,
+    email?: string
+  ): Promise<PlanChangeResult> {
     const price = await this.priceFor(plan);
     try {
-      const customer = await this.customerFor(orgId, current, true);
+      const customer = await this.customerFor(orgId, current, true, email);
       const subscription = await this.liveSubscription(customer!);
       if (subscription) {
         // already paying: confirm the switch on Stripe's portal, which shows
@@ -206,7 +211,7 @@ export class StripePaymentProvider implements PlanPaymentProvider {
   // else found by its organisation tag, else (create=true) a new one. A
   // subscription id that no longer exists (test data reset, or test ids left
   // after moving to live keys) is treated as none.
-  private async customerFor(orgId: string, current: CurrentBilling | null, create: boolean) {
+  private async customerFor(orgId: string, current: CurrentBilling | null, create: boolean, email?: string) {
     if (current?.paymentProvider === this.name && current.externalId) {
       try {
         return customerId(await this._stripe.subscriptions.retrieve(current.externalId));
@@ -222,12 +227,19 @@ export class StripePaymentProvider implements PlanPaymentProvider {
       limit: 1,
     });
     if (found.data[0]) {
+      // a customer made before we passed the email: give it one now, so
+      // Checkout doesn't ask for (and send receipts to) a typed-in address
+      if (email && !found.data[0].email) {
+        await this._stripe.customers.update(found.data[0].id, { email });
+      }
       return found.data[0].id;
     }
     if (!create) {
       return null;
     }
-    return (await this._stripe.customers.create({ metadata: { organizationId: orgId } })).id;
+    return (
+      await this._stripe.customers.create({ metadata: { organizationId: orgId }, ...(email ? { email } : {}) })
+    ).id;
   }
 
   private async liveSubscription(customer: string) {

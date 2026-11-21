@@ -2,8 +2,9 @@
 // The organisation always comes from the signed-in session.
 import { Body, Controller, Get, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Organization } from '@prisma/client';
+import { Organization, User } from '@prisma/client';
 import { GetOrgFromRequest } from '@gitroom/nestjs-libraries/user/org.from.request';
+import { GetUserFromRequest } from '@gitroom/nestjs-libraries/user/user.from.request';
 import { PlanService } from '@gitroom/nestjs-libraries/ours/plans/plan.service';
 import { ChangePlanDto } from '@gitroom/nestjs-libraries/ours/plans/dtos/plan.dto';
 
@@ -30,7 +31,13 @@ export class PlanController {
   }
 
   @Put('/')
-  changePlan(@GetOrgFromRequest() org: Organization, @Body() body: ChangePlanDto) {
-    return this._planService.changePlan(org.id, body.plan, canManagePlan(org));
+  changePlan(
+    @GetOrgFromRequest() org: Organization,
+    @GetUserFromRequest() user: User,
+    @Body() body: ChangePlanDto
+  ) {
+    // the signed-in admin's email goes on the payment customer, so receipts
+    // go to the account and not to whatever is typed at checkout
+    return this._planService.changePlan(org.id, body.plan, canManagePlan(org), user?.email);
   }
 }

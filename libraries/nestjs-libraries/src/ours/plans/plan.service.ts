@@ -309,7 +309,7 @@ export class PlanService {
     };
   }
 
-  async changePlan(orgId: string, key: string, canManage: boolean) {
+  async changePlan(orgId: string, key: string, canManage: boolean, email?: string) {
     const plan = PAID_PLANS.find((p) => p.key === key);
     if (!plan) {
       throw new HttpException('That plan doesn’t exist.', 400);
@@ -325,7 +325,7 @@ export class PlanService {
       );
     }
     const { row } = await this.current(orgId);
-    const result = await provider.changePlan(orgId, plan, row);
+    const result = await provider.changePlan(orgId, plan, row, email);
     if (result.status === 'changed') {
       await this._planRepository.setPlan(
         orgId,

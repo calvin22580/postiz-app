@@ -30,7 +30,13 @@ export type BillingUpdate =
 export interface PlanPaymentProvider {
   // stored on the plan row as paymentProvider
   name: string;
-  changePlan(orgId: string, plan: PlanDefinition, current: CurrentBilling | null): Promise<PlanChangeResult>;
+  // email: the signed-in admin's, for the provider's customer and receipts
+  changePlan(
+    orgId: string,
+    plan: PlanDefinition,
+    current: CurrentBilling | null,
+    email?: string
+  ): Promise<PlanChangeResult>;
   // a page where the owner manages payment details, invoices and cancelling;
   // null when there's nothing to manage yet
   manageUrl?(orgId: string, current: CurrentBilling | null): Promise<string | null>;
