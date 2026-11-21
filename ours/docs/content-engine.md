@@ -32,6 +32,17 @@ Design and reasoning: the "Kanosena content engine and brand memory: design" doc
 | Writer | Planned (E3) | Sonnet 5.5 | Week plan, brand brief, platform rules | Draft captions | `captions.write` |
 | Memory keeper | Planned (E4) | Haiku 5.5, Anthropic memory tool | New owner signals, current memory | `ours_brand_memory`, through our checked tool handler | `memory.update` |
 
+## Entry points
+
+Every way a post can start goes through the same steps above and ends waiting for the owner's approval in the app.
+
+| Entry point | Status | Goes through | Notes |
+| --- | --- | --- | --- |
+| Weekly posts screen | Live | Week writer, Checker (when on), hard rules | |
+| Rewrite on the review screen | Live (M5) | Rewriter, Checker (when on), hard rules | |
+| Upstream public API, MCP and CLI | Live, limited | None of ours | `assertDirectPostingAllowed` keeps these to upstream drafts; they never reach our review screen |
+| Claude or ChatGPT connector | Planned (E8) | Checker, hard rules; lands as a post waiting for approval | Our own small tool set: read the profile and this week's posts, add a post or idea. No tool can approve, schedule or publish. Exposing profile data through a connector needs a decision first |
+
 ## Data
 
 - `ours_business_profile`: the only source of facts.
