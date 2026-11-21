@@ -29,6 +29,8 @@ import { PerformanceRepository } from '@gitroom/nestjs-libraries/ours/performanc
 import { DirectPostingGuard } from '@gitroom/backend/ours/direct.posting.guard';
 import { ErasureService } from '@gitroom/nestjs-libraries/ours/erasure/erasure.service';
 import { ErasureRepository } from '@gitroom/nestjs-libraries/ours/erasure/erasure.repository';
+import { BrandSignalService } from '@gitroom/nestjs-libraries/ours/memory/brand.signal.service';
+import { BrandSignalRepository } from '@gitroom/nestjs-libraries/ours/memory/brand.signal.repository';
 import { ErasureInterceptor } from '@gitroom/backend/ours/erasure.interceptor';
 
 const authenticatedController = [
@@ -65,6 +67,8 @@ const publicController = [StripeWebhookController];
     PerformanceRepository,
     ErasureService,
     ErasureRepository,
+    BrandSignalService,
+    BrandSignalRepository,
     // Milestone 7: our plan's channel limit on upstream's "add a channel"
     // routes (global, so upstream's modules need no change)
     {

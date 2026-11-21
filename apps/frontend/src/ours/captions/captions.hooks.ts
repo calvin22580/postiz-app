@@ -21,6 +21,8 @@ export interface Caption {
   // set when the owner rewrote the text themselves
   editedAt: string | null;
   rejectedAt: string | null;
+  // why the owner rejected it, if they said (a REJECT_REASONS key)
+  rejectReason: string | null;
   // AI rewrites still allowed for this caption
   rewritesLeft: number;
   // the platform's character limit

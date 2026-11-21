@@ -54,6 +54,7 @@ export class ErasureRepository {
       | 'oursCaptionWeek'
       | 'oursSeasonalSettings'
       | 'oursPostPerformance'
+      | 'oursBrandSignal'
     >
   ) {}
 
@@ -184,6 +185,7 @@ export class ErasureRepository {
 
     // our own rows
     await this._ours.model.oursPostPerformance.deleteMany({ where: org });
+    await this._ours.model.oursBrandSignal.deleteMany({ where: org });
     await this._ours.model.oursCaptionDraft.deleteMany({ where: org });
     await this._ours.model.oursCaptionWeek.deleteMany({ where: org });
     await this._ours.model.oursBusinessProfile.deleteMany({ where: org });

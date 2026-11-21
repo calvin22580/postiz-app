@@ -68,6 +68,8 @@ import { SeasonalService } from '@gitroom/nestjs-libraries/ours/seasonal/seasona
 import { PlanService, UsageTicket } from '@gitroom/nestjs-libraries/ours/plans/plan.service';
 import { PerformanceService } from '@gitroom/nestjs-libraries/ours/performance/performance.service';
 import { WriterPreferences } from '@gitroom/nestjs-libraries/ours/performance/performance.insights';
+import { BrandSignalService } from '@gitroom/nestjs-libraries/ours/memory/brand.signal.service';
+import { RejectReason } from '@gitroom/nestjs-libraries/ours/memory/brand.signal';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -110,6 +112,14 @@ const storedFact = (f: CaptionFact) => ({
   ...(f.source ? { source: f.source } : {}),
 });
 
+// Content engine E1: which post a signal is about.
+const signalTarget = (d: Pick<StoredCaptionDraft, 'id' | 'weekId' | 'platform' | 'theme'>) => ({
+  draftId: d.id,
+  weekId: d.weekId,
+  platform: d.platform,
+  theme: d.theme,
+});
+
 // The posting days of a week as dates, for the writer (YYYY-MM-DD).
 const postingDates = (weekStart: string) =>
   POSTING_DAYS.map((_, i) => dayjs(weekStart).add(i, 'day').format('YYYY-MM-DD'));
@@ -127,7 +137,8 @@ export class CaptionService {
     private _graphicService: GraphicService,
     private _seasonalService: SeasonalService,
     private _planService: PlanService,
-    private _performanceService: PerformanceService
+    private _performanceService: PerformanceService,
+    private _brandSignalService: BrandSignalService
   ) {}
 
   async getWeek(orgId: string) {
@@ -423,6 +434,13 @@ export class CaptionService {
         `Could not link post=${postId} to caption draft=${draftId} for org=${orgId}: ${(e as Error)?.message}`
       );
     }
+    // Content engine E1: approved as written, or after the owner's own changes
+    await this._brandSignalService.record(orgId, {
+      kind: 'approved',
+      ...signalTarget(draft),
+      after: draft.text,
+      edited: !!draft.editedAt,
+    });
     return this.getWeek(orgId);
   }
 
@@ -446,26 +464,67 @@ export class CaptionService {
     if (!(await this._captionRepository.editText(orgId, draftId, clean))) {
       throw new HttpException('This post can only be changed while it is waiting for your approval.', 400);
     }
+    // Content engine E1: keep what the text was, so the change can be learnt
+    // from (the draft itself only keeps the latest text)
+    if (clean !== draft.text) {
+      await this._brandSignalService.record(orgId, {
+        kind: 'edited',
+        ...signalTarget(draft),
+        before: draft.text,
+        after: clean,
+        edited: !!draft.editedAt,
+      });
+    }
     return this.getWeek(orgId);
   }
 
   // A rejected caption is never scheduled. It stays on the screen, so the
   // owner can bring it back.
   async reject(orgId: string, draftId: string) {
-    await this.waitingDraft(orgId, draftId);
+    const draft = await this.waitingDraft(orgId, draftId);
     if (!(await this._captionRepository.reject(orgId, draftId))) {
       throw new HttpException('This post can only be rejected while it is waiting for your approval.', 400);
     }
+    await this._brandSignalService.record(orgId, {
+      kind: 'rejected',
+      ...signalTarget(draft),
+      before: draft.text,
+      edited: !!draft.editedAt,
+    });
+    return this.getWeek(orgId);
+  }
+
+  // Content engine E1: the owner's optional one-tap reason, given after
+  // rejecting. Choosing again replaces the reason on the post; each choice
+  // is kept as a signal.
+  async setRejectReason(orgId: string, draftId: string, reason: RejectReason) {
+    const draft = await this._captionRepository.getDraft(orgId, draftId);
+    if (!draft) {
+      throw new HttpException('Caption not found', 404);
+    }
+    if (!(await this._captionRepository.setRejectReason(orgId, draftId, reason))) {
+      throw new HttpException('You can only say why for a post you rejected.', 400);
+    }
+    await this._brandSignalService.record(orgId, {
+      kind: 'reject-reason',
+      ...signalTarget(draft),
+      reason,
+    });
     return this.getWeek(orgId);
   }
 
   async restore(orgId: string, draftId: string) {
-    if (!(await this._captionRepository.getDraft(orgId, draftId))) {
+    const draft = await this._captionRepository.getDraft(orgId, draftId);
+    if (!draft) {
       throw new HttpException('Caption not found', 404);
     }
     if (!(await this._captionRepository.restore(orgId, draftId))) {
       throw new HttpException('Only a rejected post can be brought back.', 400);
     }
+    await this._brandSignalService.record(orgId, {
+      kind: 'restored',
+      ...signalTarget(draft),
+    });
     return this.getWeek(orgId);
   }
 
@@ -533,7 +592,19 @@ export class CaptionService {
 
     const { captions, reasons } = groundCaptions(output.raw, facts, 1);
     const fresh = captions.find((c) => c.platform === draft.platform);
+    // Content engine E1: the owner asked for a change, whether or not a new
+    // version was kept (after is empty when it wasn't)
+    const signal = (after: string | null) =>
+      this._brandSignalService.record(orgId, {
+        kind: 'rewrite',
+        ...signalTarget(draft),
+        before: draft.text,
+        after,
+        note: note?.trim() || null,
+        edited: !!draft.editedAt,
+      });
     if (!fresh || fresh.text === draft.text) {
+      await signal(null);
       this._logger.log(
         `Caption rewrite for org=${orgId} draft=${draftId} not kept${reasons.length ? ` (${reasons.join('; ')})` : ''}`
       );
@@ -546,6 +617,7 @@ export class CaptionService {
       text: fresh.text,
       facts: fresh.facts.map(storedFact),
     });
+    await signal(saved ? fresh.text : null);
     if (!saved) {
       throw new HttpException('This post was approved or rejected while we were writing, so it was left as it is.', 409);
     }
@@ -677,6 +749,7 @@ export class CaptionService {
         approvedAt: d.approvedAt,
         editedAt: d.editedAt,
         rejectedAt: d.rejectedAt,
+        rejectReason: d.rejectReason,
         rewritesLeft: Math.max(0, MAX_REWRITES - d.rewriteCount),
         maxLength: CAPTION_PLATFORMS.find((p) => p.key === d.platform)?.maxLength || 0,
         // details in the owner's own words that the profile doesn't have:

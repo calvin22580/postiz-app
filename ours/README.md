@@ -237,6 +237,11 @@ owner can:
 - **Approve all**: the screen calls the single approve endpoint once per
   waiting post, so each one gets the same checks and plan limit.
 
+After rejecting, the owner can say why with one tap (`PUT
+/ours/captions/:id/reject-reason`: wrong topic, doesn't sound like us, not
+true, too salesy, something else). It is optional, can be changed, and is
+cleared when the post is brought back.
+
 Filters show all, waiting, approved or rejected posts. An approved post no
 longer changes here (it is an upstream post by then). Approval is still
 Sandbox-only: see ARCHITECTURE.md "Approval before scheduling".
@@ -442,8 +447,8 @@ Upstream only marks a deleted account's organisation and a disconnected
 channel as deleted. Ours then erases the data, so the data deletion page is true:
 
 - **Account deleted** (Settings > Global Settings > Delete Account): our
-  business profile, captions, weeks, brand kit, UK date choices and post
-  results are deleted; upstream's post text, comments, signatures, sets,
+  business profile, captions, weeks, brand kit, UK date choices, post
+  results and owner signals are deleted; upstream's post text, comments, signatures, sets,
   webhooks, auto-post feeds, plugs, error logs and notifications are deleted or
   emptied; uploaded files and approved graphics are removed from storage; stored
   third-party keys and app tokens are hashed or cleared; the organisation is
@@ -465,3 +470,25 @@ channel as deleted. Ours then erases the data, so the data deletion page is true
 
 The browser test `prelaunch.spec.ts` checks the database directly, at
 `E2E_DATABASE_URL` (default: the local dev database).
+
+## Content engine (owner signals and AI cost)
+
+The map of every AI step that writes or checks posts, what it reads and what
+it may change, is `ours/docs/content-engine.md`. Every content-engine change
+updates it in the same pull request.
+
+**Owner signals (E1).** Each owner action on a post is kept as one row in
+`ours_brand_signal`: approved (with whether the owner changed the text),
+edited (before and after), rejected, the reason for rejecting, brought back,
+and rewrite (before, after and the owner's note). Code writes these, never
+AI. Recording a signal never blocks the owner's action: a failure is only
+logged. Nothing reads them yet; later milestones will learn each brand's
+style from them, and will show the owner what was learned.
+
+**What each AI step costs.** Every AI call is already logged in
+`ours_ai_usage`. To see the cost per step (totals only, no customer content):
+
+```
+DATABASE_URL="postgresql://…" node ours/scripts/ai-cost-summary.mjs
+node ours/scripts/ai-cost-summary.mjs --days 30 --org <organisationId>
+```

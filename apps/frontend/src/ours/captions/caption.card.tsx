@@ -10,6 +10,7 @@ import type { Caption, CaptionWeek } from '@gitroom/frontend/ours/captions/capti
 import { readError } from '@gitroom/frontend/ours/profile/business.profile.hooks';
 import { PlanMessage } from '@gitroom/frontend/ours/plans/plan.message';
 import { CaptionGraphic } from '@gitroom/frontend/ours/graphics/caption.graphic';
+import { REJECT_REASONS } from '@gitroom/nestjs-libraries/ours/memory/brand.signal';
 
 export const PLATFORMS: Record<Caption['platform'], { label: string }> = {
   facebook: { label: 'Facebook' },
@@ -76,7 +77,7 @@ export const CaptionCard: FC<{
 }> = ({ caption, week, channelId, channelName, brandVersion, onChanged }) => {
   const fetch = useFetch();
   const [chosenMode, setMode] = useState<Mode>('view');
-  const [busy, setBusy] = useState<null | 'approve' | 'save' | 'rewrite' | 'reject' | 'restore'>(null);
+  const [busy, setBusy] = useState<null | 'approve' | 'save' | 'rewrite' | 'reject' | 'restore' | 'reason'>(null);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState(caption.text);
   const [note, setNote] = useState('');
@@ -190,6 +191,42 @@ export const CaptionCard: FC<{
         <p className="line-clamp-2 text-[14px] leading-[1.5] text-textItemBlur" data-testid="caption-text">
           {caption.text}
         </p>
+        <div
+          role="group"
+          aria-label="Why didn’t this one work? (optional)"
+          className="flex flex-col gap-[8px]"
+          data-testid="caption-reject-reasons"
+        >
+          <span className="text-[13px] text-textItemBlur">Why didn’t this one work? (optional)</span>
+          <div className="flex flex-wrap gap-[8px]">
+            {REJECT_REASONS.map((r) => (
+              <button
+                key={r.key}
+                type="button"
+                aria-pressed={caption.rejectReason === r.key}
+                data-testid={`caption-reject-reason-${r.key}`}
+                disabled={!!busy}
+                onClick={() =>
+                  act(
+                    'reason',
+                    'reject-reason',
+                    { method: 'PUT', body: JSON.stringify({ reason: r.key }) },
+                    'We couldn’t save that. Please try again.'
+                  )
+                }
+                className={clsx(
+                  'h-[32px] px-[12px] rounded-full border text-[13px]',
+                  caption.rejectReason === r.key
+                    ? 'border-btnPrimary bg-btnPrimary text-white'
+                    : 'border-newBorder hover:bg-newBgColorInner',
+                  busy && 'opacity-60'
+                )}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="flex items-center justify-between gap-[12px] flex-wrap">
           <span className="text-[13px] text-textItemBlur">This post won’t be scheduled.</span>
           <SecondaryButton
