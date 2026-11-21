@@ -28,6 +28,17 @@ import {
 } from '@gitroom/nestjs-libraries/ours/captions/writers/anthropic.caption.writer';
 import { CaptionWriterError, CaptionWriterWithUsageError } from '@gitroom/nestjs-libraries/ours/captions/writers/caption.writer';
 import {
+  applyChecks,
+  CaptionCheckerError,
+  captionsToCheck,
+} from '@gitroom/nestjs-libraries/ours/captions/checkers/caption.checker';
+import {
+  AnthropicCaptionChecker,
+  buildCheckMessage,
+  checkSchema,
+} from '@gitroom/nestjs-libraries/ours/captions/checkers/anthropic.caption.checker';
+import { DemoCaptionChecker } from '@gitroom/nestjs-libraries/ours/captions/checkers/demo.caption.checker';
+import {
   CaptionService,
   captionToHtml,
   MAX_REWRITES,
@@ -1266,5 +1277,161 @@ describe('UK dates in captions', () => {
     const { service, seasonal } = makeService();
     seasonal.factsForWeek.mockRejectedValue(new Error('db down'));
     await expect((service as any).seasonalFacts('org-1', '2026-11-23')).resolves.toEqual([]);
+  });
+});
+
+describe('the Checker (content engine E2)', () => {
+  const week = { id: 'w1', weekStart: '2026-11-16', timezone: 'Europe/London' };
+  const draft = () => ({
+    id: 'd1',
+    weekId: 'w1',
+    status: 'PENDING_APPROVAL',
+    platform: 'facebook',
+    scheduledFor: new Date('2030-01-08T12:30:00Z'),
+    theme: 'Spotlight: Sourdough loaves',
+    text: 'In the spotlight this week at Harbour Lane Bakery: Sourdough loaves. Get in touch to find out more.',
+    facts: [{ id: 'services.0', field: 'services', value: 'Sourdough loaves' }],
+    rewriteCount: 0,
+    editedAt: null,
+  });
+  const CHECK_USAGE = { provider: 'anthropic', model: 'claude-sonnet-5-5', inputTokens: 700, outputTokens: 90, cacheReadTokens: 0, cacheWriteTokens: 0 };
+  const plan = () => ({
+    posts: [
+      {
+        day: 0,
+        theme: 'Hello',
+        captions: [
+          { platform: 'facebook', text: 'Hello from Harbour Lane Bakery in Exampletown!', factIds: ['businessName.0', 'location.0'] },
+          { platform: 'instagram', text: 'Harbour Lane Bakery, family-run in Exampletown since 1985.', factIds: ['businessName.0', 'location.0'] },
+          { platform: 'linkedin', text: 'Harbour Lane Bakery now delivers vegan cakes across the county.', factIds: ['businessName.0'] },
+        ],
+      },
+    ],
+  });
+  const writer = () => ({ name: 'anthropic' as const, write: async () => ({ raw: plan(), usages: [] }), rewrite: vi.fn() });
+  const checker = (results: any[], usages: any[] = [CHECK_USAGE]) => ({
+    name: 'anthropic' as const,
+    check: vi.fn(async () => ({ results, usages })),
+  });
+
+  it('lists every caption with a key, and applies pass, fix and drop', () => {
+    const list = captionsToCheck(plan());
+    expect(list.map((c) => c.key)).toEqual(['0:facebook', '0:instagram', '0:linkedin']);
+    const { raw, fixed, dropped } = applyChecks(plan(), [
+      { key: '0:facebook', verdict: 'pass', claims: [] },
+      { key: '0:instagram', verdict: 'fix', claims: [], text: ' Harbour Lane Bakery, a family bakery in Exampletown. ' },
+      { key: '0:linkedin', verdict: 'drop', claims: [] },
+    ]);
+    expect([fixed, dropped]).toEqual([1, 1]);
+    expect(raw.posts![0].captions!.map((c) => c.text)).toEqual([
+      'Hello from Harbour Lane Bakery in Exampletown!',
+      'Harbour Lane Bakery, a family bakery in Exampletown.',
+    ]);
+  });
+
+  it('drops a fix that came back without text, and leaves captions it said nothing about', () => {
+    const { raw, dropped } = applyChecks(plan(), [{ key: '0:instagram', verdict: 'fix', claims: [], text: '  ' }]);
+    expect(dropped).toBe(1);
+    expect(raw.posts![0].captions!.map((c) => c.platform)).toEqual(['facebook', 'linkedin']);
+  });
+
+  it('is off unless switched on, so weeks are written exactly as before', async () => {
+    const { service, repo, usage } = makeService();
+    await service.runWriting('org-1', week, FACTS, 'warm', writer());
+    const [, , body] = repo.finishWeek.mock.calls[0] as unknown as [string, string, any];
+    // the hard rules alone: the invented year is dropped, the invented delivery is not
+    expect(body.drafts.map((d: any) => d.platform)).toEqual(['facebook', 'linkedin']);
+    expect(usage.logCall).not.toHaveBeenCalledWith('org-1', 'captions.check', expect.anything());
+  });
+
+  it('fixes and drops before the hard rules, and logs its cost under its own name', async () => {
+    const { service, repo, usage } = makeService();
+    const check = checker([
+      { key: '0:facebook', verdict: 'pass', claims: [{ claim: 'in Exampletown', factId: 'location.0' }] },
+      { key: '0:instagram', verdict: 'fix', claims: [{ claim: 'since 1985', factId: null }], text: 'Harbour Lane Bakery, a family bakery in Exampletown.' },
+      { key: '0:linkedin', verdict: 'drop', claims: [{ claim: 'delivers vegan cakes', factId: null }] },
+    ]);
+    await service.runWriting('org-1', week, FACTS, 'warm', writer(), undefined, null, undefined, check);
+    expect(check.check).toHaveBeenCalledWith({ facts: FACTS, captions: captionsToCheck(plan()) });
+    const [, , body] = repo.finishWeek.mock.calls[0] as unknown as [string, string, any];
+    expect(body.drafts.map((d: any) => [d.platform, d.text])).toEqual([
+      ['facebook', 'Hello from Harbour Lane Bakery in Exampletown!'],
+      ['instagram', 'Harbour Lane Bakery, a family bakery in Exampletown.'],
+    ]);
+    expect(usage.logCall).toHaveBeenCalledWith('org-1', 'captions.check', CHECK_USAGE);
+  });
+
+  it('still runs the hard rules on a fix', async () => {
+    const { service, repo } = makeService();
+    const check = checker([{ key: '0:facebook', verdict: 'fix', claims: [], text: 'Harbour Lane Bakery: 20% off this week!' }]);
+    await service.runWriting('org-1', week, FACTS, 'warm', writer(), undefined, null, undefined, check);
+    const [, , body] = repo.finishWeek.mock.calls[0] as unknown as [string, string, any];
+    expect(body.drafts.map((d: any) => d.platform)).toEqual(['linkedin']);
+  });
+
+  it('goes on with the hard rules alone when the check fails, logging what was billed', async () => {
+    const { service, repo, usage } = makeService();
+    const failing = {
+      name: 'anthropic' as const,
+      check: vi.fn(async () => {
+        throw new CaptionCheckerError('The caption check stopped early (refusal).', [CHECK_USAGE]);
+      }),
+    };
+    await service.runWriting('org-1', week, FACTS, 'warm', writer(), undefined, null, undefined, failing);
+    const [, , body] = repo.finishWeek.mock.calls[0] as unknown as [string, string, any];
+    expect(body.drafts.map((d: any) => d.platform)).toEqual(['facebook', 'linkedin']);
+    expect(usage.logCall).toHaveBeenCalledWith('org-1', 'captions.check', CHECK_USAGE);
+  });
+
+  it('checks a rewrite too, and keeps the current version when it is dropped', async () => {
+    const { service, repo, usage } = makeService();
+    repo.getDraft.mockResolvedValue(draft());
+    const rewriter = {
+      name: 'anthropic' as const,
+      write: vi.fn(),
+      rewrite: vi.fn(async () => ({
+        raw: { posts: [{ day: 0, theme: 'Spotlight', captions: [{ platform: 'facebook', text: 'Harbour Lane Bakery, voted Exampletown’s favourite.', factIds: ['businessName.0', 'location.0'] }] }] },
+        usages: [],
+      })),
+    };
+    const check = checker([{ key: '0:facebook', verdict: 'drop', claims: [{ claim: 'voted favourite', factId: null }] }]);
+    await expect(service.rewrite('org-1', 'd1', undefined, rewriter, check)).rejects.toThrow('kept the current one');
+    expect(repo.saveRewrite).not.toHaveBeenCalled();
+    expect(usage.logCall).toHaveBeenCalledWith('org-1', 'captions.check', CHECK_USAGE);
+  });
+
+  it('the demo Checker passes everything and costs nothing', async () => {
+    const out = await new DemoCaptionChecker().check({ facts: FACTS, captions: captionsToCheck(plan()) });
+    expect(out.usages).toEqual([]);
+    expect(out.results.every((r) => r.verdict === 'pass')).toBe(true);
+  });
+
+  it('sends the profile and captions as untrusted data with a strict schema (fake client)', async () => {
+    const results = [{ key: '0:facebook', claims: [], verdict: 'pass', text: '' }, { key: 'made-up', claims: [], verdict: 'pass', text: '' }];
+    const { client, stream } = fakeClient(fakeMessage(JSON.stringify({ results })));
+    const input = { facts: FACTS, captions: captionsToCheck(plan()).slice(0, 1) };
+    const out = await new AnthropicCaptionChecker(client, 'claude-sonnet-5-5').check(input);
+    // a result for a caption it wasn't given is ignored
+    expect(out.results.map((r) => r.key)).toEqual(['0:facebook']);
+    expect(out.usages[0]).toMatchObject({ inputTokens: 1200, outputTokens: 900 });
+    const [params] = stream.mock.calls[0] as unknown as [any];
+    expect(params.model).toBe('claude-sonnet-5-5');
+    expect(params.fallbacks).toBe('default');
+    expect(params.output_config).toEqual({ effort: 'low', format: { type: 'json_schema', schema: checkSchema } });
+    expect(params.messages[0].content).toBe(buildCheckMessage(input));
+    expect(buildCheckMessage(input)).toContain('<untrusted_business_profile>');
+    expect(buildCheckMessage(input)).toContain('<untrusted_captions>');
+  });
+
+  it('sends no fallback for Haiku, and reports a refusal with its cost', async () => {
+    const { client, stream } = fakeClient(fakeMessage('', 'refusal'));
+    const err = await new AnthropicCaptionChecker(client, 'claude-haiku-5-5')
+      .check({ facts: FACTS, captions: captionsToCheck(plan()) })
+      .catch((e) => e);
+    expect(err).toBeInstanceOf(CaptionCheckerError);
+    expect(err.usages).toHaveLength(1);
+    const [params] = stream.mock.calls[0] as unknown as [any];
+    expect(params.fallbacks).toBeUndefined();
+    expect(params.betas).toBeUndefined();
   });
 });

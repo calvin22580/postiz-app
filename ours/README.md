@@ -492,3 +492,10 @@ style from them, and will show the owner what was learned.
 DATABASE_URL="postgresql://…" node ours/scripts/ai-cost-summary.mjs
 node ours/scripts/ai-cost-summary.mjs --days 30 --org <organisationId>
 ```
+
+**The Checker (E2, off by default).** With `OURS_CAPTION_CHECKER=true`, one more AI call reads each written caption against the profile, claim by claim, and passes it, fixes it once, or drops it, before the usual checks. It also checks AI rewrites, never the owner's own edits. Without an API key a demo Checker passes everything. It stays off until the test set shows it helps.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `OURS_CAPTION_CHECKER` | off | `true` turns the Checker on. |
+| `OURS_AI_CHECKER_MODEL` | `claude-sonnet-5-5` | The Checker's model. Change it only after a test-set comparison. |

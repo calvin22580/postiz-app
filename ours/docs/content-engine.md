@@ -27,7 +27,7 @@ Design and reasoning: the "Kanosena content engine and brand memory: design" doc
 | Rewriter | Live (M5) | `OURS_AI_MODEL` (Opus 5.5) | Profile facts, current caption, owner note | One draft caption | `caption-rewrite` |
 | Hard rules | Live (M3) | none (code) | Caption, facts | Keep or drop | none |
 | Owner signals | Live (E1) | none (code) | Owner actions | `ours_brand_signal` | none |
-| Checker | Planned (E2) | Sonnet 5.5 | Caption, facts, brand "avoid" list | Pass, fix or drop per caption | `captions.check` |
+| Checker | Built, off (E2) | `OURS_AI_CHECKER_MODEL` (Sonnet 5.5 until the test set decides) | Captions, profile facts, brand "avoid" list (from E4) | Pass, fix or drop per caption, before the hard rules | `captions.check` |
 | Strategist | Planned (E3) | Opus 5.5 | Profile, brand brief, UK dates, results, recent themes | Week plan (ideas and facts) | `captions.plan` |
 | Writer | Planned (E3) | Sonnet 5.5 | Week plan, brand brief, platform rules | Draft captions | `captions.write` |
 | Memory keeper | Planned (E4) | Haiku 5.5, Anthropic memory tool | New owner signals, current memory | `ours_brand_memory`, through our checked tool handler | `memory.update` |
@@ -45,6 +45,7 @@ Design and reasoning: the "Kanosena content engine and brand memory: design" doc
   - `rewrite`: the text before, the new version (empty if none could be kept), and the owner's note.
   Recording a signal never blocks the owner's action: a failure is logged only. Signals are erased with the organisation.
 - `ours_brand_memory` (planned, E4): lessons about voice and preferences, each citing the signals behind it.
+- The Checker (E2) runs only with `OURS_CAPTION_CHECKER=true`, after the writer and the rewriter. One call checks a whole week. A fixed caption still goes through the hard rules. If the check call fails, the captions go on to the hard rules unchanged and the failure is logged: the hard rules and the owner's approval still apply.
 - `ours_ai_usage`: one row per AI call. `ours/scripts/ai-cost-summary.mjs` prints cost per step.
 
 ## Adding or changing a step

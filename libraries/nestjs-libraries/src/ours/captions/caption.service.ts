@@ -52,6 +52,15 @@ import {
 import { AnthropicCaptionWriter } from '@gitroom/nestjs-libraries/ours/captions/writers/anthropic.caption.writer';
 import { DemoCaptionWriter } from '@gitroom/nestjs-libraries/ours/captions/writers/demo.caption.writer';
 import {
+  applyChecks,
+  CaptionChecker,
+  CaptionCheckerError,
+  captionsToCheck,
+} from '@gitroom/nestjs-libraries/ours/captions/checkers/caption.checker';
+import { AnthropicCaptionChecker } from '@gitroom/nestjs-libraries/ours/captions/checkers/anthropic.caption.checker';
+import { DemoCaptionChecker } from '@gitroom/nestjs-libraries/ours/captions/checkers/demo.caption.checker';
+import { RawCaptionPlan } from '@gitroom/nestjs-libraries/ours/captions/writers/caption.writer';
+import {
   isSandboxEnabled,
   SANDBOX_IDENTIFIER,
 } from '@gitroom/nestjs-libraries/ours/sandbox/sandbox.config';
@@ -76,6 +85,8 @@ dayjs.extend(timezone);
 
 export const CAPTIONS_FEATURE = 'captions';
 export const CAPTION_REWRITE_FEATURE = 'caption-rewrite';
+// Content engine E2: the Checker's calls, for a week and for a rewrite
+export const CAPTION_CHECK_FEATURE = 'captions.check';
 // Each AI rewrite is a billed call, so a caption can be rewritten a few times
 // only; after that the owner can still edit it themselves.
 export const MAX_REWRITES = 5;
@@ -90,6 +101,15 @@ export const createCaptionWriter = (): CaptionWriter =>
   captionWriterName() === 'anthropic'
     ? new AnthropicCaptionWriter()
     : new DemoCaptionWriter();
+
+// Content engine E2: the Checker runs only when switched on, and stays off
+// until the test set shows it helps (ours/docs/content-engine.md).
+export const createCaptionChecker = (): CaptionChecker | null =>
+  process.env.OURS_CAPTION_CHECKER !== 'true'
+    ? null
+    : captionWriterName() === 'anthropic'
+    ? new AnthropicCaptionChecker()
+    : new DemoCaptionChecker();
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -234,7 +254,8 @@ export class CaptionService {
     ticket?: UsageTicket,
     preferences?: WriterPreferences | null,
     // the platforms the plan includes; all of them when not given
-    platforms?: CaptionPlatform[]
+    platforms?: CaptionPlatform[],
+    checker: CaptionChecker | null = createCaptionChecker()
   ) {
     try {
       let output;
@@ -254,9 +275,10 @@ export class CaptionService {
         throw e;
       }
       await this.logUsages(orgId, output.usages);
+      const raw = await this.check(orgId, output.raw, facts, checker);
 
       const { captions, dropped, reasons } = groundCaptions(
-        output.raw,
+        raw,
         facts,
         POSTING_DAYS.length,
         platforms
@@ -535,7 +557,8 @@ export class CaptionService {
     orgId: string,
     draftId: string,
     note?: string,
-    writer: CaptionWriter = createCaptionWriter()
+    writer: CaptionWriter = createCaptionWriter(),
+    checker: CaptionChecker | null = createCaptionChecker()
   ) {
     const draft = await this.waitingDraft(orgId, draftId);
     const { profile } = await this._businessProfileService.getProfile(orgId);
@@ -589,8 +612,9 @@ export class CaptionService {
       throw new HttpException('Something went wrong while writing a new version. Please try again.', 400);
     }
     await this.logUsages(orgId, output.usages, CAPTION_REWRITE_FEATURE);
+    const raw = await this.check(orgId, output.raw, facts, checker);
 
-    const { captions, reasons } = groundCaptions(output.raw, facts, 1);
+    const { captions, reasons } = groundCaptions(raw, facts, 1);
     const fresh = captions.find((c) => c.platform === draft.platform);
     // Content engine E1: the owner asked for a change, whether or not a new
     // version was kept (after is empty when it wasn't)
@@ -696,6 +720,35 @@ export class CaptionService {
     } catch (e) {
       this._logger.error(`Could not read UK dates for org=${orgId}: ${(e as Error)?.message}`);
       return [];
+    }
+  }
+
+  // Content engine E2: the Checker passes, fixes or drops each caption before
+  // the hard rules. If the check itself fails, the captions go on to the hard
+  // rules unchanged: those still run, and the owner still approves each post.
+  private async check(
+    orgId: string,
+    raw: RawCaptionPlan,
+    facts: CaptionFact[],
+    checker: CaptionChecker | null
+  ): Promise<RawCaptionPlan> {
+    if (!checker) {
+      return raw;
+    }
+    try {
+      const output = await checker.check({ facts, captions: captionsToCheck(raw) });
+      await this.logUsages(orgId, output.usages, CAPTION_CHECK_FEATURE);
+      const checked = applyChecks(raw, output.results);
+      this._logger.log(
+        `Caption check for org=${orgId} (${checker.name}): fixed ${checked.fixed}, dropped ${checked.dropped}`
+      );
+      return checked.raw;
+    } catch (e) {
+      if (e instanceof CaptionCheckerError) {
+        await this.logUsages(orgId, e.usages, CAPTION_CHECK_FEATURE);
+      }
+      this._logger.error(`Caption check skipped for org=${orgId}: ${(e as Error)?.message}`);
+      return raw;
     }
   }
 
