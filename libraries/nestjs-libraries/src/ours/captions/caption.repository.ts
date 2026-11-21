@@ -41,6 +41,9 @@ const DRAFT_SELECT = {
   rejectedAt: true,
   rejectReason: true,
   rewriteCount: true,
+  previousText: true,
+  previousFacts: true,
+  previousEditedAt: true,
 } satisfies Prisma.OursCaptionDraftSelect;
 
 export type StoredCaptionWeek = Prisma.OursCaptionWeekGetPayload<{
