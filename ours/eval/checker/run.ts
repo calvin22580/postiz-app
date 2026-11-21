@@ -23,8 +23,11 @@ interface TestCase {
   profile: string;
   platform: string;
   text: string;
-  // true: every claim is in the profile; invented: the one detail that isn't
-  label: { kind: 'true' } | { kind: 'invented'; detail: string };
+  // true: every claim is in the profile; invented: the detail that isn't.
+  // grade: clear (the owner would object), borderline (framing a reader might
+  // accept) or timing (depends on the post's slot, which the Checker isn't
+  // given). Only clear counts towards the ship bar; the rest are reported.
+  label: { kind: 'true' } | { kind: 'invented'; detail: string; grade?: 'clear' | 'borderline' | 'timing' };
   tags?: string[];
 }
 
@@ -77,6 +80,13 @@ interface Row {
   error?: string;
 }
 
+// the label first, then its grade, then the case's own tags
+const labelTags = (c: TestCase) => [
+  c.label.kind,
+  ...(c.label.kind === 'invented' ? [c.label.grade || 'clear'] : []),
+  ...(c.tags || []),
+];
+
 const usagesByModel = new Map<string, AiCallUsage[]>();
 
 async function runModel(model: string, rep: number) {
@@ -106,11 +116,11 @@ async function runModel(model: string, rep: number) {
         const result = results.find((r) => r.key === `c${i}`);
         const invented = c.label.kind === 'invented';
         const row: Row = error || !result
-          ? { prompt_id: c.id, prompt: c.text, tags: [c.label.kind, ...(c.tags || [])], model, rep, status: 'error', error: error || 'no result for this caption' }
+          ? { prompt_id: c.id, prompt: c.text, tags: labelTags(c), model, rep, status: 'error', error: error || 'no result for this caption' }
           : {
               prompt_id: c.id,
               prompt: c.text,
-              tags: [c.label.kind, ...(c.tags || [])],
+              tags: labelTags(c),
               model,
               rep,
               status: 'ok',
@@ -139,7 +149,7 @@ function rulesBaseline() {
     const row: Row = {
       prompt_id: c.id,
       prompt: c.text,
-      tags: [c.label.kind, ...(c.tags || [])],
+      tags: labelTags(c),
       model: 'rules',
       rep: 0,
       status: 'ok',
@@ -158,7 +168,8 @@ function summarise(name: string) {
     .split('\n')
     .map((l) => JSON.parse(l));
   const ok = rows.filter((r) => r.status === 'ok');
-  const invented = ok.filter((r) => r.tags[0] === 'invented');
+  const invented = (grade: string) => ok.filter((r) => r.tags[0] === 'invented' && r.tags[1] === grade);
+  const caughtPct = (grade: string) => pct(invented(grade).filter((r) => r.grade?.caught).length, invented(grade).length);
   const truePosts = ok.filter((r) => r.tags[0] === 'true');
   const fixes = ok.filter((r) => r.verdict === 'fix');
   const usages = usagesByModel.get(name) || [];
@@ -168,7 +179,9 @@ function summarise(name: string) {
   );
   return {
     name,
-    caught: pct(invented.filter((r) => r.grade?.caught).length, invented.length),
+    caught: caughtPct('clear'),
+    borderline: caughtPct('borderline'),
+    timing: caughtPct('timing'),
     kept: pct(truePosts.filter((r) => r.grade?.kept).length, truePosts.length),
     fixes: fixes.length,
     fixesPassRules: pct(fixes.filter((r) => r.fix_passes_rules).length, fixes.length),
@@ -189,9 +202,10 @@ function summarise(name: string) {
   console.table(summary);
   writeFileSync(
     path.join(runDir, 'summary.md'),
-    `# Checker test run: ${setName}\n\n${cases.length} captions (${cases.filter((c) => c.label.kind === 'invented').length} with an invented detail), ${reps} run(s) per model.\n\n` +
-      `| Step | Mistakes caught | True posts kept | Fixes | Fixes passing the hard rules | Errors | Calls | Cost (USD) |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n` +
-      summary.map((s) => `| ${s.name} | ${s.caught} | ${s.kept} | ${s.fixes} | ${s.fixesPassRules} | ${s.errors} | ${s.calls} | ${s.costUsd} |`).join('\n') +
+    `# Checker test run: ${setName}\n\n${cases.length} captions (${cases.filter((c) => c.label.kind === 'invented').length} with an invented detail), ${reps} run(s) per model. ` +
+      `Clear mistakes count towards the ship bar; borderline and timing ones are reported, not scored.\n\n` +
+      `| Step | Clear mistakes caught | True posts kept | Borderline flagged | Timing flagged | Fixes | Fixes passing the hard rules | Errors | Calls | Cost (USD) |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n` +
+      summary.map((s) => `| ${s.name} | ${s.caught} | ${s.kept} | ${s.borderline} | ${s.timing} | ${s.fixes} | ${s.fixesPassRules} | ${s.errors} | ${s.calls} | ${s.costUsd} |`).join('\n') +
       '\n'
   );
   console.log(`Results in ${path.relative(process.cwd(), runDir)}`);
