@@ -54,6 +54,20 @@
     "ENCRYPTION_PROVIDER": "local",
     "DISABLE_REGISTRATION": "true",
     "API_LIMIT": "30",
+    // App emails (password resets, activation, notifications) go through
+    // Cloudflare Email Sending over SMTP, with upstream's nodemailer provider.
+    // kanosena.com is onboarded for sending (records on cf-bounce. and
+    // _dmarc.; the iCloud MX/SPF for support@ are untouched). The password is
+    // a Cloudflare API token with "Email Sending: Edit", sent as the EMAIL_PASS
+    // secret by the deploy workflow from the EMAIL_SMTP_TOKEN repository
+    // secret.
+    "EMAIL_PROVIDER": "nodemailer",
+    "EMAIL_HOST": "smtp.mx.cloudflare.net",
+    "EMAIL_PORT": "465",
+    "EMAIL_SECURE": "true",
+    "EMAIL_USER": "api_token",
+    "EMAIL_FROM_ADDRESS": "no-reply@kanosena.com",
+    "EMAIL_FROM_NAME": "Kanosena",
     // Demo environment for platform app reviews: the Sandbox channel is on and
     // always labelled. Plans are paid through Stripe's sandbox ("Test
     // payments" on screen, test cards only, no real money). Needs the
