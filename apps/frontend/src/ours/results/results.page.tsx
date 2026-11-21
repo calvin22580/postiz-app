@@ -31,7 +31,7 @@ const Shell: FC<{ children: React.ReactNode }> = ({ children }) => (
 const Card: FC<{ children: React.ReactNode; testId?: string }> = ({ children, testId }) => (
   <section
     data-testid={testId}
-    className="flex flex-col gap-[16px] rounded-[14px] border border-newBorder bg-newBgColor p-[20px] mobile:p-[16px]"
+    className="flex flex-col gap-[16px] rounded-[18px] border border-newBorder bg-newBgColor p-[20px] mobile:p-[16px]"
   >
     {children}
   </section>
@@ -297,7 +297,7 @@ export const ResultsPage: FC = () => {
   return (
     <Shell>
       <div className="flex flex-col gap-[6px]">
-        <h1 className="text-[26px] font-[600]" data-testid="results-heading">
+        <h1 className="k-display text-[28px] leading-[1.15]" data-testid="results-heading">
           What worked
         </h1>
         <p className="text-[15px] leading-[1.6] text-textItemBlur">
@@ -313,8 +313,8 @@ export const ResultsPage: FC = () => {
         </Notice>
       ) : !data ? (
         <div className="flex flex-col gap-[16px]" aria-busy="true">
-          <div className="h-[120px] rounded-[14px] bg-newBgLineColor animate-pulse" />
-          <div className="h-[220px] rounded-[14px] bg-newBgLineColor animate-pulse" />
+          <div className="h-[120px] rounded-[18px] bg-newBgLineColor animate-pulse" />
+          <div className="h-[220px] rounded-[18px] bg-newBgLineColor animate-pulse" />
         </div>
       ) : (
         <>
