@@ -54,7 +54,7 @@ export type StoredCaptionDraft = Prisma.OursCaptionDraftGetPayload<{
 }>;
 
 // clears the version kept from before an AI rewrite
-const noPrevious = {
+const noPrevious: Prisma.OursCaptionDraftUpdateManyMutationInput = {
   previousText: null,
   previousFacts: Prisma.DbNull,
   previousEditedAt: null,
