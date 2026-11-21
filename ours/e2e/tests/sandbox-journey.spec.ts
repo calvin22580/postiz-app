@@ -25,6 +25,11 @@ test('sandbox post is scheduled, sent by the scheduler and shown as a sandbox po
   await page.getByRole('button', { name: 'Connect' }).click();
   await page.waitForURL(/added=sandbox/);
 
+  // The onboarding list shows it straight away, without a page refresh
+  // (found in the persona test: it still offered "Continue without channels").
+  await expect(page.getByText(/Connected Channels \(1\)/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continue without channels' })).toHaveCount(0);
+
   // The channel is listed, labelled as a sandbox.
   await page.goto('/launches');
   await expect(page.getByText('Sandbox · E2E Cafe').filter({ visible: true }).first()).toBeVisible();
@@ -102,4 +107,16 @@ test('sandbox post is scheduled, sent by the scheduler and shown as a sandbox po
   await expect(card).toContainText('Sandbox · E2E Cafe');
   await expect(card).toContainText(message);
   await page.screenshot({ path: 'test-results/sandbox-post.png' });
+
+  // The post preview (and its shared view) keeps the Sandbox label.
+  await page.goto(`/p/${postId}?share=true`);
+  await expect(page.getByTestId('sandbox-preview-marker')).toContainText('never sent to any real social media platform');
+  await page.screenshot({ path: 'test-results/sandbox-preview.png' });
+
+  // So does its row in the calendar's list view.
+  await page.goto('/launches');
+  await page.getByText('List', { exact: true }).first().click();
+  await page.getByText('Published', { exact: true }).first().click();
+  await expect(page.getByTestId('sandbox-calendar-marker').first()).toContainText('Test only, never publishes');
+  await page.screenshot({ path: 'test-results/sandbox-list-row.png' });
 });

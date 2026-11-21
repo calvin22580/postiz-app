@@ -28,6 +28,7 @@ import {
   mcpConnectorUrls,
 } from '@gitroom/frontend/components/public-api/public.component';
 import { McpClientIcon } from '@gitroom/frontend/components/public-api/mcp.client.icons';
+import { useRefreshOnChannelAdded } from '@gitroom/frontend/ours/onboarding/refresh.on.added'; // OURS (2026-11-21): reload channels after connecting
 import { showDeveloperTools } from '@gitroom/frontend/ours/developer-tools/developer.tools'; // OURS (2026-11-15): hide the Connect Agents step
 
 interface OnboardingModalProps {
@@ -144,7 +145,7 @@ const OnboardingStep1: FC<{ onNext: () => void; onSkip: () => void }> = ({
     return list;
   }, []);
 
-  const { data: integrations } = useSWR('/integrations/list', load, {
+  const { data: integrations, mutate: reloadIntegrations } = useSWR('/integrations/list', load, { // OURS (2026-11-21): mutate, for the reload below
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
     revalidateIfStale: false,
@@ -153,6 +154,8 @@ const OnboardingStep1: FC<{ onNext: () => void; onSkip: () => void }> = ({
     refreshWhenOffline: false,
     fallbackData: [],
   });
+
+  useRefreshOnChannelAdded(reloadIntegrations); // OURS (2026-11-21): show a channel connected in-app without a page refresh
 
   const sortedIntegrations = useMemo(() => {
     return orderBy(

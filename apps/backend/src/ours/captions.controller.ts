@@ -104,6 +104,11 @@ export class CaptionsController {
     return this._captionService.restore(org.id, id);
   }
 
+  @Post('/:id/keep-previous')
+  keepPrevious(@GetOrgFromRequest() org: Organization, @Param('id') id: string) {
+    return this._captionService.keepPrevious(org.id, id);
+  }
+
   @Post('/:id/rewrite')
   rewrite(
     @GetOrgFromRequest() org: Organization,

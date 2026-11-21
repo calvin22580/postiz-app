@@ -640,11 +640,40 @@ export class CaptionService {
     const saved = await this._captionRepository.saveRewrite(orgId, draftId, {
       text: fresh.text,
       facts: fresh.facts.map(storedFact),
+      previous:
+        draft.previousText
+          ? { text: draft.previousText, facts: (draft.previousFacts ?? []) as Prisma.InputJsonValue, editedAt: draft.previousEditedAt }
+          : { text: draft.text, facts: draft.facts as Prisma.InputJsonValue, editedAt: draft.editedAt },
     });
     await signal(saved ? fresh.text : null);
     if (!saved) {
       throw new HttpException('This post was approved or rejected while we were writing, so it was left as it is.', 409);
     }
+    return this.getWeek(orgId);
+  }
+
+  // After AI rewrites, the owner can go back to the version before them
+  // (found in the persona test: a rewrite replaced a post the owner preferred)
+  async keepPrevious(orgId: string, draftId: string) {
+    const draft = await this.waitingDraft(orgId, draftId);
+    if (!draft.previousText) {
+      throw new HttpException('There’s no earlier version of this post to go back to.', 400);
+    }
+    const kept = await this._captionRepository.keepPrevious(orgId, draftId, {
+      text: draft.previousText,
+      facts: (draft.previousFacts ?? []) as Prisma.InputJsonValue,
+      editedAt: draft.previousEditedAt,
+    });
+    if (!kept) {
+      throw new HttpException('This post can only be changed while it is waiting for your approval.', 400);
+    }
+    await this._brandSignalService.record(orgId, {
+      kind: 'kept-previous',
+      ...signalTarget(draft),
+      before: draft.text,
+      after: draft.previousText,
+      edited: !!draft.previousEditedAt,
+    });
     return this.getWeek(orgId);
   }
 
@@ -804,6 +833,8 @@ export class CaptionService {
         rejectedAt: d.rejectedAt,
         rejectReason: d.rejectReason,
         rewritesLeft: Math.max(0, MAX_REWRITES - d.rewriteCount),
+        // the version before the AI rewrites, while the owner can go back to it
+        previousText: d.status === OursCaptionStatus.PENDING_APPROVAL ? d.previousText : null,
         maxLength: CAPTION_PLATFORMS.find((p) => p.key === d.platform)?.maxLength || 0,
         // details in the owner's own words that the profile doesn't have:
         // shown as a reminder to check, never removed

@@ -25,6 +25,8 @@ export interface Caption {
   rejectReason: string | null;
   // AI rewrites still allowed for this caption
   rewritesLeft: number;
+  // the version before the AI rewrites, while the owner can go back to it
+  previousText: string | null;
   // the platform's character limit
   maxLength: number;
   // details in the owner's own wording that the profile doesn't have

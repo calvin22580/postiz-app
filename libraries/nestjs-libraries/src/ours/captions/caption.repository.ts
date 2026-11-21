@@ -50,6 +50,13 @@ export type StoredCaptionDraft = Prisma.OursCaptionDraftGetPayload<{
   select: typeof DRAFT_SELECT;
 }>;
 
+// clears the version kept from before an AI rewrite
+const noPrevious = {
+  previousText: null,
+  previousFacts: Prisma.DbNull,
+  previousEditedAt: null,
+};
+
 @Injectable()
 export class CaptionRepository {
   constructor(
@@ -264,6 +271,21 @@ export class CaptionRepository {
     return this.whileStatus(orgId, id, OursCaptionStatus.PENDING_APPROVAL, {
       text,
       editedAt: new Date(),
+      ...noPrevious,
+    });
+  }
+
+  // back to the version before the AI rewrites
+  keepPrevious(
+    orgId: string,
+    id: string,
+    previous: { text: string; facts: Prisma.InputJsonValue; editedAt: Date | null }
+  ) {
+    return this.whileStatus(orgId, id, OursCaptionStatus.PENDING_APPROVAL, {
+      text: previous.text,
+      facts: previous.facts,
+      editedAt: previous.editedAt,
+      ...noPrevious,
     });
   }
 
@@ -305,15 +327,24 @@ export class CaptionRepository {
     return count === 1;
   }
 
+  // previous: the version before the first of the rewrites since the owner
+  // last chose a text, so going back after two rewrites returns the original
   saveRewrite(
     orgId: string,
     id: string,
-    body: { text: string; facts: Prisma.InputJsonValue }
+    body: {
+      text: string;
+      facts: Prisma.InputJsonValue;
+      previous: { text: string; facts: Prisma.InputJsonValue; editedAt: Date | null };
+    }
   ) {
     return this.whileStatus(orgId, id, OursCaptionStatus.PENDING_APPROVAL, {
       text: body.text,
       facts: body.facts,
       editedAt: null,
+      previousText: body.previous.text,
+      previousFacts: body.previous.facts,
+      previousEditedAt: body.previous.editedAt,
     });
   }
 

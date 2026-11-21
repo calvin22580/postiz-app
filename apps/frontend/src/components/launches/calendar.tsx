@@ -66,6 +66,7 @@ import {
 } from '@gitroom/frontend/components/layout/set.timezone';
 import { Button } from '@gitroom/react/form/button';
 import { ChevronUpIcon } from '@gitroom/frontend/components/ui/icons';
+import { SandboxCalendarMarker } from '@gitroom/frontend/ours/sandbox/sandbox.markers'; // OURS (2026-11-21): Sandbox label on calendar rows
 
 // Extend dayjs with necessary plugins
 extend(isSameOrAfter);
@@ -1451,6 +1452,8 @@ const CalendarItem: FC<{
             isBeforeNow && brandMark && '!grayscale'
           )}
         >
+          {/* OURS (2026-11-21): Sandbox label stays on the row after approval */}
+          <SandboxCalendarMarker identifier={post.integration?.providerIdentifier} display={display} />
           <div className="text-start">
             {state === 'DRAFT' ? t('draft', 'Draft') + ': ' : ''}
           </div>

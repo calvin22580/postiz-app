@@ -335,6 +335,15 @@ describe('AnthropicCaptionWriter.rewrite (fake client)', () => {
       buildRewriteMessage({ facts: FACTS, tone: 'warm', day: 'Monday', platform: 'facebook', theme: 'Hello', current: 'Hi', note: '  ', attempt: 0 })
     ).not.toContain('owner_note');
   });
+
+  // persona test: a post going out after closing promised food "coming right
+  // up", and "keep it short" came back longer
+  it('tells the AI when each caption goes out and to respect a request for a shorter version', () => {
+    expect(CAPTION_SYSTEM_PROMPT).toContain('Never suggest that something is ready, waiting or available right now');
+    const user = buildRewriteMessage({ facts: FACTS, tone: 'warm', day: 'Monday', platform: 'instagram', theme: 'Hello', current: 'Hi', note: 'Keep it short', attempt: 0 });
+    expect(user).toContain('going out at 18:30');
+    expect(user).toContain('must have fewer words than the current one');
+  });
 });
 
 const makeService = () => {
@@ -355,6 +364,7 @@ const makeService = () => {
     setRejectReason: vi.fn(async () => true),
     claimRewrite: vi.fn(async () => true),
     saveRewrite: vi.fn(async () => true),
+    keepPrevious: vi.fn(async () => true),
     giveBackRewrite: vi.fn(async () => ({ count: 1 })),
   };
   const profiles = {
@@ -772,7 +782,30 @@ describe('CaptionService review', () => {
         { id: 'businessName.0', field: 'businessName', value: 'Harbour Lane Bakery' },
         { id: 'services.0', field: 'services', value: 'Sourdough loaves' },
       ],
+      // the version before it, so the owner can go back
+      previous: { text: draft().text, facts: draft().facts, editedAt: null },
     });
+  });
+
+  it('keeps the version from before the first rewrite, so two rewrites can still go back to the original', async () => {
+    const { service, repo } = makeService();
+    const original = { text: 'The original, edited by the owner.', facts: [], editedAt: new Date('2030-01-01T00:00:00Z') };
+    repo.getDraft.mockResolvedValue(draft({ rewriteCount: 1, previousText: original.text, previousFacts: original.facts, previousEditedAt: original.editedAt }));
+    await service.rewrite('org-1', 'd1', undefined, rewriter('Sourdough loaves, baked by Harbour Lane Bakery. Pop in and say hello.'));
+    expect(repo.saveRewrite).toHaveBeenCalledWith('org-1', 'd1', expect.objectContaining({ previous: original }));
+  });
+
+  it('goes back to the earlier version after a rewrite, and records it', async () => {
+    const { service, repo, signals } = makeService();
+    repo.getDraft.mockResolvedValue(draft({ text: 'The rewrite.', previousText: 'The earlier one.', previousFacts: [{ id: 'services.0' }], previousEditedAt: null }));
+    await service.keepPrevious('org-1', 'd1');
+    expect(repo.keepPrevious).toHaveBeenCalledWith('org-1', 'd1', { text: 'The earlier one.', facts: [{ id: 'services.0' }], editedAt: null });
+    expect(signals.record).toHaveBeenCalledWith('org-1', expect.objectContaining({ kind: 'kept-previous', before: 'The rewrite.', after: 'The earlier one.' }));
+
+    repo.getDraft.mockResolvedValue(draft({ previousText: null }));
+    await expect(service.keepPrevious('org-1', 'd1')).rejects.toThrow('no earlier version');
+    repo.getDraft.mockResolvedValue(draft({ status: 'APPROVED', previousText: 'x' }));
+    await expect(service.keepPrevious('org-1', 'd1')).rejects.toThrow('already approved');
   });
 
   it('keeps the current version when the new one invents a detail, but still logs the cost', async () => {
@@ -1011,8 +1044,8 @@ describe('platforms in a week (Milestone 7)', () => {
 
   it('tells the AI which platforms to write for', () => {
     const message = buildCaptionMessage({ facts: FACTS, tone: 'warm', days: [...POSTING_DAYS], platforms: ['instagram'] });
-    expect(message).toContain('Platforms: Instagram\n');
-    expect(buildCaptionMessage({ facts: FACTS, tone: 'warm', days: [...POSTING_DAYS] })).toContain('Platforms: Facebook, Instagram, LinkedIn\n');
+    expect(message).toContain('Platforms (posting time): Instagram (18:30)\n');
+    expect(buildCaptionMessage({ facts: FACTS, tone: 'warm', days: [...POSTING_DAYS] })).toContain('Platforms (posting time): Facebook (12:30), Instagram (18:30), LinkedIn (08:30)\n');
   });
 
   it('writes a one-platform plan’s week on its connected platform only', async () => {

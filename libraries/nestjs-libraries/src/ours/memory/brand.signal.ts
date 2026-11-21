@@ -15,6 +15,9 @@ export const SIGNAL_KINDS = [
   'restored',
   // an AI rewrite the owner asked for (note = what they asked to change)
   'rewrite',
+  // after AI rewrites, the owner went back to the earlier version (before =
+  // the rewrite they turned down, after = the version they kept)
+  'kept-previous',
 ] as const;
 
 export type SignalKind = (typeof SIGNAL_KINDS)[number];
