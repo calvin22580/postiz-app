@@ -12,7 +12,7 @@ committed).
 - `profiles`: each business's profile facts (`id`, `field`, `value`), saved as files so a run never depends on a live website;
 - `cases`: one caption each, with its profile and platform, labelled `true` (every claim is in the profile) or `invented` with the one detail that isn't. Optional `tags` group cases in the results (for example `missed-by-rules`).
 
-`checker/sets/sample` is a six-caption made-up sample for checking that the runner works. The real test set is built in E2 from real business websites.
+`checker/sets/sample` is a six-caption made-up sample for checking that the runner works. `checker/sets/personas` is the E2 test set: 66 posts for three fictional businesses from the Codex persona test (21/11/2026), 46 of them written by the app and 20 with planted mistakes. Invented details are graded clear (scored), borderline or timing (reported only); posts relabelled after review carry the `relabelled` tag.
 
 Run from the repo root:
 
@@ -24,6 +24,8 @@ ANTHROPIC_API_KEY=… ours/eval/checker/run.sh --set <name> --models claude-haik
 - `--models`: comma-separated model ids, or `demo` (free, passes everything).
 - `--reps`: runs per model (default 1). Two runs show how much results vary.
 - `--limit N`: only the first N captions, for a pilot.
+
+`run.sh` bundles the runner with the esbuild that is already in `node_modules` (installed with upstream's dependencies, not added by us), so it needs no new package.
 
 Each run calls the real Checker, with a whole profile's captions (up to 12) in one call, as the app does for a written week. Today's hard rules (`unsupportedDetails`) are scored on the same captions for comparison, at no cost.
 

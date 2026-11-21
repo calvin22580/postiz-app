@@ -599,10 +599,13 @@
       "profile": "thimblewick",
       "platform": "facebook",
       "label": {
-        "kind": "true"
+        "kind": "invented",
+        "grade": "timing",
+        "detail": "“tomorrow's a good day to pop in” is only right if tomorrow is an opening day, which depends on when the post goes out."
       },
       "tags": [
-        "codex-run-2"
+        "codex-run-2",
+        "relabelled"
       ],
       "text": "A quick reminder of when you can find us at Apricot Thimblewick Café: Tuesday to Saturday, 09:00 to 15:00. We're closed on Sundays and Mondays, so tomorrow's a good day to pop in. See you soon ☕"
     },
@@ -673,10 +676,13 @@
       "profile": "thimblewick",
       "platform": "facebook",
       "label": {
-        "kind": "true"
+        "kind": "invented",
+        "grade": "borderline",
+        "detail": "“goes down nicely with a cuppa” suggests the café serves tea; the menu lists only the loaf and the soup."
       },
       "tags": [
-        "codex-run-2"
+        "codex-run-2",
+        "relabelled"
       ],
       "text": "Mid-week treat, anyone? A slice of our apricot and oat loaf is £3.40, and it goes down nicely with a cuppa. Pop in and say hello 😊"
     },

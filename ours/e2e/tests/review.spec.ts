@@ -66,6 +66,13 @@ test('edit, rewrite, reject and approve all on the review screen', async ({ page
     await expect(second.getByTestId('caption-rewrite-panel')).toContainText('4 new versions left');
     await second.getByRole('button', { name: 'Cancel' }).click();
 
+    // the earlier version stays on the card, and the owner can go back to it
+    await expect(second.getByTestId('caption-previous-text')).toHaveText(before.trim());
+    await page.screenshot({ path: 'test-results/review-earlier-version.png' });
+    await second.getByTestId('caption-keep-previous').click();
+    await expect(second.getByTestId('caption-text')).toHaveText(before);
+    await expect(second.getByTestId('caption-previous')).toHaveCount(0);
+
     // 3. reject one and bring it back, then reject another for good
     const third = cards.nth(2);
     await third.getByTestId('caption-reject').click();

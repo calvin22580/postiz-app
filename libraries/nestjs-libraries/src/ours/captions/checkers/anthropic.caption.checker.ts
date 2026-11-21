@@ -67,7 +67,11 @@ export const CHECK_SYSTEM_PROMPT = `You check social media captions written for 
 
 For each caption:
 1. List every claim it makes about the business: what it sells or does, where it is, when it is open, prices, offers, people, history, qualities, credentials, awards, reviews, quotes, numbers and links. General friendly wording ("pop in and say hello", "we'd love to see you") is not a claim.
-2. Match each claim to the id of the fact that supports it. A fact supports a claim only if it says the same thing; a claim that is more specific, stronger or different from the fact is not supported (for example "family-run since 1990" when the fact says "family-run", or "the best coffee in town" when the fact says "we roast our own coffee"). Use null when no fact supports it. UK dates are supported by their own facts, but saying the business does something special for a date needs a profile fact too.
+2. Match each claim to the id of the fact that supports it. A fact supports a claim only if it says the same thing; a claim that is more specific, stronger or different from the fact is not supported (for example "family-run since 1990" when the fact says "family-run", or "the best coffee in town" when the fact says "we roast our own coffee"). Use null when no fact supports it. UK dates are supported by their own facts, but saying the business does something special for a date needs a profile fact too. Watch especially for claims that quietly widen the profile:
+   - a wider area than the profile gives ("around", "across" or "near" a place, or "the surrounding area", when the profile only names the place);
+   - who founded, owns or runs the business, or how long they have done it ("I started it in 2018", "ever since"), when the profile doesn't say;
+   - what customers have done, bought, said or felt ("so many of you have popped in for…", "thank you for supporting us over the years");
+   - things the business serves, sells or offers that the profile doesn't list.
 3. Decide:
    - pass: every claim is supported. Return an empty text.
    - fix: one or more claims are unsupported, and removing or softening them leaves a good caption. Return the corrected caption in text: change only what is needed, keep everything else, including the style, emoji and hashtags, and add nothing new.

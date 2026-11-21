@@ -48,6 +48,7 @@ import {
   CaptionWriter,
   CaptionWriterError,
   CaptionWriterWithUsageError,
+  RawCaptionPlan,
 } from '@gitroom/nestjs-libraries/ours/captions/writers/caption.writer';
 import { AnthropicCaptionWriter } from '@gitroom/nestjs-libraries/ours/captions/writers/anthropic.caption.writer';
 import { DemoCaptionWriter } from '@gitroom/nestjs-libraries/ours/captions/writers/demo.caption.writer';
@@ -59,7 +60,6 @@ import {
 } from '@gitroom/nestjs-libraries/ours/captions/checkers/caption.checker';
 import { AnthropicCaptionChecker } from '@gitroom/nestjs-libraries/ours/captions/checkers/anthropic.caption.checker';
 import { DemoCaptionChecker } from '@gitroom/nestjs-libraries/ours/captions/checkers/demo.caption.checker';
-import { RawCaptionPlan } from '@gitroom/nestjs-libraries/ours/captions/writers/caption.writer';
 import {
   isSandboxEnabled,
   SANDBOX_IDENTIFIER,
@@ -86,7 +86,7 @@ dayjs.extend(timezone);
 export const CAPTIONS_FEATURE = 'captions';
 export const CAPTION_REWRITE_FEATURE = 'caption-rewrite';
 // Content engine E2: the Checker's calls, for a week and for a rewrite
-export const CAPTION_CHECK_FEATURE = 'captions.check';
+export const CAPTION_CHECK_FEATURE = 'caption-check';
 // Each AI rewrite is a billed call, so a caption can be rewritten a few times
 // only; after that the owner can still edit it themselves.
 export const MAX_REWRITES = 5;

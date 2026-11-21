@@ -1374,7 +1374,7 @@ describe('the Checker (content engine E2)', () => {
     const [, , body] = repo.finishWeek.mock.calls[0] as unknown as [string, string, any];
     // the hard rules alone: the invented year is dropped, the invented delivery is not
     expect(body.drafts.map((d: any) => d.platform)).toEqual(['facebook', 'linkedin']);
-    expect(usage.logCall).not.toHaveBeenCalledWith('org-1', 'captions.check', expect.anything());
+    expect(usage.logCall).not.toHaveBeenCalledWith('org-1', 'caption-check', expect.anything());
   });
 
   it('fixes and drops before the hard rules, and logs its cost under its own name', async () => {
@@ -1391,7 +1391,7 @@ describe('the Checker (content engine E2)', () => {
       ['facebook', 'Hello from Harbour Lane Bakery in Exampletown!'],
       ['instagram', 'Harbour Lane Bakery, a family bakery in Exampletown.'],
     ]);
-    expect(usage.logCall).toHaveBeenCalledWith('org-1', 'captions.check', CHECK_USAGE);
+    expect(usage.logCall).toHaveBeenCalledWith('org-1', 'caption-check', CHECK_USAGE);
   });
 
   it('still runs the hard rules on a fix', async () => {
@@ -1413,7 +1413,7 @@ describe('the Checker (content engine E2)', () => {
     await service.runWriting('org-1', week, FACTS, 'warm', writer(), undefined, null, undefined, failing);
     const [, , body] = repo.finishWeek.mock.calls[0] as unknown as [string, string, any];
     expect(body.drafts.map((d: any) => d.platform)).toEqual(['facebook', 'linkedin']);
-    expect(usage.logCall).toHaveBeenCalledWith('org-1', 'captions.check', CHECK_USAGE);
+    expect(usage.logCall).toHaveBeenCalledWith('org-1', 'caption-check', CHECK_USAGE);
   });
 
   it('checks a rewrite too, and keeps the current version when it is dropped', async () => {
@@ -1430,7 +1430,7 @@ describe('the Checker (content engine E2)', () => {
     const check = checker([{ key: '0:facebook', verdict: 'drop', claims: [{ claim: 'voted favourite', factId: null }] }]);
     await expect(service.rewrite('org-1', 'd1', undefined, rewriter, check)).rejects.toThrow('kept the current one');
     expect(repo.saveRewrite).not.toHaveBeenCalled();
-    expect(usage.logCall).toHaveBeenCalledWith('org-1', 'captions.check', CHECK_USAGE);
+    expect(usage.logCall).toHaveBeenCalledWith('org-1', 'caption-check', CHECK_USAGE);
   });
 
   it('the demo Checker passes everything and costs nothing', async () => {

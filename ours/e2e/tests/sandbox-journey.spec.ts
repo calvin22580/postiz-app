@@ -114,9 +114,8 @@ test('sandbox post is scheduled, sent by the scheduler and shown as a sandbox po
   await page.screenshot({ path: 'test-results/sandbox-preview.png' });
 
   // So does its row in the calendar's list view.
-  await page.goto('/launches');
-  await page.getByText('List', { exact: true }).first().click();
-  await page.getByText('Published', { exact: true }).first().click();
+  await page.goto('/launches?display=list');
+  await page.getByText('Published', { exact: true }).filter({ visible: true }).first().click();
   await expect(page.getByTestId('sandbox-calendar-marker').first()).toContainText('Test only, never publishes');
   await page.screenshot({ path: 'test-results/sandbox-list-row.png' });
 });
