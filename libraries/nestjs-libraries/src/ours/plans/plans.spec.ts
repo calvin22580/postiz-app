@@ -15,6 +15,7 @@ import {
 import {
   allowancePeriod,
   channelLimitMessage,
+  keepsBillingDate,
   limitMessage,
   planStatus,
   PlanService,
@@ -36,7 +37,7 @@ describe('plan config', () => {
   });
 
   it('never gives a bigger plan less of anything', () => {
-    const keys = [...METRICS.map((m) => m.key), 'channels', 'aiSpendUsd'] as const;
+    const keys = [...METRICS.map((m) => m.key), 'channels', 'platforms', 'aiSpendUsd'] as const;
     for (let i = 1; i < PAID_PLANS.length; i++) {
       for (const k of keys) {
         expect(PAID_PLANS[i].limits[k], `${PAID_PLANS[i].key}.${k}`).toBeGreaterThanOrEqual(
@@ -59,6 +60,20 @@ describe('plan config', () => {
   it('lets the trial write a full week on all three platforms', () => {
     // 5 weekdays x Facebook, Instagram, LinkedIn
     expect(TRIAL_PLAN.limits.postsScheduled).toBeGreaterThanOrEqual(15);
+    expect(TRIAL_PLAN.limits.platforms).toBe(3);
+  });
+
+  it('writes each plan’s week on as many platforms as its summary says', () => {
+    expect(PAID_PLANS.map((p) => p.limits.platforms)).toEqual([1, 2, 3]);
+  });
+
+  it('never gives a paying customer less than the trial', () => {
+    const keys = [...METRICS.map((m) => m.key), 'aiSpendUsd'] as const;
+    for (const k of keys) {
+      // a week of posts is the one exception: every plan writes a week a week
+      if (k === 'captionWeeks' || k === 'postsScheduled') continue;
+      expect(PAID_PLANS[0].limits[k], `starter.${k}`).toBeGreaterThanOrEqual(TRIAL_PLAN.limits[k]);
+    }
   });
 
   it('reads settings from the environment with UK defaults', () => {
@@ -91,26 +106,44 @@ describe('plan config', () => {
 });
 
 describe('allowance periods', () => {
-  it('uses the calendar month in UK time, not UTC', () => {
-    // 23:30 UTC on 31 March 2026 is 00:30 on 1 April in British Summer Time
-    expect(usagePeriod(new Date('2026-03-31T23:30:00Z'), 'Europe/London')).toMatchObject({
-      key: '2026-04',
+  it('resets on the billing date each month, not the 1st', () => {
+    const startedAt = new Date('2026-11-19T15:00:00Z');
+    expect(usagePeriod(startedAt, new Date('2026-11-20T12:00:00Z'), 'Europe/London')).toMatchObject({
+      key: '2026-11-19',
+      startDate: '2026-11-19',
+      resetsOn: '2026-12-19',
+    });
+    // the moment it renews, the next month starts
+    expect(usagePeriod(startedAt, new Date('2026-12-19T14:59:59Z')).key).toBe('2026-11-19');
+    expect(usagePeriod(startedAt, new Date('2026-12-19T15:00:00Z')).key).toBe('2026-12-19');
+    expect(usagePeriod(startedAt, new Date('2027-03-01T00:00:00Z'))).toMatchObject({ key: '2027-02-19', resetsOn: '2027-03-19' });
+  });
+
+  it('counts each month from the start, as Stripe bills a plan started on the 31st', () => {
+    const startedAt = new Date('2027-01-31T10:00:00Z');
+    const feb = usagePeriod(startedAt, new Date('2027-02-15T12:00:00Z'));
+    expect(feb).toMatchObject({ key: '2027-01-31', resetsOn: '2027-02-28' });
+    expect(usagePeriod(startedAt, new Date('2027-03-10T12:00:00Z'))).toMatchObject({ key: '2027-02-28', resetsOn: '2027-03-31' });
+    expect(usagePeriod(startedAt, new Date('2027-04-01T12:00:00Z'))).toMatchObject({ key: '2027-03-31', resetsOn: '2027-04-30' });
+    expect(limitMessage(findPlan('starter')!, 'rewrites', feb.end)).toContain('resets on 28/02/2027');
+  });
+
+  it('shows the billing date in UK time', () => {
+    // 23:30 UTC on 31 March 2026 is 1 April in British Summer Time
+    expect(usagePeriod(new Date('2026-03-31T23:30:00Z'), new Date('2026-04-10T12:00:00Z'), 'Europe/London')).toMatchObject({
       startDate: '2026-04-01',
       resetsOn: '2026-05-01',
     });
-    expect(usagePeriod(new Date('2026-11-30T23:30:00Z'), 'Europe/London').key).toBe('2026-11');
-    expect(usagePeriod(new Date('2026-12-31T12:00:00Z'), 'Europe/London').resetsOn).toBe('2027-01-01');
   });
 
-  it('ends the month at UK midnight when the clocks change', () => {
-    // clocks go back on 25/10/2026: October starts in BST and ends in GMT
-    const october = usagePeriod(new Date('2026-10-15T12:00:00Z'), 'Europe/London');
-    expect(october.start.toISOString()).toBe('2026-09-30T23:00:00.000Z');
-    expect(october.end.toISOString()).toBe('2026-11-01T00:00:00.000Z');
-    expect(limitMessage(findPlan('starter')!, 'rewrites', october.end)).toContain('resets on 01/11/2026');
-    // clocks go forward on 29/03/2026
-    const march = usagePeriod(new Date('2026-03-15T12:00:00Z'), 'Europe/London');
-    expect(march.end.toISOString()).toBe('2026-03-31T23:00:00.000Z');
+  it('keeps the billing date when moving between paid plans on the same subscription', () => {
+    expect(keepsBillingDate({ plan: 'starter', paymentProvider: 'stripe', externalId: 'sub_1' }, 'stripe', 'sub_1')).toBe(true);
+    expect(keepsBillingDate({ plan: 'starter', paymentProvider: 'test' }, 'test', undefined)).toBe(true);
+    // a first paid plan, a new subscription, or a plan that ended starts afresh
+    expect(keepsBillingDate({ plan: 'trial', paymentProvider: 'none' }, 'stripe', 'sub_1')).toBe(false);
+    expect(keepsBillingDate({ plan: 'trial', paymentProvider: 'stripe', externalId: 'sub_1' }, 'stripe', 'sub_1')).toBe(false);
+    expect(keepsBillingDate({ plan: 'growth', paymentProvider: 'stripe', externalId: 'sub_1' }, 'stripe', 'sub_2')).toBe(false);
+    expect(keepsBillingDate(null, 'stripe', 'sub_1')).toBe(false);
   });
 
   it('doesn’t count AI spent in the trial against the first paid month', () => {
@@ -121,6 +154,10 @@ describe('allowance periods', () => {
     expect(allowancePeriod({ plan: 'starter', startedAt: longAgo, trialEndsAt: null }, now).spendFrom.toISOString()).toBe(
       '2026-11-01T00:00:00.000Z'
     );
+    const midMonth = new Date('2026-03-14T09:00:00Z');
+    expect(allowancePeriod({ plan: 'starter', startedAt: midMonth, trialEndsAt: null }, now).spendFrom.toISOString()).toBe(
+      '2026-11-14T09:00:00.000Z'
+    );
   });
 
   it('gives the trial one allowance for its whole length', () => {
@@ -128,7 +165,7 @@ describe('allowance periods', () => {
     const trialEndsAt = new Date('2026-12-09T10:00:00Z');
     const p = allowancePeriod({ plan: 'trial', startedAt, trialEndsAt }, new Date('2026-12-02T10:00:00Z'));
     expect(p).toMatchObject({ key: 'trial', resetsOn: null, start: startedAt });
-    expect(allowancePeriod({ plan: 'growth', startedAt, trialEndsAt: null }, new Date('2026-12-02T10:00:00Z')).key).toBe('2026-12');
+    expect(allowancePeriod({ plan: 'growth', startedAt, trialEndsAt: null }, new Date('2026-12-02T10:00:00Z')).key).toBe('2026-11-25');
   });
 
   it('knows when a trial has ended', () => {
@@ -227,12 +264,12 @@ describe('PlanService', () => {
 
   it('takes one unit at a time and refuses past the limit with a 403 and a reason', async () => {
     const { service } = makeService({ plan: active('starter') });
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
       await service.claim('org-1', 'profileBuilds');
     }
     const error = await service.claim('org-1', 'profileBuilds').catch((e) => e);
     expect(error.getStatus()).toBe(PLAN_LIMIT_STATUS);
-    expect(error.message).toContain('all 2 website reads included in your Starter plan this month');
+    expect(error.message).toContain('all 3 website reads included in your Starter plan this month');
   });
 
   it('never refuses with 402, which sends the owner to upstream’s billing page', () => {
@@ -254,7 +291,7 @@ describe('PlanService', () => {
     const { service, repo } = makeService({ plan: active('growth') });
     const ticket = await service.claim('org-1', 'rewrites', new Date('2026-11-30T23:59:00Z'));
     await service.giveBack('org-1', ticket);
-    expect(repo.giveBack).toHaveBeenCalledWith('org-1', '2026-11', 'rewrites');
+    expect(repo.giveBack).toHaveBeenCalledWith('org-1', '2026-11-01', 'rewrites');
   });
 
   it('blocks everything once the trial has ended', async () => {
@@ -322,7 +359,8 @@ describe('PlanService', () => {
     await expect(service.changePlan('org-1', 'trial', true)).rejects.toThrow('doesn’t exist');
     expect(repo.setPlan).not.toHaveBeenCalled();
     const view = await service.changePlan('org-1', 'growth', true);
-    expect(repo.setPlan).toHaveBeenCalledWith('org-1', 'growth', 'test');
+    // a change between paid plans keeps the billing date
+    expect(repo.setPlan).toHaveBeenCalledWith('org-1', 'growth', 'test', undefined, undefined);
     expect(view.plan.key).toBe('growth');
     expect(view.billing).toEqual({ mode: 'test', canChange: true, canManage: false, testPayments: false });
   });

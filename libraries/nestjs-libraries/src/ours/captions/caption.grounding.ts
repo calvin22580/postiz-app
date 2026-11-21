@@ -133,10 +133,13 @@ export const withoutCitedDates = (text: string, dates: CaptionFact[]) => {
   return out;
 };
 
+// platforms: the ones the plan includes this week (all when not given); a
+// caption for any other platform is dropped
 export const groundCaptions = (
   raw: RawCaptionPlan,
   facts: CaptionFact[],
-  dayCount: number
+  dayCount: number,
+  platforms?: CaptionPlatform[]
 ) => {
   const byId = new Map(facts.map((f) => [f.id, f]));
   const kept: CheckedCaption[] = [];
@@ -166,6 +169,8 @@ export const groundCaptions = (
         ? 'bad day'
         : !isCaptionPlatform(platform)
         ? 'bad platform'
+        : platforms && !platforms.includes(platform)
+        ? 'platform not on plan'
         : seen.has(key)
         ? 'duplicate'
         : text.length < 20 || text.length > maxLength

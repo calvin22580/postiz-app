@@ -1,4 +1,4 @@
-// OURS: which plan an organisation is on and what it has used this month
+// OURS: which plan an organisation is on and what it has used this billing month
 // (Milestone 7). Every query is scoped by organizationId.
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -50,12 +50,14 @@ export class PlanRepository {
   }
 
   // externalId: the provider's subscription id (Stripe), left as it is when
-  // not given
-  setPlan(orgId: string, plan: string, paymentProvider: string, externalId?: string) {
+  // not given. startedAt: when the allowance month starts (the billing
+  // date); not given keeps the one on record (a change of plan on the same
+  // subscription).
+  setPlan(orgId: string, plan: string, paymentProvider: string, externalId?: string, startedAt?: Date) {
     return this._plan.model.oursPlanSubscription.upsert({
       where: { organizationId: orgId },
-      create: { organizationId: orgId, plan, paymentProvider, externalId },
-      update: { plan, paymentProvider, externalId, trialEndsAt: null, startedAt: new Date() },
+      create: { organizationId: orgId, plan, paymentProvider, externalId, ...(startedAt ? { startedAt } : {}) },
+      update: { plan, paymentProvider, externalId, trialEndsAt: null, ...(startedAt ? { startedAt } : {}) },
       select: planSelect,
     });
   }

@@ -12,6 +12,7 @@ import {
   POSTING_DAYS,
   scheduledFor,
   toneFromProfile,
+  weekPlatforms,
 } from '@gitroom/nestjs-libraries/ours/captions/caption.plan';
 import {
   groundCaptions,
@@ -183,6 +184,15 @@ describe('DemoCaptionWriter', () => {
     expect(usages).toEqual([]);
     // the week ends with how to get in touch
     expect(captions.filter((c) => c.day === 4).every((c) => c.text.includes('01632 960123'))).toBe(true);
+  });
+
+  it('writes only for the platforms the plan includes', async () => {
+    const platforms = ['instagram' as const];
+    const { raw } = await new DemoCaptionWriter().write({ facts: FACTS, tone: 'warm', days: [...POSTING_DAYS], platforms });
+    const { captions, dropped } = groundCaptions(raw, FACTS, POSTING_DAYS.length, platforms);
+    expect(dropped).toBe(0);
+    expect(captions).toHaveLength(5);
+    expect(captions.every((c) => c.platform === 'instagram')).toBe(true);
   });
 
   it('writes fewer days for a thin profile rather than padding', async () => {
@@ -368,6 +378,7 @@ const makeService = () => {
   const plans = {
     claim: vi.fn(async (_org: string, metric: string) => ({ metric, period: '2026-11' })),
     giveBack: vi.fn(async () => undefined),
+    current: vi.fn(async () => ({ plan: { limits: { platforms: 3 } } })),
   };
   // Milestone 8: no past results unless a test adds some
   const performance = { writerPreferences: vi.fn(async (): Promise<any> => null) };
@@ -826,6 +837,59 @@ describe('CaptionService review', () => {
     const [, , saved] = repo.saveRewrite.mock.calls[0] as unknown as [string, string, { text: string }];
     expect(saved.text).not.toBe(draft().text);
     expect(saved.text).toContain('Sourdough loaves');
+  });
+});
+
+describe('platforms in a week (Milestone 7)', () => {
+  it('takes connected platforms first, then the usual order, up to the plan’s number', () => {
+    expect(weekPlatforms(1, [])).toEqual(['facebook']);
+    expect(weekPlatforms(1, ['sandbox', 'instagram-standalone'])).toEqual(['instagram']);
+    expect(weekPlatforms(2, ['linkedin-page'])).toEqual(['linkedin', 'facebook']);
+    expect(weekPlatforms(3, ['linkedin'])).toEqual(['linkedin', 'facebook', 'instagram']);
+    // never an empty week
+    expect(weekPlatforms(0, [])).toEqual(['facebook']);
+  });
+
+  it('drops a caption for a platform the plan doesn’t include, even if the AI wrote one', () => {
+    const raw = {
+      posts: [
+        {
+          day: 0,
+          theme: 'x',
+          captions: ['facebook', 'instagram', 'linkedin'].map((platform) => ({
+            platform,
+            text: 'Fresh bread every morning at Harbour Lane Bakery.',
+            factIds: ['businessName.0'],
+          })),
+        },
+      ],
+    };
+    const { captions, reasons } = groundCaptions(raw, FACTS, 5, ['linkedin']);
+    expect(captions.map((c) => c.platform)).toEqual(['linkedin']);
+    expect(reasons).toEqual(['day 0 facebook: platform not on plan', 'day 0 instagram: platform not on plan']);
+  });
+
+  it('tells the AI which platforms to write for', () => {
+    const message = buildCaptionMessage({ facts: FACTS, tone: 'warm', days: [...POSTING_DAYS], platforms: ['instagram'] });
+    expect(message).toContain('Platforms: Instagram\n');
+    expect(buildCaptionMessage({ facts: FACTS, tone: 'warm', days: [...POSTING_DAYS] })).toContain('Platforms: Facebook, Instagram, LinkedIn\n');
+  });
+
+  it('writes a one-platform plan’s week on its connected platform only', async () => {
+    const { service, repo, plans } = makeService();
+    plans.current.mockResolvedValue({ plan: { limits: { platforms: 1 } } });
+    const week = { id: 'w1', weekStart: '2030-01-07', timezone: 'Europe/London' };
+    Object.assign(repo, { claimWeek: vi.fn(async () => week) });
+    const run = vi.spyOn(service, 'runWriting').mockResolvedValue(undefined);
+    await service.startWriting('org-1');
+    // the test org has a Sandbox channel and a Facebook Page
+    expect(run.mock.calls[0][7]).toEqual(['facebook']);
+
+    run.mockRestore();
+    await service.runWriting('org-1', week, FACTS, 'warm', new DemoCaptionWriter(), undefined, null, ['facebook']);
+    const saved = (repo.finishWeek.mock.calls[0] as any[])[2].drafts;
+    expect(saved.length).toBeGreaterThan(0);
+    expect(saved.every((d: { platform: string }) => d.platform === 'facebook')).toBe(true);
   });
 });
 

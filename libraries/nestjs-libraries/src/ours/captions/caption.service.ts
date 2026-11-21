@@ -37,6 +37,7 @@ import {
   POSTING_DAYS,
   scheduledFor,
   toneFromProfile,
+  weekPlatforms,
 } from '@gitroom/nestjs-libraries/ours/captions/caption.plan';
 import {
   groundCaptions,
@@ -188,7 +189,9 @@ export class CaptionService {
     let week;
     let seasonal: CaptionFact[];
     let preferences: WriterPreferences | null = null;
+    let platforms: CaptionPlatform[];
     try {
+      platforms = await this.platformsForWeek(orgId);
       week = await this._captionRepository.claimWeek(orgId, weekStart, tz);
       // Milestone 6: UK dates that fit this week, if the owner wants them
       seasonal = week ? await this.seasonalFacts(orgId, weekStart) : [];
@@ -204,7 +207,7 @@ export class CaptionService {
       return this.getWeek(orgId);
     }
     // background: the request returns now, the screen polls for progress
-    this.runWriting(orgId, week, [...facts, ...seasonal], toneFromProfile(profile.fields), undefined, ticket, preferences).catch(
+    this.runWriting(orgId, week, [...facts, ...seasonal], toneFromProfile(profile.fields), undefined, ticket, preferences, platforms).catch(
       (e) =>
         this._logger.error(`Caption writing crashed for org=${orgId}: ${e?.message}`)
     );
@@ -218,7 +221,9 @@ export class CaptionService {
     tone: string,
     writer: CaptionWriter = createCaptionWriter(),
     ticket?: UsageTicket,
-    preferences?: WriterPreferences | null
+    preferences?: WriterPreferences | null,
+    // the platforms the plan includes; all of them when not given
+    platforms?: CaptionPlatform[]
   ) {
     try {
       let output;
@@ -229,6 +234,7 @@ export class CaptionService {
           days: [...POSTING_DAYS],
           dates: postingDates(week.weekStart),
           ...(preferences ? { preferences } : {}),
+          ...(platforms ? { platforms } : {}),
         });
       } catch (e) {
         if (e instanceof CaptionWriterWithUsageError) {
@@ -241,7 +247,8 @@ export class CaptionService {
       const { captions, dropped, reasons } = groundCaptions(
         output.raw,
         facts,
-        POSTING_DAYS.length
+        POSTING_DAYS.length,
+        platforms
       );
       this._logger.log(
         `Captions for org=${orgId}: kept ${captions.length}, dropped ${dropped}${reasons.length ? ` (${reasons.join('; ')})` : ''}`
@@ -282,6 +289,19 @@ export class CaptionService {
           : 'Something went wrong while writing your captions. Please try again.'
       );
     }
+  }
+
+  // Milestone 7: a week is written only for as many platforms as the plan
+  // includes, preferring the ones the business has connected.
+  async platformsForWeek(orgId: string) {
+    const [{ plan }, channels] = await Promise.all([
+      this._planService.current(orgId),
+      this._integrationService.getIntegrationsList(orgId),
+    ]);
+    return weekPlatforms(
+      plan.limits.platforms,
+      channels.filter((c) => !c.disabled).map((c) => c.providerIdentifier)
+    );
   }
 
   // Channels a caption may be scheduled on. Only Sandbox channels for now:
