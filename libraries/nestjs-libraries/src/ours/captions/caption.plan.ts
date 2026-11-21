@@ -14,16 +14,32 @@ import {
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+// providers: the channel types (provider identifiers) that post to it
 export const CAPTION_PLATFORMS = [
-  { key: 'facebook', label: 'Facebook', time: '12:30', maxLength: 2000 },
-  { key: 'instagram', label: 'Instagram', time: '18:30', maxLength: 2200 },
-  { key: 'linkedin', label: 'LinkedIn', time: '08:30', maxLength: 3000 },
+  { key: 'facebook', label: 'Facebook', time: '12:30', maxLength: 2000, providers: ['facebook'] },
+  { key: 'instagram', label: 'Instagram', time: '18:30', maxLength: 2200, providers: ['instagram', 'instagram-standalone'] },
+  { key: 'linkedin', label: 'LinkedIn', time: '08:30', maxLength: 3000, providers: ['linkedin', 'linkedin-page'] },
 ] as const;
 
 export type CaptionPlatform = (typeof CAPTION_PLATFORMS)[number]['key'];
 
 export const isCaptionPlatform = (key: string): key is CaptionPlatform =>
   CAPTION_PLATFORMS.some((p) => p.key === key);
+
+// The platforms a week is written for: as many as the plan includes, taking
+// the ones the business has connected channels for first, then the rest in
+// the order above. A one-platform plan with Instagram connected gets an
+// Instagram week; with nothing connected yet it gets Facebook.
+export const weekPlatforms = (count: number, connected: string[]): CaptionPlatform[] => {
+  const has = (p: (typeof CAPTION_PLATFORMS)[number]) =>
+    p.providers.some((id) => connected.includes(id));
+  return [
+    ...CAPTION_PLATFORMS.filter(has),
+    ...CAPTION_PLATFORMS.filter((p) => !has(p)),
+  ]
+    .slice(0, Math.max(1, count))
+    .map((p) => p.key);
+};
 
 // One post a weekday, written for each platform. Small businesses rarely keep
 // up more than this, and LinkedIn is quiet at weekends.

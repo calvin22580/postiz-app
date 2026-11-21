@@ -18,6 +18,8 @@ export interface CaptionWriterInput {
   // Milestone 8: kinds of post that did clearly better or worse on this
   // business's past posts. A preference for choosing ideas, never a fact.
   preferences?: Pick<WriterPreferences, 'favour' | 'avoid'>;
+  // the platforms the plan includes this week; all of them when not given
+  platforms?: CaptionPlatform[];
 }
 
 // What a writer returns before checking: unchecked captions.

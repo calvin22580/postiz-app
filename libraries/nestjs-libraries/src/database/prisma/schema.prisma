@@ -2016,7 +2016,8 @@ model OursPlanSubscription {
 model OursUsageCounter {
   id             String   @id @default(uuid())
   organizationId String
-  // the calendar month in the business's time zone, YYYY-MM
+  // the allowance period: "trial", or the first day of a billing month
+  // (YYYY-MM-DD; rows before 21/11/2026 used the calendar month, YYYY-MM)
   period         String
   metric         String
   used           Int      @default(0)

@@ -326,12 +326,17 @@ Screen: `/plan` ("Plan and usage" in the menu). Code:
 - **Plans and limits** are in `plans.config.ts`. Every price and limit there is
   a **placeholder** to tune. Starter £79, Growth £149, Pro £299 a month, plus a
   free trial for new organisations.
-- **What's counted each month** (calendar month, `OURS_DEFAULT_TIMEZONE`):
+- **What's counted each month** (the billing month: from the day the paid plan
+  started, so it resets on the customer's billing date, as upstream does; a
+  change between paid plans keeps the date):
   weeks of posts written, posts scheduled (approvals), AI rewrites, website
   reads for the profile. Connected channels (including disabled ones) are
   counted as they stand. A week, website read or post that fails is given
   back; an AI rewrite counts once it is written, even if it isn't kept. Graphics are drawn locally at no cost and come
   with each scheduled post, so they have no separate limit.
+- **Platforms**: a week of posts is written for as many platforms as the plan
+  includes (`platforms`: Starter 1, Growth 2, Pro 3, trial 3), taking the ones
+  the business has connected first, then Facebook, Instagram, LinkedIn.
 - **Fair use**: AI cost logged in `ours_ai_usage` is capped per plan
   (`aiSpendUsd`). The owner sees a fair-use message, never the amount.
 - **Trial**: starts the first time an organisation is seen, `OURS_TRIAL_DAYS`

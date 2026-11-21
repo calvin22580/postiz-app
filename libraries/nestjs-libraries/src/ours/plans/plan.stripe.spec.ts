@@ -308,7 +308,8 @@ describe('Stripe webhook', () => {
     });
     expect(await service.paymentWebhook('stripe', body, header)).toEqual({ ok: true, retry: false });
     expect(lookup).toHaveBeenCalled();
-    expect(repo.setPlan).toHaveBeenCalledWith('org-1', 'growth', 'stripe', 'sub_1');
+    // the first paid month starts now
+    expect(repo.setPlan).toHaveBeenCalledWith('org-1', 'growth', 'stripe', 'sub_1', expect.any(Date));
   });
 
   it('ignores events it doesn’t need', async () => {
@@ -338,10 +339,18 @@ describe('applying a billing update', () => {
   });
   const apply = (service: PlanService, sub: Stripe.Subscription) => service.applyBillingUpdate('stripe', billingUpdateFor(sub));
 
-  it('moves the plan when the subscription’s price changes', async () => {
+  it('moves the plan when the subscription’s price changes, keeping the billing date', async () => {
     const { service, repo } = makeService(paying('starter'));
     await apply(service, subscription({}, growth));
-    expect(repo.setPlan).toHaveBeenCalledWith('org-1', 'growth', 'stripe', 'sub_1');
+    expect(repo.setPlan).toHaveBeenCalledWith('org-1', 'growth', 'stripe', 'sub_1', undefined);
+  });
+
+  it('starts a new billing month for a new subscription, on the day Stripe bills', async () => {
+    const { service, repo } = makeService(paying('starter', 'sub_old'));
+    // the event arrives a day late: the allowance still starts on the billing date
+    const anchor = new Date('2026-11-19T15:00:00Z');
+    await apply(service, subscription({ billing_cycle_anchor: anchor.getTime() / 1000 }, growth));
+    expect(repo.setPlan).toHaveBeenCalledWith('org-1', 'growth', 'stripe', 'sub_1', anchor);
   });
 
   it('leaves a renewal alone, so the fair-use month isn’t restarted', async () => {

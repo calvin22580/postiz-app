@@ -22,7 +22,8 @@ export interface CurrentBilling {
 export type BillingUpdate =
   | { state: 'ignore' }
   // paid up: the organisation is on planKey
-  | { state: 'live'; orgId: string; externalId: string; planKey: string }
+  // billingAnchor: when the subscription's billing month starts
+  | { state: 'live'; orgId: string; externalId: string; planKey: string; billingAnchor?: Date }
   // over: new work stops until the owner picks a plan again
   | { state: 'ended'; orgId: string; externalId: string; endedAt: Date };
 

@@ -41,23 +41,33 @@ export interface UsageTicket {
   period: string;
 }
 
-// The allowance month: the calendar month in the business's time zone.
-export const usagePeriod = (now: Date = new Date(), tz = captionTimezone()) => {
-  const start = dayjs(now).tz(tz).startOf('month');
-  // from the date, not start + 1 month: that keeps the start's UTC offset,
-  // which is an hour out when the clocks change in March and October
-  const next = dayjs.tz(start.add(1, 'month').format('YYYY-MM-DD'), tz);
+// The allowance month runs from the day the paid plan started, a month at a
+// time, so it resets on the customer's billing date, as upstream does for its
+// own monthly limits (SubscriptionService.currentPeriodStart). Months are
+// counted from the start each time, in UTC as Stripe does: a plan started on
+// the 31st resets on the last day of a shorter month and on the 31st again
+// after it. The key is the period's first day, so each period has its own
+// counters.
+export const usagePeriod = (startedAt: Date, now: Date = new Date(), tz = captionTimezone()) => {
+  const anchor = dayjs.utc(startedAt);
+  const at = (months: number) => anchor.add(months, 'month');
+  let months = Math.max(0, dayjs.utc(now).diff(anchor, 'month') || 0);
+  // diff can be one out around the end of a month
+  if (months > 0 && at(months).isAfter(now)) months--;
+  if (!at(months + 1).isAfter(now)) months++;
+  const start = at(months);
+  const end = at(months + 1);
   return {
-    key: start.format('YYYY-MM'),
+    key: start.tz(tz).format('YYYY-MM-DD'),
     start: start.toDate(),
-    end: next.toDate(),
-    startDate: start.format('YYYY-MM-DD'),
-    resetsOn: next.format('YYYY-MM-DD'),
+    end: end.toDate(),
+    startDate: start.tz(tz).format('YYYY-MM-DD'),
+    resetsOn: end.tz(tz).format('YYYY-MM-DD'),
   };
 };
 
 // The trial's allowance covers the whole trial and never resets; paid plans
-// use the calendar month.
+// reset each month on their billing date.
 export const allowancePeriod = (
   row: { plan: string; startedAt: Date; trialEndsAt: Date | null },
   now: Date = new Date()
@@ -72,11 +82,24 @@ export const allowancePeriod = (
       spendFrom: row.startedAt,
     };
   }
-  const month = usagePeriod(now);
+  const month = usagePeriod(row.startedAt, now);
   // AI spent during the trial doesn't count against the first paid month
   const spendFrom = row.startedAt > month.start ? row.startedAt : month.start;
   return { ...month, spendFrom };
 };
+
+// Moving between paid plans on the same subscription keeps the billing date
+// (Stripe keeps it when the price changes), so the allowance month carries on
+// from the same day. A first paid plan, or a new subscription, starts afresh.
+export const keepsBillingDate = (
+  row: { plan: string; paymentProvider?: string; externalId?: string | null } | null,
+  providerName: string,
+  externalId?: string | null
+) =>
+  !!row &&
+  row.plan !== TRIAL_PLAN_KEY &&
+  row.paymentProvider === providerName &&
+  (row.externalId || null) === (externalId || null);
 
 // A calendar date for a message, in the configured locale (DD/MM/YYYY for
 // en-GB).
@@ -304,7 +327,13 @@ export class PlanService {
     const { row } = await this.current(orgId);
     const result = await provider.changePlan(orgId, plan, row);
     if (result.status === 'changed') {
-      await this._planRepository.setPlan(orgId, plan.key, provider.name);
+      await this._planRepository.setPlan(
+        orgId,
+        plan.key,
+        provider.name,
+        undefined,
+        keepsBillingDate(row, provider.name, row.externalId) ? undefined : new Date()
+      );
     }
     return { ...(await this.overview(orgId, canManage)), ...(result.status === 'redirect' ? { redirect: result.url } : {}) };
   }
@@ -379,7 +408,13 @@ export class PlanService {
       // twice, so a person needs to look
       this._logger.error(`org=${orgId} had ${providerName} ${row.externalId}, now ${externalId}: check for a double payment`);
     }
-    await this._planRepository.setPlan(orgId, plan.key, providerName, externalId);
+    await this._planRepository.setPlan(
+      orgId,
+      plan.key,
+      providerName,
+      externalId,
+      keepsBillingDate(row, providerName, externalId) ? undefined : update.billingAnchor || new Date()
+    );
     this._logger.log(`org=${orgId} is on ${plan.key} (${providerName} ${externalId})`);
   }
 

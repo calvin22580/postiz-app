@@ -250,6 +250,9 @@ export const billingUpdateFor = (subscription: Stripe.Subscription, now: Date = 
       externalId: subscription.id,
       // an unknown price comes through as is, so it's logged as an error
       planKey: planForStripeLookupKey(lookupKey)?.key || `stripe price ${lookupKey || 'without lookup key'}`,
+      // the allowance resets on the day Stripe bills, even if this event
+      // arrived late
+      ...(subscription.billing_cycle_anchor ? { billingAnchor: new Date(subscription.billing_cycle_anchor * 1000) } : {}),
     };
   }
   if (ENDED_SUBSCRIPTION_STATUSES.includes(subscription.status)) {

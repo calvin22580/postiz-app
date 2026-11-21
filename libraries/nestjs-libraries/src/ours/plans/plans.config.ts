@@ -4,8 +4,8 @@
 // PLACEHOLDERS: every price and limit below is a first guess for testing, not
 // a decision. Calvin tunes them here; nothing else needs to change.
 //
-// Allowances reset on the 1st of each calendar month in the business's time
-// zone (OURS_DEFAULT_TIMEZONE, Europe/London by default).
+// Allowances reset each month on the customer's billing date: the day their
+// paid plan started (plan.service.ts usagePeriod).
 
 // What we count each month. Labels are written to finish the sentence
 // "You've used all 5 …" and to sit under a meter on the plan screen.
@@ -40,6 +40,8 @@ export const AI_METRICS: MeteredKey[] = ['captionWeeks', 'rewrites', 'profileBui
 export interface PlanLimits extends Record<MeteredKey, number> {
   // connected channels at any one time (not monthly)
   channels: number;
+  // platforms a week of posts is written for (Facebook, Instagram, LinkedIn)
+  platforms: number;
   // fair-use safety net: AI cost in USD per month (ours_ai_usage.costUsd).
   // Never shown to the owner as an amount.
   aiSpendUsd: number;
@@ -70,8 +72,10 @@ export const PAID_PLANS: PlanDefinition[] = [
       captionWeeks: 5,
       postsScheduled: 25,
       rewrites: 20,
-      profileBuilds: 2,
+      // the same as the trial, so starting to pay never takes anything away
+      profileBuilds: 3,
       channels: 2,
+      platforms: 1,
       aiSpendUsd: 8,
     },
   },
@@ -87,6 +91,7 @@ export const PAID_PLANS: PlanDefinition[] = [
       rewrites: 60,
       profileBuilds: 4,
       channels: 4,
+      platforms: 2,
       aiSpendUsd: 15,
     },
   },
@@ -102,6 +107,7 @@ export const PAID_PLANS: PlanDefinition[] = [
       rewrites: 150,
       profileBuilds: 10,
       channels: 8,
+      platforms: 3,
       aiSpendUsd: 30,
     },
   },
@@ -121,6 +127,7 @@ export const TRIAL_PLAN: PlanDefinition = {
     rewrites: 15,
     profileBuilds: 3,
     channels: 3,
+    platforms: 3,
     aiSpendUsd: 3,
   },
 };

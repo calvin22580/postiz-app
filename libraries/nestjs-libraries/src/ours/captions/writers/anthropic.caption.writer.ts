@@ -62,7 +62,7 @@ Rules:
 2. Do not write any number, price, percentage, phone number, email address, web address or @handle unless it appears in a fact you were given, written the same way.
 3. List in factIds the id of every fact a caption relies on. Every caption relies on at least one fact.
 4. Write in British English (for example colour, organise, favourite) and in the tone of voice given. Keep it warm and natural, never pushy, and avoid words like "best", "free", "offer" or "award" unless the facts say so.
-5. Write one post idea per posting day, using a different fact or angle each day. For each idea write a caption for every platform: ${CAPTION_PLATFORMS.map((p) => p.label).join(', ')}.
+5. Write one post idea per posting day, using a different fact or angle each day. For each idea write one caption for each platform listed under "Platforms" in the message, and for no other platform. Each platform has its own style:
    - Facebook: conversational, two to four short sentences, at most one or two emoji, no hashtags or at most one.
    - Instagram: a strong first line, short paragraphs, then three to six relevant hashtags on the last line.
    - LinkedIn: professional and helpful, three to five sentences, no more than two hashtags.
@@ -76,6 +76,9 @@ export const buildCaptionMessage = (input: CaptionWriterInput) =>
   `Write the captions for this week.\n\n` +
   `Posting days (index: day): ${input.days
     .map((d, i) => `${i}: ${input.dates?.[i] ? longDate(input.dates[i]) : d}`)
+    .join(', ')}\n` +
+  `Platforms: ${CAPTION_PLATFORMS.filter((p) => !input.platforms || input.platforms.includes(p.key))
+    .map((p) => p.label)
     .join(', ')}\n` +
   `Tone of voice: ${escapeAttr(input.tone)}\n\n` +
   preferencesBlock(input) +

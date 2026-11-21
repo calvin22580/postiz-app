@@ -5,6 +5,7 @@
 // Each idea has a few versions, so "rewrite" can offer a different one.
 import {
   CaptionFact,
+  CaptionPlatform,
   isSeasonalFact,
 } from '@gitroom/nestjs-libraries/ours/captions/caption.plan';
 import {
@@ -185,6 +186,12 @@ const ideasFrom = (facts: CaptionFact[]): Idea[] => {
   return ideas;
 };
 
+// only the platforms the plan includes this week
+const onPlatforms = (captions: Captions, platforms?: CaptionPlatform[]): Partial<Captions> =>
+  platforms
+    ? Object.fromEntries(Object.entries(captions).filter(([p]) => platforms.includes(p as CaptionPlatform)))
+    : captions;
+
 const planFor = (day: number, idea: Idea, captions: Partial<Captions>): RawCaptionPlan => ({
   posts: [
     {
@@ -239,7 +246,7 @@ export class DemoCaptionWriter implements CaptionWriter {
     if (last) picked.push(last);
 
     const raw: RawCaptionPlan = {
-      posts: picked.flatMap((idea, day) => planFor(day, idea, idea.versions[0]).posts || []),
+      posts: picked.flatMap((idea, day) => planFor(day, idea, onPlatforms(idea.versions[0], input.platforms)).posts || []),
     };
     return { raw, usages: [] };
   }

@@ -9,6 +9,17 @@ import { expect, Page, test } from '@playwright/test';
 import { BACKEND, setUkDates, signUp } from './helpers';
 import { startTestSite } from './fixtures/test.site';
 
+// Starter starts during the test, so its allowance resets a month from now
+// (the billing date), shown as a UK date
+const monthFromToday = () => {
+  const now = new Date();
+  const last = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 2, 0)).getUTCDate();
+  const next = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, Math.min(now.getUTCDate(), last), now.getUTCHours(), now.getUTCMinutes())
+  );
+  return new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', day: '2-digit', month: '2-digit', year: 'numeric' }).format(next);
+};
+
 const meter = (page: Page, key: string) => page.getByTestId(`plan-meter-${key}`);
 const expectUsed = async (page: Page, key: string, used: number, limit: number) => {
   await expect(meter(page, key)).toHaveAttribute('data-used', String(used));
@@ -55,24 +66,28 @@ test('trial, switching plan, counting usage and stopping at a limit', async ({ p
     await page.locator('[data-testid="plan-option"][data-plan="starter"]').getByTestId('plan-option-choose').click();
     await expect(page.getByTestId('plan-current-name')).toHaveText('Starter');
     await expect(page.locator('[data-plan="starter"]').getByTestId('plan-option-current')).toBeVisible();
-    await expect(page.getByTestId('plan-resets')).toContainText(/next resets on 01\/\d{2}\/\d{4}/);
-    await expectUsed(page, 'profileBuilds', 0, 2);
+    // the allowance resets on the billing date: a month from today
+    await expect(page.getByTestId('plan-resets')).toContainText(`next resets on ${monthFromToday()}`);
+    await expectUsed(page, 'profileBuilds', 0, 3);
     await expectUsed(page, 'channels', 1, 2);
 
-    // 4. reading the website counts, twice is Starter's allowance
+    // 4. reading the website counts, three times is Starter's allowance (the
+    // same as the trial's)
     await page.goto('/business-profile');
     await page.getByLabel('Your website address').fill(site.url);
     await page.getByRole('button', { name: 'Read my website' }).click();
     await expect(page.getByTestId('profile-summary')).toBeVisible({ timeout: 90_000 });
-    await page.getByRole('button', { name: 'Read my website again' }).click();
-    await expect(page.getByTestId('profile-summary')).toBeVisible({ timeout: 90_000 });
-    await expect(page.getByRole('button', { name: 'Read my website again' })).toBeEnabled({ timeout: 90_000 });
+    for (let i = 0; i < 2; i++) {
+      await page.getByRole('button', { name: 'Read my website again' }).click();
+      await expect(page.getByTestId('profile-summary')).toBeVisible({ timeout: 90_000 });
+      await expect(page.getByRole('button', { name: 'Read my website again' })).toBeEnabled({ timeout: 90_000 });
+    }
 
-    // a third read is refused, with the reason and a link to the plan
+    // a fourth read is refused, with the reason and a link to the plan
     await page.getByRole('button', { name: 'Read my website again' }).click();
     const refusal = page.getByRole('alert').filter({ hasText: 'website reads' });
     await expect(refusal).toContainText(
-      /You’ve used all 2 website reads included in your Starter plan this month\. It resets on 01\/\d{2}\/\d{4}\. Growth includes 4 a month: see Plan and usage\./
+      `You’ve used all 3 website reads included in your Starter plan this month. It resets on ${monthFromToday()}. Growth includes 4 a month: see Plan and usage.`
     );
     await expect(refusal.getByTestId('plan-link')).toHaveAttribute('href', '/plan');
 
@@ -80,14 +95,17 @@ test('trial, switching plan, counting usage and stopping at a limit', async ({ p
     await page.goto('/captions');
     await page.getByRole('button', { name: 'Write next week’s posts' }).click();
     await expect(page.getByTestId('captions-summary')).toBeVisible({ timeout: 90_000 });
+    // Starter is one platform: with only a Sandbox channel, the week is all Facebook
+    await expect(page.getByTestId('caption-card').first()).toBeVisible();
+    await expect(page.locator('[data-testid="caption-card"]:not([data-platform="facebook"])')).toHaveCount(0);
     const first = page.getByTestId('caption-card').first();
     await first.getByRole('button', { name: /Approve and schedule on Sandbox · Plan Cafe/ }).click();
     await expect(first.getByTestId('caption-status')).toHaveText('Approved and scheduled');
 
     // 6. the plan screen shows what was used
     await page.goto('/plan');
-    await expectUsed(page, 'profileBuilds', 2, 2);
-    await expect(meter(page, 'profileBuilds')).toContainText('2 of 2, all used');
+    await expectUsed(page, 'profileBuilds', 3, 3);
+    await expect(meter(page, 'profileBuilds')).toContainText('3 of 3, all used');
     await expectUsed(page, 'captionWeeks', 1, 5);
     await expectUsed(page, 'postsScheduled', 1, 25);
     await expectUsed(page, 'rewrites', 0, 20);
