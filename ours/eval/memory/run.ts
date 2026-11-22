@@ -182,7 +182,7 @@ const pct = (n: number, d: number) => (d ? `${Math.round((n / d) * 1000) / 10}%`
   console.table(summary);
   writeFileSync(
     path.join(runDir, 'summary.md'),
-    `# Memory keeper test run: ${setName}\n\n${Object.keys(set.businesses).length} businesses, four weeks of owner actions each, ${reps} run(s) per keeper, model ${model}.\n` +
+    `# Memory keeper test run: ${setName}\n\n${Object.keys(set.businesses).length} businesses, ${new Set(Object.values(set.businesses).flatMap((b) => b.signals.map((s) => s.week))).size} weeks of owner actions each, ${reps} run(s) per keeper, model ${model}.\n` +
       `Bars to ship: habits found 80% or more, at most 1 wrong lesson per business, 0 facts stored, 0 switched-off lessons back, 0 one-offs promoted.\n\n` +
       `| Keeper | Habits found | Wrong lessons per business | One-offs promoted | Facts stored | Switched-off back | Refused saves | Errors | Calls | Cost (USD) |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n` +
       summary.map((s) => `| ${s.keeper} | ${s.habitsFound} | ${s.wrongPerBusiness} | ${s.oneOffsPromoted} | ${s.factsStored} | ${s.switchedOffBack} | ${s.refusals} | ${s.errors} | ${s.calls} | ${s.costUsd} |`).join('\n') +

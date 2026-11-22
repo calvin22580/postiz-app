@@ -87,6 +87,14 @@ describe('lesson rules', () => {
       'Say "pop in" rather than "visit us".',
       'Write in the first person plural, warm and plain.',
       'Posts work best when kept short.',
+      // lessons the harder test set needs the keeper to be able to write
+      'Use hashtags on Instagram only, not on Facebook or LinkedIn.',
+      'Say "bike", not "bicycle".',
+      'On LinkedIn, write in the first person as the owner.',
+      'Leave prices out of posts.',
+      'Don\'t sign off with "Ride safe" any more.',
+      'No emoji in LinkedIn posts.',
+      'Say "groom", not "pamper".',
     ]) {
       expect(lessonProblems(ok, 'voice')).toEqual([]);
     }

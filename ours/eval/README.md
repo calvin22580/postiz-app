@@ -55,4 +55,6 @@ ANTHROPIC_API_KEY=… ours/eval/memory/run.sh --keepers memory-tool,plain --reps
 ANTHROPIC_API_KEY=… ours/eval/memory/run.sh --keepers memory-tool --model claude-sonnet-5-5
 ```
 
+`sets/hard/history.json` (built by `node ours/eval/memory/sets/hard/build.mjs`) is harder: eight weeks per business, habits that only hold on one platform (hashtags on Instagram only, no emoji on LinkedIn), an owner who changes their mind (adds a sign-off, then takes it out; turns cake posts down, then brings them back), signals that point both ways (must not become a lesson), facts slipped into edits, a lesson switched off before week 4, and rewrite notes that try to give orders. Run it with `--set hard`. The first set got too easy once the keepers were fixed (both found every habit), so keepers are compared on this one.
+
 `memory-tool` is the app's keeper (Anthropic's memory tool); `plain` is the single-call version it is compared with. A full comparison (2 keepers, 3 businesses, 4 weeks, 3 runs on Haiku 5.5) is about 72 keeper runs and should cost well under $1. The demo keeper only knows two rules, so its low score is expected.
