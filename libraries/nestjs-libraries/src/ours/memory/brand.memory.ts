@@ -75,8 +75,11 @@ export const formatLessonFile = (l: Lesson) =>
     `status: ${lessonStatus(l)}${l.source === 'owner' ? ', written by the owner' : ''} (set by Kanosena; you can't change this line)`,
   ].join('\n');
 
+// words a model writes for "no ids" instead of leaving the line empty
+const NO_REFS = new Set(['nothing', 'none', 'n/a', 'na', '-', 'empty', 'null', '(none)', '(empty)']);
+
 const refs = (value: string) =>
-  [...new Set(value.split(/[\s,]+/).map((r) => r.trim().toLowerCase()).filter(Boolean))];
+  [...new Set(value.split(/[\s,]+/).map((r) => r.trim().toLowerCase()).filter((r) => r && !NO_REFS.has(r)))];
 
 export class LessonFileError extends Error {}
 
@@ -115,6 +118,9 @@ const FACT_PATTERNS: [RegExp, string][] = [
 ];
 
 // Numbers are fine when they describe the writing itself ("at most 2 emoji").
+// "works best when", "best kept short": about the writing, not a claim
+const STYLE_BEST = /\b(?:works?|worked|working|land|lands|reads?|go(?:es)?) best\b|\bbest (?:when|if|with|kept|left)\b/gi;
+
 const STYLE_NUMBER = /\b\d+\s*(?:sentences?|words?|characters?|emoji|emojis|hashtags?|lines?|paragraphs?|exclamation marks?|questions?)\b/gi;
 
 // Folders whose lessons name things to stay away from: a claim word there is
@@ -127,7 +133,7 @@ export const lessonProblems = (lesson: string, folder: MemoryFolder) => {
   if (lesson.length > MAX_LESSON_LENGTH) {
     problems.push(`it is longer than ${MAX_LESSON_LENGTH} characters`);
   }
-  const details = unsupportedDetails(lesson.replace(STYLE_NUMBER, ' '), []).filter(
+  const details = unsupportedDetails(lesson.replace(STYLE_NUMBER, ' ').replace(STYLE_BEST, ' '), []).filter(
     (d) => !(CLAIM_WORDS_ALLOWED.includes(folder) && /^[a-z][a-z .-]*$/.test(d))
   );
   if (details.length) {

@@ -57,6 +57,11 @@ export class MemoryWorkspace {
     return [...this._lessons.values()];
   }
 
+  // shown to the keeper, so it doesn't learn them again in other words
+  switchedOff() {
+    return [...this._switchedOff];
+  }
+
   // The lessons this run changed (to save) and the paths it removed.
   changes() {
     const saved: Lesson[] = [];

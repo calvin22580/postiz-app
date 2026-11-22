@@ -71,6 +71,7 @@ export class BrandMemoryRepository {
       select: {
         id: true,
         kind: true,
+        draftId: true,
         platform: true,
         theme: true,
         before: true,

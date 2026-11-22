@@ -39,8 +39,9 @@ interface Pattern {
 interface Business {
   name: string;
   signals: Signal[];
-  // lessons the owner switches off before a week starts
-  switchOffBeforeWeek?: Record<string, SwitchedOffLesson[]>;
+  // lessons the owner switches off before a week starts; match: a regular
+  // expression for the same lesson in other words
+  switchOffBeforeWeek?: Record<string, (SwitchedOffLesson & { match?: string })[]>;
   // what the owner's actions really show: each should end as an active lesson
   habits: Pattern[];
   // shown once only: must not become an active lesson
@@ -100,7 +101,7 @@ async function runBusiness(keeperName: string, rep: number, id: string, biz: Bus
   const keeper = keeperFor(keeperName);
   const known = new Set(biz.signals.map((s) => s.id.slice(0, SIGNAL_REF_LENGTH)));
   let lessons: Lesson[] = [];
-  const switchedOff: SwitchedOffLesson[] = [];
+  const switchedOff: (SwitchedOffLesson & { match?: string })[] = [];
   const result: BusinessResult = {
     keeper: keeperName, rep, business: id, lessons: [], habitsFound: [], habitsMissed: [], wrongLessons: [],
     oneOffsPromoted: [], factsStored: [], switchedOffBack: [], refusals: [], summaries: [], errors: [], usages: [],
@@ -141,7 +142,7 @@ async function runBusiness(keeperName: string, rep: number, id: string, biz: Bus
   result.oneOffsPromoted = biz.oneOffs.filter((o) => active.some((l) => matches(o, l.lesson))).map((o) => o.id);
   result.factsStored = result.lessons.filter((l) => matches(biz.facts, l.lesson)).map((l) => l.lesson);
   result.switchedOffBack = result.lessons
-    .filter((l) => switchedOff.some((o) => o.path === l.path || similarLessons(o.lesson, l.lesson)))
+    .filter((l) => switchedOff.some((o) => o.path === l.path || similarLessons(o.lesson, l.lesson) || (o.match && matches(o.match, l.lesson) && !/\b(?:no|not|never|avoid|leave out|skip|without|fewer)\b/i.test(l.lesson))))
     .map((l) => l.lesson);
   return result;
 }

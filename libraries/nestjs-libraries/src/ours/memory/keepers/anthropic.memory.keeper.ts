@@ -46,7 +46,7 @@ export class AnthropicMemoryKeeper implements MemoryKeeper {
         thread: false,
         system: [{ type: 'text', text: KEEPER_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
         tools: [betaMemoryTool(memoryToolHandlers(input.workspace))],
-        messages: [{ role: 'user', content: buildKeeperMessage(input.signals) }],
+        messages: [{ role: 'user', content: buildKeeperMessage(input.signals, input.workspace.switchedOff()) }],
       });
       for await (const message of runner) {
         usages.push(...usagesFrom(message));

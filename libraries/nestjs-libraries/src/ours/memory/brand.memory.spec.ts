@@ -15,7 +15,7 @@ import { BrandMemoryService } from './brand.memory.service';
 import { AnthropicMemoryKeeper } from './keepers/anthropic.memory.keeper';
 import { PlainMemoryKeeper } from './keepers/plain.memory.keeper';
 import { DemoMemoryKeeper } from './keepers/demo.memory.keeper';
-import { buildKeeperMessage, MemoryKeeper } from './keepers/memory.keeper';
+import { buildKeeperMessage, keeperSignals, MemoryKeeper } from './keepers/memory.keeper';
 import { buildCaptionMessage, buildRewriteMessage } from '../captions/writers/anthropic.caption.writer';
 import { buildCheckMessage } from '../captions/checkers/anthropic.caption.checker';
 
@@ -73,6 +73,9 @@ describe('lesson rules', () => {
       evidence: ['aaaa1111', 'bbbb2222'],
       against: [],
     });
+    // models often write a word for "no ids" (the first paid run lost most lessons to this)
+    expect(parseLessonFile('lesson: Short posts.\nevidence: aaaa1111, bbbb2222\nagainst: nothing').against).toEqual([]);
+    expect(parseLessonFile('lesson: Short posts.\nevidence: aaaa1111\nagainst: none').against).toEqual([]);
     expect(() => parseLessonFile('Remember: the owner likes short posts')).toThrow(/three lines/);
     expect(() => parseLessonFile('evidence: aaaa1111')).toThrow(/lesson/);
   });
@@ -83,6 +86,7 @@ describe('lesson rules', () => {
       'Use at most 2 emoji in a post.',
       'Say "pop in" rather than "visit us".',
       'Write in the first person plural, warm and plain.',
+      'Posts work best when kept short.',
     ]) {
       expect(lessonProblems(ok, 'voice')).toEqual([]);
     }
@@ -283,6 +287,27 @@ describe('memory keepers', () => {
       ['/memories/voice/no-exclamation-marks.md', ['aaaa1111', 'bbbb2222']],
       ['/memories/avoid/salesy-posts.md', ['cccc3333']],
     ]);
+  });
+
+  it('counts a rejection and its reason as one owner action', () => {
+    const merged = keeperSignals([
+      { ref: 'aaaa1111', kind: 'rejected', draftId: 'd1', before: 'Buy now!' },
+      { ref: 'bbbb2222', kind: 'rejected', draftId: 'd2', before: 'Hello' },
+      { ref: 'cccc3333', kind: 'reject-reason', draftId: 'd1', reason: 'salesy' },
+    ]);
+    expect(merged).toEqual([
+      { ref: 'aaaa1111', kind: 'rejected', draftId: 'd1', before: 'Buy now!', reason: 'salesy' },
+      { ref: 'bbbb2222', kind: 'rejected', draftId: 'd2', before: 'Hello' },
+    ]);
+    // without post ids, the reason joins the rejection just before it
+    expect(keeperSignals([{ ref: 'a', kind: 'rejected' }, { ref: 'b', kind: 'reject-reason', reason: 'topic' }])).toEqual([{ ref: 'a', kind: 'rejected', reason: 'topic' }]);
+  });
+
+  it('shows the keeper what the owner switched off', () => {
+    const msg = buildKeeperMessage([{ ref: 'aaaa1111', kind: 'approved', after: 'Hi 🙂' }], [{ lesson: 'Use plenty of emoji.' }]);
+    expect(msg).toContain('<switched_off_by_owner>');
+    expect(msg).toContain('- Use plenty of emoji.');
+    expect(buildKeeperMessage([{ ref: 'aaaa1111', kind: 'approved' }])).not.toContain('switched_off');
   });
 
   it('passes owner words as data, without tags they could break out of', () => {

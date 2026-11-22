@@ -83,7 +83,7 @@ export class PlainMemoryKeeper implements MemoryKeeper {
           messages: [
             {
               role: 'user',
-              content: `<memory>\n${current}\n</memory>\n\n${buildKeeperMessage(input.signals)}`,
+              content: `<memory>\n${current}\n</memory>\n\n${buildKeeperMessage(input.signals, input.workspace.switchedOff())}`,
             },
           ],
         })
