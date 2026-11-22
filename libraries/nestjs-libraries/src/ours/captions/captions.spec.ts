@@ -341,6 +341,7 @@ const makeService = () => {
     editText: vi.fn(async () => true),
     reject: vi.fn(async () => true),
     restore: vi.fn(async () => true),
+    setRejectReason: vi.fn(async () => true),
     claimRewrite: vi.fn(async () => true),
     saveRewrite: vi.fn(async () => true),
     giveBackRewrite: vi.fn(async () => ({ count: 1 })),
@@ -382,8 +383,10 @@ const makeService = () => {
   };
   // Milestone 8: no past results unless a test adds some
   const performance = { writerPreferences: vi.fn(async (): Promise<any> => null) };
-  const service = new CaptionService(repo as never, profiles as never, usage as never, integrations as never, posts as never, graphics as never, seasonal as never, plans as never, performance as never);
-  return { service, repo, usage, posts, graphics, profiles, seasonal, plans, performance };
+  // Content engine E1: owner signals are recorded, never block an action
+  const signals = { record: vi.fn(async () => ({ id: 'sig-1' })) };
+  const service = new CaptionService(repo as never, profiles as never, usage as never, integrations as never, posts as never, graphics as never, seasonal as never, plans as never, performance as never, signals as never);
+  return { service, repo, usage, posts, graphics, profiles, seasonal, plans, performance, signals };
 };
 
 describe('CaptionService.runWriting', () => {
@@ -837,6 +840,132 @@ describe('CaptionService review', () => {
     const [, , saved] = repo.saveRewrite.mock.calls[0] as unknown as [string, string, { text: string }];
     expect(saved.text).not.toBe(draft().text);
     expect(saved.text).toContain('Sourdough loaves');
+  });
+});
+
+describe('owner signals (content engine E1)', () => {
+  const draft = (over: Record<string, unknown> = {}) => ({
+    id: 'd1',
+    weekId: 'w1',
+    status: 'PENDING_APPROVAL',
+    platform: 'facebook',
+    scheduledFor: new Date('2030-01-08T12:30:00Z'),
+    theme: 'Spotlight: Sourdough loaves',
+    text: 'In the spotlight this week at Harbour Lane Bakery: Sourdough loaves.',
+    facts: [{ id: 'services.0', field: 'services', value: 'Sourdough loaves' }],
+    rewriteCount: 0,
+    editedAt: null,
+    ...over,
+  });
+  const target = { draftId: 'd1', weekId: 'w1', platform: 'facebook', theme: 'Spotlight: Sourdough loaves' };
+  const USAGE = { provider: 'anthropic', model: 'claude-opus-5-5', inputTokens: 900, outputTokens: 120, cacheReadTokens: 0, cacheWriteTokens: 0 };
+  const rewriter = (text: string) => ({
+    name: 'anthropic' as const,
+    write: vi.fn(),
+    rewrite: vi.fn(async () => ({
+      raw: { posts: [{ day: 0, theme: 'Spotlight', captions: [{ platform: 'facebook', text, factIds: ['businessName.0', 'services.0'] }] }] },
+      usages: [USAGE],
+    })),
+  });
+
+  it('keeps the text before and after an owner’s edit, and nothing when the text didn’t change', async () => {
+    const { service, repo, signals } = makeService();
+    repo.getDraft.mockResolvedValue(draft());
+    await service.editText('org-1', 'd1', 'Fresh sourdough today.');
+    expect(signals.record).toHaveBeenCalledWith('org-1', {
+      kind: 'edited',
+      ...target,
+      before: draft().text,
+      after: 'Fresh sourdough today.',
+      edited: false,
+    });
+    signals.record.mockClear();
+    await service.editText('org-1', 'd1', `  ${draft().text}  `);
+    expect(signals.record).not.toHaveBeenCalled();
+  });
+
+  it('records a rejection, the optional reason, and bringing it back', async () => {
+    const { service, repo, signals } = makeService();
+    repo.getDraft.mockResolvedValue(draft());
+    await service.reject('org-1', 'd1');
+    expect(signals.record).toHaveBeenLastCalledWith('org-1', { kind: 'rejected', ...target, before: draft().text, edited: false });
+
+    repo.getDraft.mockResolvedValue(draft({ status: 'REJECTED' }));
+    await service.setRejectReason('org-1', 'd1', 'tone');
+    expect(repo.setRejectReason).toHaveBeenCalledWith('org-1', 'd1', 'tone');
+    expect(signals.record).toHaveBeenLastCalledWith('org-1', { kind: 'reject-reason', ...target, reason: 'tone' });
+
+    await service.restore('org-1', 'd1');
+    expect(signals.record).toHaveBeenLastCalledWith('org-1', { kind: 'restored', ...target });
+  });
+
+  it('takes a reason only for a rejected post of this organisation', async () => {
+    const { service, repo, signals } = makeService();
+    repo.getDraft.mockResolvedValueOnce(null);
+    await expect(service.setRejectReason('org-1', 'd1', 'tone')).rejects.toThrow('Caption not found');
+    repo.getDraft.mockResolvedValueOnce(draft());
+    repo.setRejectReason.mockResolvedValueOnce(false);
+    await expect(service.setRejectReason('org-1', 'd1', 'tone')).rejects.toThrow('only say why for a post you rejected');
+    expect(signals.record).not.toHaveBeenCalled();
+  });
+
+  it('records each rewrite with the owner’s note, and an empty new version when none was kept', async () => {
+    const { service, repo, signals } = makeService();
+    repo.getDraft.mockResolvedValue(draft());
+    await service.rewrite('org-1', 'd1', '  Shorter please ', rewriter('Sourdough loaves, baked by Harbour Lane Bakery.'));
+    expect(signals.record).toHaveBeenLastCalledWith('org-1', {
+      kind: 'rewrite',
+      ...target,
+      before: draft().text,
+      after: 'Sourdough loaves, baked by Harbour Lane Bakery.',
+      note: 'Shorter please',
+      edited: false,
+    });
+    // an invented detail: nothing kept, but the request still tells us something
+    await expect(
+      service.rewrite('org-1', 'd1', undefined, rewriter('Sourdough loaves at Harbour Lane Bakery, now 20% off!'))
+    ).rejects.toThrow('kept the current one');
+    expect(signals.record).toHaveBeenLastCalledWith('org-1', expect.objectContaining({ kind: 'rewrite', after: null, note: null }));
+    // approved or rejected while we were writing: the new version wasn't kept
+    repo.saveRewrite.mockResolvedValueOnce(false);
+    await expect(
+      service.rewrite('org-1', 'd1', undefined, rewriter('Sourdough loaves, baked by Harbour Lane Bakery.'))
+    ).rejects.toThrow('left as it is');
+    expect(signals.record).toHaveBeenLastCalledWith('org-1', expect.objectContaining({ kind: 'rewrite', after: null }));
+    expect(signals.record).toHaveBeenCalledTimes(3);
+  });
+
+  it('records an approval with the scheduled text and whether the owner had changed it', async () => {
+    process.env.SANDBOX_CHANNEL_ENABLED = 'true';
+    try {
+      const { service, repo, signals } = makeService();
+      repo.getDraft.mockResolvedValue(draft({ editedAt: new Date(), scheduledFor: new Date(Date.now() + 2 * 24 * 3600 * 1000) }));
+      await service.approve('org-1', 'd1', 'sbx');
+      expect(signals.record).toHaveBeenCalledWith('org-1', { kind: 'approved', ...target, after: draft().text, edited: true });
+    } finally {
+      delete process.env.SANDBOX_CHANNEL_ENABLED;
+    }
+  });
+
+  it('records nothing when scheduling fails', async () => {
+    process.env.SANDBOX_CHANNEL_ENABLED = 'true';
+    try {
+      const { service, repo, posts, signals } = makeService();
+      repo.getDraft.mockResolvedValue(draft({ scheduledFor: new Date(Date.now() + 2 * 24 * 3600 * 1000) }));
+      posts.createPost.mockRejectedValueOnce(new Error('down'));
+      await expect(service.approve('org-1', 'd1', 'sbx')).rejects.toThrow('couldn’t schedule');
+      expect(signals.record).not.toHaveBeenCalled();
+    } finally {
+      delete process.env.SANDBOX_CHANNEL_ENABLED;
+    }
+  });
+
+  it('shows the owner’s reason on a rejected post', async () => {
+    const { service, repo } = makeService();
+    repo.latestWeek.mockResolvedValue({ id: 'w1', weekStart: '2030-01-07', timezone: 'Europe/London', status: 'READY', errorMessage: null, writer: 'demo', droppedCount: 0, startedAt: new Date() } as never);
+    repo.getDrafts.mockResolvedValue([draft({ status: 'REJECTED', rejectReason: 'salesy' })] as never);
+    const { week } = await service.getWeek('org-1');
+    expect(week!.captions[0].rejectReason).toBe('salesy');
   });
 });
 

@@ -110,7 +110,8 @@ test('disconnecting a channel and deleting the account erase the data', async ({
       })
       .toBe(1);
     const [gone] = await query(`select name, token, picture, "internalId" from "Integration" where id = $1`, [two.id]);
-    expect(gone.name).toMatch(/^[0-9a-f]{32}$/);
+    // the name stays, so connecting the same page again revives the row
+    expect(gone.name).toBe('Sandbox · Erase Cafe Two');
     expect(gone.token).not.toBe(two.token);
     expect(gone.token).toMatch(/^[0-9a-f]{32}$/);
     expect(gone.picture).toBeNull();
@@ -121,6 +122,8 @@ test('disconnecting a channel and deleting the account erase the data', async ({
     // 2. delete the account from Settings
     expect((await query(`select 1 from ours_business_profile where "organizationId" = $1`, [orgId])).length).toBe(1);
     expect((await query(`select 1 from ours_caption_draft where "organizationId" = $1`, [orgId])).length).toBeGreaterThan(0);
+    // content engine E1: approving left owner signals behind
+    expect((await query(`select 1 from ours_brand_signal where "organizationId" = $1`, [orgId])).length).toBeGreaterThan(0);
     const [{ count: postsBefore }] = await query(`select count(*)::int as count from "Post" where "organizationId" = $1 and content <> ''`, [orgId]);
     expect(postsBefore).toBeGreaterThan(0);
 
@@ -140,6 +143,7 @@ test('disconnecting a channel and deleting the account erase the data', async ({
     expect(await count('ours_caption_draft')).toBe(0);
     expect(await count('ours_caption_week')).toBe(0);
     expect(await count('ours_seasonal_settings')).toBe(0);
+    expect(await count('ours_brand_signal')).toBe(0);
     expect(await count('"Post"', `and (content <> '' or "deletedAt" is null)`)).toBe(0);
     expect(await count('"Integration"', `and name like '%Erase Cafe%'`)).toBe(0);
     // billing and AI-cost records stay (no customer content in them)

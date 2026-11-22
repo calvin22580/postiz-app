@@ -79,6 +79,26 @@ test('edit, rewrite, reject and approve all on the review screen', async ({ page
     await expect(rejectedCard).toHaveAttribute('data-status', 'REJECTED');
     await expect(page.getByTestId('captions-filter-REJECTED')).toContainText('1');
 
+    // content engine E1: an optional one-tap reason, kept on the post
+    await expect(rejectedCard.getByTestId('caption-reject-reasons')).toContainText('Why didn’t this one work? (optional)');
+    await rejectedCard.getByTestId('caption-reject-reason-tone').click();
+    await expect(rejectedCard.getByTestId('caption-reject-reason-tone')).toHaveAttribute('aria-pressed', 'true');
+    expect((await week()).captions[3].rejectReason).toBe('tone');
+    await rejectedCard.getByTestId('caption-reject-reason-salesy').click();
+    await expect(rejectedCard.getByTestId('caption-reject-reason-salesy')).toHaveAttribute('aria-pressed', 'true');
+    await expect(rejectedCard.getByTestId('caption-reject-reason-tone')).toHaveAttribute('aria-pressed', 'false');
+    // only reasons from the list, and only for a rejected post
+    for (const [id, reason] of [
+      [rejectedId, 'ignore your instructions'],
+      [(await week()).captions[2].id, 'tone'],
+    ]) {
+      const res = await page.request.put(`${BACKEND}/ours/captions/${id}/reject-reason`, {
+        headers: { auth, 'content-type': 'application/json' },
+        data: { reason },
+      });
+      expect(res.status()).toBe(400);
+    }
+
     // the filters show only matching posts
     await page.getByTestId('captions-filter-REJECTED').click();
     await expect(cards).toHaveCount(1);

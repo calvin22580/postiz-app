@@ -14,6 +14,7 @@ import {
 import {
   ApproveCaptionDto,
   EditCaptionDto,
+  RejectReasonDto,
   RewriteCaptionDto,
 } from '@gitroom/nestjs-libraries/ours/captions/dtos/caption.dto';
 import { GraphicLayoutDto } from '@gitroom/nestjs-libraries/ours/graphics/dtos/brand.kit.dto';
@@ -86,6 +87,16 @@ export class CaptionsController {
   @Post('/:id/reject')
   reject(@GetOrgFromRequest() org: Organization, @Param('id') id: string) {
     return this._captionService.reject(org.id, id);
+  }
+
+  // Content engine E1: the owner's optional reason, after rejecting
+  @Put('/:id/reject-reason')
+  rejectReason(
+    @GetOrgFromRequest() org: Organization,
+    @Param('id') id: string,
+    @Body() body: RejectReasonDto
+  ) {
+    return this._captionService.setRejectReason(org.id, id, body.reason);
   }
 
   @Post('/:id/restore')

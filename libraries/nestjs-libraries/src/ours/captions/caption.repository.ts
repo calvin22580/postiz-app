@@ -39,6 +39,7 @@ const DRAFT_SELECT = {
   graphicPath: true,
   editedAt: true,
   rejectedAt: true,
+  rejectReason: true,
   rewriteCount: true,
 } satisfies Prisma.OursCaptionDraftSelect;
 
@@ -277,6 +278,14 @@ export class CaptionRepository {
     return this.whileStatus(orgId, id, OursCaptionStatus.REJECTED, {
       status: OursCaptionStatus.PENDING_APPROVAL,
       rejectedAt: null,
+      rejectReason: null,
+    });
+  }
+
+  // Content engine E1: why the owner rejected it (optional, while rejected)
+  setRejectReason(orgId: string, id: string, reason: string) {
+    return this.whileStatus(orgId, id, OursCaptionStatus.REJECTED, {
+      rejectReason: reason,
     });
   }
 

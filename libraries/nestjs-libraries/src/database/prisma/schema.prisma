@@ -1955,6 +1955,9 @@ model OursCaptionDraft {
   // themselves; rewriteCount counts AI rewrites (capped, each one is billed)
   editedAt       DateTime?
   rejectedAt     DateTime?
+  // Content engine E1: the owner's optional reason for rejecting (one of
+  // REJECT_REASONS in ours/memory/brand.signal.ts); cleared on bring back
+  rejectReason   String?
   rewriteCount   Int               @default(0)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
@@ -2069,4 +2072,34 @@ model OursErasure {
   @@unique([kind, targetId])
   @@index([organizationId])
   @@map("ours_erasure")
+}
+
+// Content engine E1 (21/11/2026): what owners do with the posts we write,
+// kept as a plain log so later milestones can learn each brand's style from
+// it (ours/docs/content-engine.md). Written by code, never by AI. Holds the
+// owner's own words, so it is erased with the organisation.
+model OursBrandSignal {
+  id             String   @id @default(uuid())
+  organizationId String
+  // approved | edited | rejected | reject-reason | restored | rewrite
+  kind           String
+  draftId        String?
+  weekId         String?
+  platform       String?
+  theme          String?
+  // the post's text before and after the action (edits and rewrites); for
+  // an approval, `after` is the text that was scheduled
+  before         String?
+  after          String?
+  // reject-reason: one of REJECT_REASONS
+  reason         String?
+  // rewrite: what the owner asked to change, in their own words
+  note           String?
+  // true when the owner had already changed the post's text themselves
+  // before this action (for an approval: the scheduled text is theirs)
+  edited         Boolean?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@map("ours_brand_signal")
 }
