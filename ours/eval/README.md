@@ -57,4 +57,18 @@ ANTHROPIC_API_KEY=… ours/eval/memory/run.sh --keepers memory-tool --model clau
 
 `sets/hard/history.json` (built by `node ours/eval/memory/sets/hard/build.mjs`) is harder: eight weeks per business, habits that only hold on one platform (hashtags on Instagram only, no emoji on LinkedIn), an owner who changes their mind (adds a sign-off, then takes it out; turns cake posts down, then brings them back), signals that point both ways (must not become a lesson), facts slipped into edits, a lesson switched off before week 4, and rewrite notes that try to give orders. Run it with `--set hard`. The first set got too easy once the keepers were fixed (both found every habit), so keepers are compared on this one.
 
-`memory-tool` is the app's keeper (Anthropic's memory tool); `plain` is the single-call version it is compared with. A full comparison (2 keepers, 3 businesses, 4 weeks, 3 runs on Haiku 5.5) is about 72 keeper runs and should cost well under $1. The demo keeper only knows two rules, so its low score is expected.
+`plain` is the app's keeper (one structured call); `memory-tool` (Anthropic's memory tool, `OURS_MEMORY_KEEPER=memory-tool` in the app) and `managed-agents` (a Managed Agents memory store, test only) are the versions it was compared with. A full comparison (2 keepers, 3 businesses, 4 weeks, 3 runs on Haiku 5.5) is about 72 keeper runs and should cost well under $1. The demo keeper only knows two rules, so its low score is expected.
+
+### Does memory change what gets written?
+
+`ours/eval/memory/run.sh writer` writes the same week for each business in `sets/hard/writer.json` twice, once with the brand brief and once without, through the real caption writer and grounding check, then checks every kept caption against the owner's habits ("bike", not "bicycle"; no hashtags on Facebook or LinkedIn; no prices; "I" on LinkedIn; no emoji on LinkedIn, and so on). The profiles use the words the owner swaps out and list prices, as real websites do, so the brief has something to change. A guard check makes sure the brief doesn't take away what the owner kept (hashtags on Instagram).
+
+The lessons are the ones a good keeper ends with, from `writer.json`, or a keeper run's final lessons with `--from runs/<time>-hard/<keeper>.results.jsonl`. Each summary cell is the share of kept captions passing a check; captions dropped by the grounding check are counted too, since a brief must not make the writer state things the profile doesn't say.
+
+```
+ours/eval/memory/run.sh writer                                       # demo writer: free, checks the plumbing (it ignores the brief)
+ANTHROPIC_API_KEY=… ours/eval/memory/run.sh writer --writer anthropic --reps 2
+ANTHROPIC_API_KEY=… ours/eval/memory/run.sh writer --writer anthropic --from ours/eval/memory/runs/<time>-hard/plain.results.jsonl
+```
+
+The writer is the app's (Opus 5.5 by default, `--model` to change it). One run is six weeks of captions, about $0.40 to $0.60.
