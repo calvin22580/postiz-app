@@ -111,7 +111,7 @@ const FACT_PATTERNS: [RegExp, string][] = [
   [/\b(?:open|opens|opening|closed|closes|closing)\s+(?:on|at|from|until|till|every|daily|late|early|monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekends?)\b/i, 'opening times'],
   [/\b(?:since|founded|established|est\.|years? in|years? of|family[- ]run|family[- ]owned|started (?:the|it|in))\b/i, 'history of the business'],
   [/\b(?:located|based in|based at|situated|address|postcode|parking)\b/i, 'where the business is'],
-  [/\b(?:menu|price list|prices? (?:are|is|start)|costs?|charges?)\b/i, 'prices or what is sold'],
+  [/\b(?:price list|prices? (?:are|is|start|from)|costs? (?:just|only|from)|charges? (?:for|from))\b/i, 'prices'],
 ];
 
 // Numbers are fine when they describe the writing itself ("at most 2 emoji").

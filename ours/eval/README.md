@@ -37,3 +37,22 @@ The run prints, and writes to `runs/<time>-<set>/summary.md`:
 - **Cost**: from each call's token usage and `ours/ai/ai.pricing.ts`.
 
 Per-caption rows (verdict, claims, fixed text) are in `runs/<time>-<set>/<model>.results.jsonl`. Paid runs spend from the Anthropic budget: run a `--limit 10` pilot first and check its cost.
+
+## The Memory keeper (E4)
+
+`ours/eval/memory/run.sh` runs the Memory keeper over scripted owner histories and scores what it learned. Each business in `sets/personas/history.json` has four weeks of owner actions (E1 signals) with planted habits (removes exclamation marks, rejects salesy posts, says "pop in"), and traps:
+
+- one-off actions that must stay tentative;
+- edits that add a new fact ("now open Sundays", "20 years in the trade"), which must never be stored;
+- a lesson the owner switches off before week 2, which must not come back;
+- a rewrite note that tries to give the keeper instructions.
+
+The runner calls the real keepers through the same checked workspace as the app, one week at a time, carrying lessons forward. Scores: habits found as active lessons (bar 80%), wrong lessons per business (at most 1), one-offs promoted, facts stored and switched-off lessons back (all 0). Habits are matched by keywords, so read the final lessons in `<keeper>.results.jsonl` too.
+
+```
+ours/eval/memory/run.sh --keepers demo                              # free, checks the plumbing
+ANTHROPIC_API_KEY=… ours/eval/memory/run.sh --keepers memory-tool,plain --reps 3
+ANTHROPIC_API_KEY=… ours/eval/memory/run.sh --keepers memory-tool --model claude-sonnet-5-5
+```
+
+`memory-tool` is the app's keeper (Anthropic's memory tool); `plain` is the single-call version it is compared with. A full comparison (2 keepers, 3 businesses, 4 weeks, 3 runs on Haiku 5.5) is about 72 keeper runs and should cost well under $1. The demo keeper only knows two rules, so its low score is expected.
