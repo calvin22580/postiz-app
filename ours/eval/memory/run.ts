@@ -11,6 +11,7 @@ import { MemoryWorkspace, SwitchedOffLesson, MemoryRefusal } from '@gitroom/nest
 import { MemoryKeeper, MemoryKeeperError } from '@gitroom/nestjs-libraries/ours/memory/keepers/memory.keeper';
 import { AnthropicMemoryKeeper } from '@gitroom/nestjs-libraries/ours/memory/keepers/anthropic.memory.keeper';
 import { PlainMemoryKeeper } from '@gitroom/nestjs-libraries/ours/memory/keepers/plain.memory.keeper';
+import { ManagedMemoryKeeper } from '@gitroom/nestjs-libraries/ours/memory/keepers/managed.memory.keeper';
 import { DemoMemoryKeeper } from '@gitroom/nestjs-libraries/ours/memory/keepers/demo.memory.keeper';
 import { costUsd } from '@gitroom/nestjs-libraries/ours/ai/ai.pricing';
 import { AiCallUsage } from '@gitroom/nestjs-libraries/ours/ai/ai.usage.service';
@@ -74,7 +75,8 @@ const keeperFor = (name: string): MemoryKeeper => {
   const client = new Anthropic();
   if (name === 'memory-tool') return new AnthropicMemoryKeeper(client, model);
   if (name === 'plain') return new PlainMemoryKeeper(client, model);
-  throw new Error(`Unknown keeper ${name}: use demo, memory-tool or plain`);
+  if (name === 'managed-agents') return new ManagedMemoryKeeper(client, model);
+  throw new Error(`Unknown keeper ${name}: use demo, memory-tool, plain or managed-agents`);
 };
 
 const matches = (p: Pattern | string, text: string) =>
@@ -95,6 +97,7 @@ interface BusinessResult {
   summaries: string[];
   errors: string[];
   usages: AiCallUsage[];
+  extraCostUsd: number;
 }
 
 async function runBusiness(keeperName: string, rep: number, id: string, biz: Business): Promise<BusinessResult> {
@@ -104,7 +107,7 @@ async function runBusiness(keeperName: string, rep: number, id: string, biz: Bus
   const switchedOff: (SwitchedOffLesson & { match?: string })[] = [];
   const result: BusinessResult = {
     keeper: keeperName, rep, business: id, lessons: [], habitsFound: [], habitsMissed: [], wrongLessons: [],
-    oneOffsPromoted: [], factsStored: [], switchedOffBack: [], refusals: [], summaries: [], errors: [], usages: [],
+    oneOffsPromoted: [], factsStored: [], switchedOffBack: [], refusals: [], summaries: [], errors: [], usages: [], extraCostUsd: 0,
   };
   const weeks = [...new Set(biz.signals.map((s) => s.week))].sort((a, b) => a - b);
   for (const week of weeks) {
@@ -120,6 +123,7 @@ async function runBusiness(keeperName: string, rep: number, id: string, biz: Bus
     try {
       const out = await keeper.keep({ signals, workspace });
       result.usages.push(...out.usages);
+      result.extraCostUsd += out.extraCostUsd || 0;
       result.summaries.push(`week ${week}: ${out.summary}`);
       // saved like the app: changed lessons replace, removed ones go, retired ones drop out
       const { saved, removed } = workspace.changes();
@@ -133,6 +137,7 @@ async function runBusiness(keeperName: string, rep: number, id: string, biz: Bus
     }
     result.refusals.push(...workspace.refusals.map((r) => ({ ...r, week })));
   }
+  await keeper.dispose?.();
 
   result.lessons = lessons.map((l) => ({ ...l, status: lessonStatus(l) }));
   const active = result.lessons.filter((l) => l.status === 'active');
@@ -165,7 +170,7 @@ const pct = (n: number, d: number) => (d ? `${Math.round((n / d) * 1000) / 10}%`
     const rs = results.filter((r) => r.keeper === keeper);
     const habits = rs.reduce((n, r) => n + r.habitsFound.length + r.habitsMissed.length, 0);
     const usages = rs.flatMap((r) => r.usages);
-    const cost = usages.reduce((sum, u) => sum + (costUsd(u.model, u) || 0), 0);
+    const cost = usages.reduce((sum, u) => sum + (costUsd(u.model, u) || 0), 0) + rs.reduce((sum, r) => sum + r.extraCostUsd, 0);
     return {
       keeper,
       habitsFound: pct(rs.reduce((n, r) => n + r.habitsFound.length, 0), habits),

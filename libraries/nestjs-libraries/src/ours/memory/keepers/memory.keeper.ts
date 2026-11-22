@@ -29,11 +29,15 @@ export interface MemoryKeeperOutput {
   // the keeper's own one-line account of what it changed
   summary: string;
   usages: AiCallUsage[];
+  // cost not priced by tokens (a Managed Agents session's running time), in USD
+  extraCostUsd?: number;
 }
 
 export interface MemoryKeeper {
-  readonly name: 'anthropic' | 'plain' | 'demo';
+  readonly name: 'anthropic' | 'plain' | 'demo' | 'managed';
   keep(input: MemoryKeeperInput): Promise<MemoryKeeperOutput>;
+  // removes anything the keeper made outside Kanosena (test runs only)
+  dispose?(): Promise<void>;
 }
 
 export class MemoryKeeperError extends Error {
