@@ -1385,7 +1385,14 @@ describe('the Checker (content engine E2)', () => {
       { key: '0:linkedin', verdict: 'drop', claims: [{ claim: 'delivers vegan cakes', factId: null }] },
     ]);
     await service.runWriting('org-1', week, FACTS, 'warm', writer(), undefined, null, undefined, check);
-    expect(check.check).toHaveBeenCalledWith({ facts: FACTS, captions: captionsToCheck(plan()) });
+    // each caption carries its posting day and time, for "tomorrow" or "open now"
+    expect(check.check).toHaveBeenCalledWith({
+      facts: FACTS,
+      captions: captionsToCheck(plan()).map((c) => ({
+        ...c,
+        postsAt: `Monday 16 November 2026, ${{ facebook: '12:30', instagram: '18:30', linkedin: '08:30' }[c.platform]}`,
+      })),
+    });
     const [, , body] = repo.finishWeek.mock.calls[0] as unknown as [string, string, any];
     expect(body.drafts.map((d: any) => [d.platform, d.text])).toEqual([
       ['facebook', 'Hello from Harbour Lane Bakery in Exampletown!'],
@@ -1454,6 +1461,12 @@ describe('the Checker (content engine E2)', () => {
     expect(params.messages[0].content).toBe(buildCheckMessage(input));
     expect(buildCheckMessage(input)).toContain('<untrusted_business_profile>');
     expect(buildCheckMessage(input)).toContain('<untrusted_captions>');
+  });
+
+  it('tells the Checker when a caption goes out, without letting the text break out', () => {
+    const message = buildCheckMessage({ facts: FACTS, captions: [{ key: '0:instagram', platform: 'instagram', text: 'Hi', postsAt: 'Tuesday 24 November 2026, 18:30"><x' }] });
+    expect(message).toContain('posts="Tuesday 24 November 2026, 18:30x"');
+    expect(buildCheckMessage({ facts: FACTS, captions: [{ key: 'a', platform: 'facebook', text: 'Hi' }] })).not.toContain('posts=');
   });
 
   it('sends no fallback for Haiku, and reports a refusal with its cost', async () => {

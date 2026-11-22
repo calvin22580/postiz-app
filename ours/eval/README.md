@@ -12,7 +12,7 @@ committed).
 - `profiles`: each business's profile facts (`id`, `field`, `value`), saved as files so a run never depends on a live website;
 - `cases`: one caption each, with its profile and platform, labelled `true` (every claim is in the profile) or `invented` with the one detail that isn't. Optional `tags` group cases in the results (for example `missed-by-rules`).
 
-`checker/sets/sample` is a six-caption made-up sample for checking that the runner works. `checker/sets/personas` is the E2 test set: 66 posts for three fictional businesses from the Codex persona test (21/11/2026), 46 of them written by the app and 20 with planted mistakes. Invented details are graded clear (scored), borderline or timing (reported only); posts relabelled after review carry the `relabelled` tag.
+`checker/sets/sample` is a six-caption made-up sample for checking that the runner works. `checker/sets/personas` is the E2 test set: 66 posts for three fictional businesses from the Codex persona test (21/11/2026), 46 of them written by the app and 20 with planted mistakes. Invented details are graded clear (scored), borderline or timing (reported only); posts relabelled after review carry the `relabelled` tag. Each Codex post has `postsAt`, its posting day and time, which the app also gives the Checker.
 
 Run from the repo root:
 

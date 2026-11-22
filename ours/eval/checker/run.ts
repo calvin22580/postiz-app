@@ -23,6 +23,8 @@ interface TestCase {
   profile: string;
   platform: string;
   text: string;
+  // when it goes out ("Monday 23 November 2026, 18:30"), as the app tells the Checker
+  postsAt?: string;
   // true: every claim is in the profile; invented: the detail that isn't.
   // grade: clear (the owner would object), borderline (framing a reader might
   // accept) or timing (depends on the post's slot, which the Checker isn't
@@ -99,7 +101,7 @@ async function runModel(model: string, rep: number) {
   for (const [profileId, list] of byProfile) {
     const facts = set.profiles[profileId]?.facts || [];
     for (const group of chunks(list, chunkSize)) {
-      const captions: CaptionToCheck[] = group.map((c, i) => ({ key: `c${i}`, platform: c.platform, text: c.text }));
+      const captions: CaptionToCheck[] = group.map((c, i) => ({ key: `c${i}`, platform: c.platform, text: c.text, ...(c.postsAt ? { postsAt: c.postsAt } : {}) }));
       let results: CaptionCheckResult[] = [];
       let error: string | undefined;
       try {

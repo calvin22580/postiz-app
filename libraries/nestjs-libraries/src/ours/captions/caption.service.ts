@@ -33,6 +33,7 @@ import {
   factsFromProfile,
   hasEnoughToWrite,
   isSeasonalFact,
+  longDate,
   nextWeekStart,
   POSTING_DAYS,
   scheduledFor,
@@ -141,6 +142,13 @@ const signalTarget = (d: Pick<StoredCaptionDraft, 'id' | 'weekId' | 'platform' |
 });
 
 // The posting days of a week as dates, for the writer (YYYY-MM-DD).
+// "Monday 23 November 2026, 18:30": a caption's posting day and its
+// platform's time, for the Checker
+const postingTime = (day: string, platform: string) => {
+  const time = CAPTION_PLATFORMS.find((p) => p.key === platform)?.time;
+  return time ? `${day}, ${time}` : day;
+};
+
 const postingDates = (weekStart: string) =>
   POSTING_DAYS.map((_, i) => dayjs(weekStart).add(i, 'day').format('YYYY-MM-DD'));
 
@@ -275,7 +283,10 @@ export class CaptionService {
         throw e;
       }
       await this.logUsages(orgId, output.usages);
-      const raw = await this.check(orgId, output.raw, facts, checker);
+      const dates = postingDates(week.weekStart);
+      const raw = await this.check(orgId, output.raw, facts, checker, (day, platform) =>
+        dates[day] ? postingTime(longDate(dates[day]), platform) : undefined
+      );
 
       const { captions, dropped, reasons } = groundCaptions(
         raw,
@@ -612,7 +623,9 @@ export class CaptionService {
       throw new HttpException('Something went wrong while writing a new version. Please try again.', 400);
     }
     await this.logUsages(orgId, output.usages, CAPTION_REWRITE_FEATURE);
-    const raw = await this.check(orgId, output.raw, facts, checker);
+    const raw = await this.check(orgId, output.raw, facts, checker, () =>
+      postingTime(local.format('dddd D MMMM YYYY'), draft.platform)
+    );
 
     const { captions, reasons } = groundCaptions(raw, facts, 1);
     const fresh = captions.find((c) => c.platform === draft.platform);
@@ -759,13 +772,14 @@ export class CaptionService {
     orgId: string,
     raw: RawCaptionPlan,
     facts: CaptionFact[],
-    checker: CaptionChecker | null
+    checker: CaptionChecker | null,
+    postsAt?: (day: number, platform: string) => string | undefined
   ): Promise<RawCaptionPlan> {
     if (!checker) {
       return raw;
     }
     try {
-      const output = await checker.check({ facts, captions: captionsToCheck(raw) });
+      const output = await checker.check({ facts, captions: captionsToCheck(raw, postsAt) });
       await this.logUsages(orgId, output.usages, CAPTION_CHECK_FEATURE);
       const checked = applyChecks(raw, output.results);
       this._logger.log(

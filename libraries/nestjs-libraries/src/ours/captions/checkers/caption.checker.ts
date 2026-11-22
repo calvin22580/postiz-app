@@ -15,6 +15,9 @@ export interface CaptionToCheck {
   key: string;
   platform: string;
   text: string;
+  // when it goes out, in words ("Monday 23 November 2026, 18:30"), so
+  // "tomorrow" or "open now" can be checked against the day and the hours
+  postsAt?: string;
 }
 
 export interface CaptionCheckInput {
@@ -51,8 +54,12 @@ export class CaptionCheckerError extends Error {
 export const captionKey = (day: unknown, platform: unknown) =>
   `${Number(day)}:${String(platform || '')}`;
 
-// Every caption in a writer's plan, as the Checker sees it.
-export const captionsToCheck = (raw: RawCaptionPlan): CaptionToCheck[] =>
+// Every caption in a writer's plan, as the Checker sees it. postsAt gives
+// each caption's posting day and time, when known.
+export const captionsToCheck = (
+  raw: RawCaptionPlan,
+  postsAt?: (day: number, platform: string) => string | undefined
+): CaptionToCheck[] =>
   (raw?.posts || []).flatMap((post) =>
     (post?.captions || [])
       .filter((c) => String(c?.text || '').trim())
@@ -60,6 +67,7 @@ export const captionsToCheck = (raw: RawCaptionPlan): CaptionToCheck[] =>
         key: captionKey(post?.day, c?.platform),
         platform: String(c?.platform || ''),
         text: String(c?.text || '').trim(),
+        ...(postsAt?.(Number(post?.day), String(c?.platform || '')) ? { postsAt: postsAt(Number(post?.day), String(c?.platform || '')) } : {}),
       }))
   );
 

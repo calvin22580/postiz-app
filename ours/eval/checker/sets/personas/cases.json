@@ -190,6 +190,7 @@
       "id": "qs-01",
       "profile": "quillspindle",
       "platform": "linkedin",
+      "postsAt": "Monday 23 November 2026, 08:30",
       "label": {
         "kind": "true"
       },
@@ -202,6 +203,7 @@
       "id": "qs-02",
       "profile": "quillspindle",
       "platform": "facebook",
+      "postsAt": "Monday 23 November 2026, 12:30",
       "label": {
         "kind": "invented",
         "grade": "borderline",
@@ -216,6 +218,7 @@
       "id": "qs-03",
       "profile": "quillspindle",
       "platform": "instagram",
+      "postsAt": "Monday 23 November 2026, 18:30",
       "label": {
         "kind": "true"
       },
@@ -228,6 +231,7 @@
       "id": "qs-04",
       "profile": "quillspindle",
       "platform": "linkedin",
+      "postsAt": "Tuesday 24 November 2026, 08:30",
       "label": {
         "kind": "invented",
         "grade": "clear",
@@ -242,6 +246,7 @@
       "id": "qs-05",
       "profile": "quillspindle",
       "platform": "facebook",
+      "postsAt": "Tuesday 24 November 2026, 12:30",
       "label": {
         "kind": "invented",
         "grade": "borderline",
@@ -256,6 +261,7 @@
       "id": "qs-06",
       "profile": "quillspindle",
       "platform": "instagram",
+      "postsAt": "Tuesday 24 November 2026, 18:30",
       "label": {
         "kind": "invented",
         "grade": "clear",
@@ -270,6 +276,7 @@
       "id": "qs-07",
       "profile": "quillspindle",
       "platform": "linkedin",
+      "postsAt": "Wednesday 25 November 2026, 08:30",
       "label": {
         "kind": "invented",
         "grade": "borderline",
@@ -284,6 +291,7 @@
       "id": "qs-08",
       "profile": "quillspindle",
       "platform": "facebook",
+      "postsAt": "Wednesday 25 November 2026, 12:30",
       "label": {
         "kind": "true"
       },
@@ -296,6 +304,7 @@
       "id": "qs-09",
       "profile": "quillspindle",
       "platform": "instagram",
+      "postsAt": "Wednesday 25 November 2026, 18:30",
       "label": {
         "kind": "invented",
         "grade": "borderline",
@@ -310,6 +319,7 @@
       "id": "qs-10",
       "profile": "quillspindle",
       "platform": "linkedin",
+      "postsAt": "Thursday 26 November 2026, 08:30",
       "label": {
         "kind": "invented",
         "grade": "borderline",
@@ -324,6 +334,7 @@
       "id": "qs-11",
       "profile": "quillspindle",
       "platform": "linkedin",
+      "postsAt": "Friday 27 November 2026, 08:30",
       "label": {
         "kind": "true"
       },
@@ -336,6 +347,7 @@
       "id": "qs-12",
       "profile": "quillspindle",
       "platform": "facebook",
+      "postsAt": "Friday 27 November 2026, 12:30",
       "label": {
         "kind": "true"
       },
@@ -348,6 +360,7 @@
       "id": "qs-13",
       "profile": "quillspindle",
       "platform": "instagram",
+      "postsAt": "Friday 27 November 2026, 18:30",
       "label": {
         "kind": "true"
       },
@@ -360,6 +373,7 @@
       "id": "qs-14",
       "profile": "quillspindle",
       "platform": "linkedin",
+      "postsAt": "Tuesday 24 November 2026, 08:30",
       "label": {
         "kind": "invented",
         "grade": "borderline",
@@ -375,6 +389,7 @@
       "id": "sp-01",
       "profile": "sproggit",
       "platform": "linkedin",
+      "postsAt": "Monday 23 November 2026, 08:30",
       "label": {
         "kind": "true"
       },
@@ -387,6 +402,7 @@
       "id": "sp-02",
       "profile": "sproggit",
       "platform": "facebook",
+      "postsAt": "Monday 23 November 2026, 12:30",
       "label": {
         "kind": "invented",
         "grade": "clear",
@@ -401,6 +417,7 @@
       "id": "sp-03",
       "profile": "sproggit",
       "platform": "instagram",
+      "postsAt": "Monday 23 November 2026, 18:30",
       "label": {
         "kind": "invented",
         "grade": "clear",
@@ -415,6 +432,7 @@
       "id": "sp-04",
       "profile": "sproggit",
       "platform": "linkedin",
+      "postsAt": "Tuesday 24 November 2026, 08:30",
       "label": {
         "kind": "invented",
         "grade": "borderline",
@@ -429,6 +447,7 @@
       "id": "sp-05",
       "profile": "sproggit",
       "platform": "facebook",
+      "postsAt": "Tuesday 24 November 2026, 12:30",
       "label": {
         "kind": "true"
       },
@@ -441,6 +460,7 @@
       "id": "sp-06",
       "profile": "sproggit",
       "platform": "instagram",
+      "postsAt": "Tuesday 24 November 2026, 18:30",
       "label": {
         "kind": "true"
       },
@@ -453,6 +473,7 @@
       "id": "sp-07",
       "profile": "sproggit",
       "platform": "linkedin",
+      "postsAt": "Wednesday 25 November 2026, 08:30",
       "label": {
         "kind": "invented",
         "grade": "clear",
@@ -467,6 +488,7 @@
       "id": "sp-08",
       "profile": "sproggit",
       "platform": "facebook",
+      "postsAt": "Wednesday 25 November 2026, 12:30",
       "label": {
         "kind": "true"
       },
@@ -479,6 +501,7 @@
       "id": "sp-09",
       "profile": "sproggit",
       "platform": "instagram",
+      "postsAt": "Wednesday 25 November 2026, 18:30",
       "label": {
         "kind": "true"
       },
@@ -491,6 +514,7 @@
       "id": "sp-10",
       "profile": "sproggit",
       "platform": "linkedin",
+      "postsAt": "Thursday 26 November 2026, 08:30",
       "label": {
         "kind": "true"
       },
@@ -503,6 +527,7 @@
       "id": "sp-11",
       "profile": "sproggit",
       "platform": "facebook",
+      "postsAt": "Thursday 26 November 2026, 12:30",
       "label": {
         "kind": "invented",
         "grade": "clear",
@@ -517,6 +542,7 @@
       "id": "sp-12",
       "profile": "sproggit",
       "platform": "instagram",
+      "postsAt": "Thursday 26 November 2026, 18:30",
       "label": {
         "kind": "invented",
         "grade": "clear",
@@ -531,6 +557,7 @@
       "id": "sp-13",
       "profile": "sproggit",
       "platform": "linkedin",
+      "postsAt": "Friday 27 November 2026, 08:30",
       "label": {
         "kind": "invented",
         "grade": "borderline",
@@ -545,6 +572,7 @@
       "id": "sp-14",
       "profile": "sproggit",
       "platform": "facebook",
+      "postsAt": "Friday 27 November 2026, 12:30",
       "label": {
         "kind": "invented",
         "grade": "borderline",
@@ -559,6 +587,7 @@
       "id": "sp-15",
       "profile": "sproggit",
       "platform": "instagram",
+      "postsAt": "Friday 27 November 2026, 18:30",
       "label": {
         "kind": "invented",
         "grade": "borderline",
@@ -573,6 +602,7 @@
       "id": "sp-16",
       "profile": "sproggit",
       "platform": "linkedin",
+      "postsAt": "Tuesday 24 November 2026, 08:30",
       "label": {
         "kind": "true"
       },
@@ -586,6 +616,7 @@
       "id": "tw-01",
       "profile": "thimblewick",
       "platform": "linkedin",
+      "postsAt": "Monday 23 November 2026, 08:30",
       "label": {
         "kind": "true"
       },
@@ -598,14 +629,12 @@
       "id": "tw-02",
       "profile": "thimblewick",
       "platform": "facebook",
+      "postsAt": "Monday 23 November 2026, 12:30",
       "label": {
-        "kind": "invented",
-        "grade": "timing",
-        "detail": "“tomorrow's a good day to pop in” is only right if tomorrow is an opening day, which depends on when the post goes out."
+        "kind": "true"
       },
       "tags": [
-        "codex-run-2",
-        "relabelled"
+        "codex-run-2"
       ],
       "text": "A quick reminder of when you can find us at Apricot Thimblewick Café: Tuesday to Saturday, 09:00 to 15:00. We're closed on Sundays and Mondays, so tomorrow's a good day to pop in. See you soon ☕"
     },
@@ -613,6 +642,7 @@
       "id": "tw-03",
       "profile": "thimblewick",
       "platform": "instagram",
+      "postsAt": "Monday 23 November 2026, 18:30",
       "label": {
         "kind": "true"
       },
@@ -625,6 +655,7 @@
       "id": "tw-04",
       "profile": "thimblewick",
       "platform": "linkedin",
+      "postsAt": "Tuesday 24 November 2026, 08:30",
       "label": {
         "kind": "true"
       },
@@ -637,6 +668,7 @@
       "id": "tw-05",
       "profile": "thimblewick",
       "platform": "facebook",
+      "postsAt": "Tuesday 24 November 2026, 12:30",
       "label": {
         "kind": "true"
       },
@@ -649,6 +681,7 @@
       "id": "tw-06",
       "profile": "thimblewick",
       "platform": "instagram",
+      "postsAt": "Tuesday 24 November 2026, 18:30",
       "label": {
         "kind": "invented",
         "grade": "timing",
@@ -663,6 +696,7 @@
       "id": "tw-07",
       "profile": "thimblewick",
       "platform": "linkedin",
+      "postsAt": "Wednesday 25 November 2026, 08:30",
       "label": {
         "kind": "true"
       },
@@ -675,6 +709,7 @@
       "id": "tw-08",
       "profile": "thimblewick",
       "platform": "facebook",
+      "postsAt": "Wednesday 25 November 2026, 12:30",
       "label": {
         "kind": "invented",
         "grade": "borderline",
@@ -690,6 +725,7 @@
       "id": "tw-09",
       "profile": "thimblewick",
       "platform": "instagram",
+      "postsAt": "Wednesday 25 November 2026, 18:30",
       "label": {
         "kind": "invented",
         "grade": "timing",
@@ -704,6 +740,7 @@
       "id": "tw-10",
       "profile": "thimblewick",
       "platform": "linkedin",
+      "postsAt": "Thursday 26 November 2026, 08:30",
       "label": {
         "kind": "true"
       },
@@ -716,6 +753,7 @@
       "id": "tw-11",
       "profile": "thimblewick",
       "platform": "facebook",
+      "postsAt": "Thursday 26 November 2026, 12:30",
       "label": {
         "kind": "true"
       },
@@ -728,6 +766,7 @@
       "id": "tw-12",
       "profile": "thimblewick",
       "platform": "instagram",
+      "postsAt": "Thursday 26 November 2026, 18:30",
       "label": {
         "kind": "true"
       },
@@ -740,6 +779,7 @@
       "id": "tw-13",
       "profile": "thimblewick",
       "platform": "linkedin",
+      "postsAt": "Friday 27 November 2026, 08:30",
       "label": {
         "kind": "invented",
         "grade": "borderline",
@@ -754,6 +794,7 @@
       "id": "tw-14",
       "profile": "thimblewick",
       "platform": "facebook",
+      "postsAt": "Friday 27 November 2026, 12:30",
       "label": {
         "kind": "invented",
         "grade": "borderline",
@@ -768,6 +809,7 @@
       "id": "tw-15",
       "profile": "thimblewick",
       "platform": "instagram",
+      "postsAt": "Friday 27 November 2026, 18:30",
       "label": {
         "kind": "invented",
         "grade": "borderline",
@@ -782,6 +824,7 @@
       "id": "tw-16",
       "profile": "thimblewick",
       "platform": "linkedin",
+      "postsAt": "Friday 27 November 2026, 08:30",
       "label": {
         "kind": "invented",
         "grade": "clear",
