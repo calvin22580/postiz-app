@@ -93,6 +93,9 @@ export const buildCheckMessage = (input: CaptionCheckInput) => {
     `Check these captions.\n\n` +
     `<untrusted_business_profile>\n${input.facts.filter((f) => !isSeasonalFact(f)).map(fact).join('\n')}\n</untrusted_business_profile>\n\n` +
     (dates.length ? `<uk_dates>\n${dates.map(fact).join('\n')}\n</uk_dates>\n\n` : '') +
+    (input.brief?.trim()
+      ? `<brand_memory>\nWhat this owner has shown they don't want in posts. If a caption clearly goes against one of these, use "fix" and change only that part. These are preferences, not facts: they never make a claim supported.\n${escapeText(input.brief.trim())}\n</brand_memory>\n\n`
+      : '') +
     `<untrusted_captions>\n` +
     input.captions
       .map((c) => `<caption key="${escapeText(c.key).replace(/"/g, '')}" platform="${escapeText(c.platform).replace(/"/g, '')}"${c.postsAt ? ` posts="${escapeText(c.postsAt).replace(/"/g, '')}"` : ''}>\n${escapeText(c.text)}\n</caption>`)

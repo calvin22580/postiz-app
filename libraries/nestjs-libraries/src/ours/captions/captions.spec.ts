@@ -406,8 +406,10 @@ const makeService = () => {
   const performance = { writerPreferences: vi.fn(async (): Promise<any> => null) };
   // Content engine E1: owner signals are recorded, never block an action
   const signals = { record: vi.fn(async () => ({ id: 'sig-1' })) };
-  const service = new CaptionService(repo as never, profiles as never, usage as never, integrations as never, posts as never, graphics as never, seasonal as never, plans as never, performance as never, signals as never);
-  return { service, repo, usage, posts, graphics, profiles, seasonal, plans, performance, signals };
+  // Content engine E4: brand memory is off unless a test says otherwise
+  const memory = { learn: vi.fn(async (): Promise<any> => null), brief: vi.fn(async (): Promise<string> => '') };
+  const service = new CaptionService(repo as never, profiles as never, usage as never, integrations as never, posts as never, graphics as never, seasonal as never, plans as never, performance as never, signals as never, memory as never);
+  return { service, repo, usage, posts, graphics, profiles, seasonal, plans, performance, signals, memory };
 };
 
 describe('CaptionService.runWriting', () => {
@@ -443,6 +445,29 @@ describe('CaptionService.runWriting', () => {
     expect(body.drafts[0]).toMatchObject({ platform: 'facebook', theme: 'Hello' });
     expect(body.drafts[0].scheduledFor.toISOString()).toBe('2026-11-16T12:30:00.000Z');
     expect(body.drafts[0].facts.map((f: any) => f.value)).toEqual(['Harbour Lane Bakery', 'Exampletown']);
+  });
+
+  it('learns from owner actions first, then writes and checks with the brand brief (E4)', async () => {
+    const { service, memory } = makeService();
+    const order: string[] = [];
+    memory.learn.mockImplementation(async () => {
+      order.push('learn');
+      return null;
+    });
+    memory.brief.mockImplementation(async (_org: string, only?: string[]) => (only ? '- No hard selling.' : 'How posts should sound:\n- No exclamation marks.'));
+    const write = vi.fn(async () => {
+      order.push('write');
+      return {
+        raw: { posts: [{ day: 0, theme: 'Hello', captions: [{ platform: 'facebook', text: 'Hello from Harbour Lane Bakery', factIds: ['businessName.0'] }] }] },
+        usages: [],
+      };
+    });
+    const check = vi.fn(async () => ({ results: [], usages: [] }));
+    await service.runWriting('org-1', week, FACTS, 'warm', { name: 'anthropic', write } as never, undefined, null, undefined, { name: 'anthropic', check } as never);
+    expect(order).toEqual(['learn', 'write']);
+    expect(write).toHaveBeenCalledWith(expect.objectContaining({ brief: 'How posts should sound:\n- No exclamation marks.' }));
+    expect(memory.brief).toHaveBeenCalledWith('org-1', ['avoid', 'phrases']);
+    expect(check).toHaveBeenCalledWith(expect.objectContaining({ brief: '- No hard selling.' }));
   });
 
   it('fails the week with a readable message when nothing survives the checks', async () => {

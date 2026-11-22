@@ -31,6 +31,8 @@ import { ErasureService } from '@gitroom/nestjs-libraries/ours/erasure/erasure.s
 import { ErasureRepository } from '@gitroom/nestjs-libraries/ours/erasure/erasure.repository';
 import { BrandSignalService } from '@gitroom/nestjs-libraries/ours/memory/brand.signal.service';
 import { BrandSignalRepository } from '@gitroom/nestjs-libraries/ours/memory/brand.signal.repository';
+import { BrandMemoryService } from '@gitroom/nestjs-libraries/ours/memory/brand.memory.service';
+import { BrandMemoryRepository } from '@gitroom/nestjs-libraries/ours/memory/brand.memory.repository';
 import { ErasureInterceptor } from '@gitroom/backend/ours/erasure.interceptor';
 
 const authenticatedController = [
@@ -69,6 +71,8 @@ const publicController = [StripeWebhookController];
     ErasureRepository,
     BrandSignalService,
     BrandSignalRepository,
+    BrandMemoryService,
+    BrandMemoryRepository,
     // Milestone 7: our plan's channel limit on upstream's "add a channel"
     // routes (global, so upstream's modules need no change)
     {

@@ -23,14 +23,14 @@ Design and reasoning: the "Kanosena content engine and brand memory: design" doc
 | Step | Status | Model | Reads | Writes | Cost feature |
 | --- | --- | --- | --- | --- | --- |
 | Profile reader | Live (M2) | `OURS_AI_MODEL` (Opus 5.5) | Website pages | Business profile, every claim with a source | `business_profile` |
-| Week writer | Live (M3) | `OURS_AI_MODEL` (Opus 5.5) | Profile facts, UK dates, results preferences | Draft captions | `captions` |
-| Rewriter | Live (M5) | `OURS_AI_MODEL` (Opus 5.5) | Profile facts, current caption, owner note | One draft caption | `caption-rewrite` |
+| Week writer | Live (M3) | `OURS_AI_MODEL` (Opus 5.5) | Profile facts, UK dates, results preferences, brand brief (E4, when on) | Draft captions | `captions` |
+| Rewriter | Live (M5) | `OURS_AI_MODEL` (Opus 5.5) | Profile facts, current caption, owner note, brand brief (E4, when on; the note wins) | One draft caption | `caption-rewrite` |
 | Hard rules | Live (M3) | none (code) | Caption, facts | Keep or drop | none |
 | Owner signals | Live (E1) | none (code) | Owner actions | `ours_brand_signal` | none |
-| Checker | Built, off (E2) | `OURS_AI_CHECKER_MODEL` (Sonnet 5.5 until the test set decides) | Captions, profile facts, brand "avoid" list (from E4) | Pass, fix or drop per caption, before the hard rules | `caption-check` |
+| Checker | Built, off (E2) | `OURS_AI_CHECKER_MODEL` (Sonnet 5.5 until the test set decides) | Captions, profile facts, brand memory `avoid` and `phrases` lessons (E4, when on) | Pass, fix or drop per caption, before the hard rules | `caption-check` |
 | Strategist | Planned (E3) | Opus 5.5 | Profile, brand brief, UK dates, results, recent themes | Week plan (ideas and facts) | `captions.plan` |
 | Writer | Planned (E3) | Sonnet 5.5 | Week plan, brand brief, platform rules | Draft captions | `captions.write` |
-| Memory keeper | Planned (E4) | Haiku 5.5, Anthropic memory tool | New owner signals, current memory | `ours_brand_memory`, through our checked tool handler | `memory.update` |
+| Memory keeper | Built, off (E4) | `OURS_AI_MEMORY_MODEL` (Haiku 5.5), Anthropic memory tool | Owner signals since its last run, current lessons | `ours_brand_memory`, only through `MemoryWorkspace`, which checks every change | `memory-update` |
 
 ## Entry points
 
@@ -55,7 +55,9 @@ Every way a post can start goes through the same steps above and ends waiting fo
   - `restored`: a rejected post brought back;
   - `rewrite`: the text before, the new version (empty if none could be kept), and the owner's note.
   Recording a signal never blocks the owner's action: a failure is logged only. Signals are erased with the organisation.
-- `ours_brand_memory` (planned, E4): lessons about voice and preferences, each citing the signals behind it.
+- `ours_brand_memory` (E4): lessons about how the owner likes posts written and chosen, one row per memory-tool file (`/memories/{voice,phrases,likes,topics,avoid}/<name>.md`). Each cites the signals behind it (`evidence`, `against`: first 8 characters of signal ids). Our code sets the status: evidence minus against of 2 or more is `active` (used in the brief), 1 `tentative`, 0 or less `retired`. At most 30 lessons of 200 characters. `source` owner means the owner wrote or edited it, and the keeper can't change it; `offAt` means the owner switched it off, and it can't come back. Erased with the organisation.
+- `ours_brand_memory_run` (E4): one row per keeper run: the newest signal covered (the next run starts after it), what changed, what was refused and why.
+- Brand memory (E4) runs only with `OURS_BRAND_MEMORY=true`. Before a week is written, the keeper runs if there are new signals (Haiku 5.5, memory tool, at most 10 turns, `OURS_MEMORY_KEEPER=plain` swaps in the single-call version for comparison; the labelled demo keeper runs without an AI key). `MemoryWorkspace` refuses paths outside the folders, lessons without real evidence, business details (the caption hard rules plus fact patterns), switched-off lessons and changes to owner lessons; refusals go back to the keeper as tool errors. Accepted changes are saved only when the run ends. If the run fails, writing goes ahead with the lessons as they were. Rewrites read the brief but never run the keeper. The brief is a preference for wording and choice of post, never a source of claims; the Checker and hard rules still check every claim against the profile.
 - The Checker (E2) runs only with `OURS_CAPTION_CHECKER=true`, after the writer and the rewriter. One call checks a whole week. A fixed caption still goes through the hard rules. If the check call fails, the captions go on to the hard rules unchanged and the failure is logged: the hard rules and the owner's approval still apply.
 - `ours_ai_usage`: one row per AI call. `ours/scripts/ai-cost-summary.mjs` prints cost per step.
 

@@ -20,6 +20,9 @@ export interface CaptionWriterInput {
   preferences?: Pick<WriterPreferences, 'favour' | 'avoid'>;
   // the platforms the plan includes this week; all of them when not given
   platforms?: CaptionPlatform[];
+  // Content engine E4: what brand memory has learned about how the owner
+  // likes posts written and chosen. A preference, never a fact.
+  brief?: string;
 }
 
 // What a writer returns before checking: unchecked captions.
@@ -53,6 +56,8 @@ export interface CaptionRewriteInput {
   note?: string;
   // how many times this caption was rewritten before
   attempt: number;
+  // Content engine E4: the brand brief, as for a week
+  brief?: string;
 }
 
 export interface CaptionWriter {

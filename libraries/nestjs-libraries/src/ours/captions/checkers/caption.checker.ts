@@ -23,6 +23,8 @@ export interface CaptionToCheck {
 export interface CaptionCheckInput {
   facts: CaptionFact[];
   captions: CaptionToCheck[];
+  // Content engine E4: brand memory's "avoid" and "phrases" lessons
+  brief?: string;
 }
 
 export interface CaptionCheckResult {

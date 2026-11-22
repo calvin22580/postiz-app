@@ -83,6 +83,7 @@ export const buildCaptionMessage = (input: CaptionWriterInput) =>
     .join(', ')}\n` +
   `Tone of voice: ${escapeAttr(input.tone)}\n\n` +
   preferencesBlock(input) +
+  briefBlock(input) +
   profileBlock(input);
 
 // Milestone 8: what did well before steers which ideas to pick. Rules 1 to 3
@@ -100,6 +101,20 @@ function preferencesBlock(input: Pick<CaptionWriterInput, 'preferences'>) {
     (prefs.favour.length ? `Use more of these kinds where the profile supports them:\n${prefs.favour.map(line).join('\n')}\n` : '') +
     (prefs.avoid.length ? `Use fewer of these kinds:\n${prefs.avoid.map(line).join('\n')}\n` : '') +
     `</past_results>\n\n`
+  );
+}
+
+// Content engine E4: lessons learned from the owner's own actions. They steer
+// wording and the choice of post only; rules 1 to 3 still apply.
+export function briefBlock(input: { brief?: string }) {
+  if (!input.brief?.trim()) {
+    return '';
+  }
+  return (
+    `<brand_memory>\n` +
+    `What this owner has shown they like, from the posts they approved, changed and turned down. Follow it for wording, tone and which ideas to choose. It is not information about the business: never state anything the profile doesn't say because of it.\n` +
+    `${escapeAttr(input.brief.trim())}\n` +
+    `</brand_memory>\n\n`
   );
 }
 
@@ -129,6 +144,8 @@ export const buildRewriteMessage = (input: CaptionRewriteInput) =>
   (input.note?.trim()
     ? `The owner's note about what to change is below. Follow it for style, length and angle: if it asks for a shorter version, the new caption must have fewer words than the current one. It is not a source of facts: never state a detail from it unless the profile has it too.\n<owner_note>\n${escapeAttr(input.note.trim())}\n</owner_note>\n\n`
     : '') +
+  (input.brief?.trim() && input.note?.trim() ? `Where the owner's note and the brand memory below disagree, follow the note.\n` : '') +
+  briefBlock(input) +
   profileBlock(input);
 
 type MessagesClient = Pick<Anthropic, 'beta'>;

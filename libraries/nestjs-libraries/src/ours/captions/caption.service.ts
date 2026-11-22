@@ -80,6 +80,7 @@ import { PerformanceService } from '@gitroom/nestjs-libraries/ours/performance/p
 import { WriterPreferences } from '@gitroom/nestjs-libraries/ours/performance/performance.insights';
 import { BrandSignalService } from '@gitroom/nestjs-libraries/ours/memory/brand.signal.service';
 import { RejectReason } from '@gitroom/nestjs-libraries/ours/memory/brand.signal';
+import { BrandMemoryService } from '@gitroom/nestjs-libraries/ours/memory/brand.memory.service';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -166,7 +167,8 @@ export class CaptionService {
     private _seasonalService: SeasonalService,
     private _planService: PlanService,
     private _performanceService: PerformanceService,
-    private _brandSignalService: BrandSignalService
+    private _brandSignalService: BrandSignalService,
+    private _brandMemoryService: BrandMemoryService
   ) {}
 
   async getWeek(orgId: string) {
@@ -266,6 +268,10 @@ export class CaptionService {
     checker: CaptionChecker | null = createCaptionChecker()
   ) {
     try {
+      // Content engine E4: learn from the owner's latest actions first, then
+      // write with what brand memory holds (both do nothing when memory is off)
+      await this._brandMemoryService.learn(orgId);
+      const brief = await this._brandMemoryService.brief(orgId);
       let output;
       try {
         output = await writer.write({
@@ -275,6 +281,7 @@ export class CaptionService {
           dates: postingDates(week.weekStart),
           ...(preferences ? { preferences } : {}),
           ...(platforms ? { platforms } : {}),
+          ...(brief ? { brief } : {}),
         });
       } catch (e) {
         if (e instanceof CaptionWriterWithUsageError) {
@@ -594,6 +601,8 @@ export class CaptionService {
       );
     }
 
+    // Content engine E4: the brand brief as it stands (no learning while the owner waits)
+    const brief = await this._brandMemoryService.brief(orgId);
     let output;
     try {
       output = await writer.rewrite({
@@ -606,6 +615,7 @@ export class CaptionService {
         current: draft.text,
         note,
         attempt: draft.rewriteCount,
+        ...(brief ? { brief } : {}),
       });
     } catch (e) {
       if (e instanceof CaptionWriterWithUsageError) {
@@ -779,7 +789,9 @@ export class CaptionService {
       return raw;
     }
     try {
-      const output = await checker.check({ facts, captions: captionsToCheck(raw, postsAt) });
+      // Content engine E4: what the owner has shown they don't want
+      const brief = await this._brandMemoryService.brief(orgId, ['avoid', 'phrases']);
+      const output = await checker.check({ facts, captions: captionsToCheck(raw, postsAt), ...(brief ? { brief } : {}) });
       await this.logUsages(orgId, output.usages, CAPTION_CHECK_FEATURE);
       const checked = applyChecks(raw, output.results);
       this._logger.log(
