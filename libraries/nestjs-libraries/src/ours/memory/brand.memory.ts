@@ -113,7 +113,8 @@ const FACT_PATTERNS: [RegExp, string][] = [
   [/\b(?:we|they|the business|the shop|the company)\s+(?:are|is|was|were|has|have|had|sell|sells|serve|serves|offer|offers|make|makes|do|does|run|runs|own|owns|open|opens|close|closes|stock|stocks|provide|provides|deliver|delivers|cover|covers)\b/i, 'says what the business is or does'],
   [/\b(?:open|opens|opening|closed|closes|closing)\s+(?:on|at|from|until|till|every|daily|late|early|monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekends?)\b/i, 'opening times'],
   [/\b(?:since|founded|established|est\.|years? in|years? of|family[- ]run|family[- ]owned|started (?:the|it|in))\b/i, 'history of the business'],
-  [/\b(?:located|based in|based at|situated|address|postcode|parking)\b/i, 'where the business is'],
+  // "our address", not "address readers as"
+  [/\b(?:located|based in|based at|situated|postcode|parking|(?:our|the|full) address|address is)\b/i, 'where the business is'],
   [/\b(?:price list|prices? (?:are|is|start|from)|costs? (?:just|only|from)|charges? (?:for|from))\b/i, 'prices'],
 ];
 

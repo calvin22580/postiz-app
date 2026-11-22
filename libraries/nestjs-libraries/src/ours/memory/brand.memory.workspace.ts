@@ -32,6 +32,8 @@ export interface MemoryRefusal {
   command: string;
   path: string;
   reason: string;
+  // the lesson that was turned down, when there was one
+  lesson?: string;
 }
 
 // A refused change. Thrown inside a memory tool handler, the SDK's tool
@@ -193,36 +195,36 @@ export class MemoryWorkspace {
   }
 
   private checkLesson(command: string, path: string, lesson: Lesson, isNew = false) {
+    // refusals keep the lesson text, so the run log shows what was turned down
+    const refuse = (reason: string) => this.refuse(command, path, reason, lesson.lesson);
     const folder = path.split('/')[2] as MemoryFolder;
     const problems = lessonProblems(lesson.lesson, folder);
     if (problems.length) {
-      return this.refuse(
-        command,
-        path,
+      return refuse(
         `This lesson can't be stored because ${problems.join('; ')}. Brand memory holds only how the owner likes posts written and chosen; facts about the business come only from its profile.`
       );
     }
     if (!lesson.evidence.length) {
-      return this.refuse(command, path, 'Every lesson needs evidence: the ids of the owner actions that taught it.');
+      return refuse('Every lesson needs evidence: the ids of the owner actions that taught it.');
     }
     if (lesson.evidence.length > MAX_EVIDENCE || lesson.against.length > MAX_EVIDENCE) {
-      return this.refuse(command, path, `A lesson can cite at most ${MAX_EVIDENCE} owner actions each for and against.`);
+      return refuse(`A lesson can cite at most ${MAX_EVIDENCE} owner actions each for and against.`);
     }
     const unknown = [...lesson.evidence, ...lesson.against].filter((r) => !this._knownSignals.has(r));
     if (unknown.length) {
-      return this.refuse(command, path, `These are not ids of this owner's actions: ${unknown.join(', ')}. Cite only the ids given to you.`);
+      return refuse(`These are not ids of this owner's actions: ${unknown.join(', ')}. Cite only the ids given to you.`);
     }
     const off = this._switchedOff.find((o) => o.path === path || similarLessons(o.lesson, lesson.lesson));
     if (off) {
-      return this.refuse(command, path, 'The owner switched off a lesson like this one. Don\'t write it again.');
+      return refuse('The owner switched off a lesson like this one. Don\'t write it again.');
     }
     if (isNew && this._lessons.size >= MAX_LESSONS) {
-      return this.refuse(command, path, `Memory already holds ${MAX_LESSONS} lessons. Merge or delete weaker ones before adding another.`);
+      return refuse(`Memory already holds ${MAX_LESSONS} lessons. Merge or delete weaker ones before adding another.`);
     }
   }
 
-  private refuse(command: string, path: string, reason: string): never {
-    this.refusals.push({ command, path, reason });
+  private refuse(command: string, path: string, reason: string, lesson?: string): never {
+    this.refusals.push({ command, path, reason, ...(lesson ? { lesson } : {}) });
     throw new MemoryRefusedError(reason);
   }
 }

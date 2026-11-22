@@ -9,6 +9,7 @@
 import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const uuid = (seed) => {
   const h = createHash('sha1').update(seed).digest('hex');
@@ -16,7 +17,7 @@ const uuid = (seed) => {
 };
 
 // a lesson that says not to do something
-const NOT = String.raw`\b(?:no|not|don'?t|never|drop|avoid|stop|without|leave out|skip|remove|steer|less|fewer|no longer)\b`;
+const NOT = String.raw`\b(?:no|not|don'?t|never|drop|avoid|stop|without|leave out|skip|remove|steer|less|fewer|no longer|off)\b`;
 
 const business = (id, weeks) => {
   const signals = [];
@@ -215,6 +216,6 @@ const pennyroyal = {
   facts: String.raw`insured|qualified|guilds|kennels|kent|best groomer|rated`,
 };
 
-const out = path.join(path.dirname(new URL(import.meta.url).pathname), 'history.json');
+const out = path.join(path.dirname(fileURLToPath(import.meta.url)), 'history.json');
 writeFileSync(out, JSON.stringify({ businesses: { hollowfen, marrowby, pennyroyal } }, null, 1) + '\n');
 console.log(`Wrote ${out}`);

@@ -96,6 +96,7 @@ describe('lesson rules', () => {
       'Don\'t sign off with "Ride safe" any more.',
       'No emoji in LinkedIn posts.',
       'Say "groom", not "pamper".',
+      'Don\'t address readers as "folks".',
     ]) {
       expect(lessonProblems(ok, 'voice')).toEqual([]);
     }
@@ -401,7 +402,7 @@ describe('Managed Agents memory store keeper', () => {
     const { saved, removed } = workspace.changes();
     expect(saved.map((l) => l.path)).toEqual(['/memories/voice/no-exclamation-marks.md']);
     expect(removed).toEqual(['/memories/voice/short-posts.md']);
-    expect(workspace.refusals).toEqual([expect.objectContaining({ path: '/memories/likes/sundays.md' })]);
+    expect(workspace.refusals).toEqual([expect.objectContaining({ path: '/memories/likes/sundays.md', lesson: 'We are open on Sundays.' })]);
     expect(out.summary).toBe('Updated two lessons.');
     expect(out.usages).toEqual([expect.objectContaining({ model: 'claude-haiku-5-5', inputTokens: 900, outputTokens: 120 })]);
     expect(out.extraCostUsd).toBeCloseTo(0.001, 4);

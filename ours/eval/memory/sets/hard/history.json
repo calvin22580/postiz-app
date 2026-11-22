@@ -376,14 +376,14 @@
     {
      "id": "no-ride-safe",
      "describe": "No \"Ride safe\" sign-off any more",
-     "match": "(?=.*ride safe)(?=.*\\b(?:no|not|don'?t|never|drop|avoid|stop|without|leave out|skip|remove|steer|less|fewer|no longer)\\b)"
+     "match": "(?=.*ride safe)(?=.*\\b(?:no|not|don'?t|never|drop|avoid|stop|without|leave out|skip|remove|steer|less|fewer|no longer|off)\\b)"
     }
    ],
    "oneOffs": [
     {
      "id": "ride-safe-back",
      "describe": "The sign-off the owner dropped must not stay active",
-     "match": "^(?!.*\\b(?:no|not|don'?t|never|drop|avoid|stop|without|leave out|skip|remove|steer|less|fewer|no longer)\\b).*ride safe"
+     "match": "^(?!.*\\b(?:no|not|don'?t|never|drop|avoid|stop|without|leave out|skip|remove|steer|less|fewer|no longer|off)\\b).*ride safe"
     },
     {
      "id": "black-friday",
@@ -738,7 +738,7 @@
     {
      "id": "cakes-back",
      "describe": "The owner brought cake posts back: no lesson against them may stay active",
-     "match": "(?=.*cake)(?=.*\\b(?:no|not|don'?t|never|drop|avoid|stop|without|leave out|skip|remove|steer|less|fewer|no longer)\\b)"
+     "match": "(?=.*cake)(?=.*\\b(?:no|not|don'?t|never|drop|avoid|stop|without|leave out|skip|remove|steer|less|fewer|no longer|off)\\b)"
     },
     {
      "id": "christmas",

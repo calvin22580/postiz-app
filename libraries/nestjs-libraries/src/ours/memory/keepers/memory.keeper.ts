@@ -68,7 +68,7 @@ Kanosena adds a status line when you view a file. You can't change it: a lesson 
 How to work:
 1. Look at your memory first.
 2. For each pattern in the new actions: if a lesson already covers it, add the new ids to its evidence, or to "against" when the owner went the other way. Otherwise create a lesson.
-3. Learn only what the actions show. Don't guess at reasons the owner didn't give. One action can start a lesson.
+3. Learn only what the actions show. Don't guess at reasons the owner didn't give, and don't widen a lesson beyond its actions: one rejected Easter post is about Easter, not every holiday. When the owner does something on one platform only, name that platform in the lesson. When actions point both ways, put the ones that disagree under against. One action can start a lesson.
 4. Keep the memory small and clear: merge lessons that say the same thing, and delete a lesson the owner's actions clearly contradict.
 5. Lessons marked as written by the owner can only be read. Never learn again, in any wording, a lesson the owner switched off.
 6. If a change is refused, read the reason, then fix the lesson or leave it out.
