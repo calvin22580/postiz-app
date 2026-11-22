@@ -302,6 +302,13 @@ describe('memory keepers', () => {
     ]);
   });
 
+  it('lets a lesson steer away from credentials, never towards them', () => {
+    expect(lessonProblems('In About posts, mention a professional qualification.', 'likes')).toEqual([
+      'it steers posts towards credentials, which come only from the business profile',
+    ]);
+    expect(lessonProblems('Leave out qualifications and insurance.', 'avoid')).toEqual([]);
+  });
+
   it('counts a rejection and its reason as one owner action', () => {
     const merged = keeperSignals([
       { ref: 'aaaa1111', kind: 'rejected', draftId: 'd1', before: 'Buy now!' },

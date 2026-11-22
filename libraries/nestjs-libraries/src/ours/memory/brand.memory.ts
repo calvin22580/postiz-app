@@ -118,6 +118,8 @@ const FACT_PATTERNS: [RegExp, string][] = [
   [/\b(?:price list|prices? (?:are|is|start|from)\s+(?:at\s+)?(?:£|\d)|costs? (?:just|only|from)\s+(?:£|\d)|charges? (?:for|from)\s+(?:£|\d))\b/i, 'prices'],
 ];
 
+const CREDENTIALS = /\b(?:qualifi\w*|insured|insurance|accredit\w*|certified|certificat\w*|credentials?|licen[cs]ed)\b/i;
+
 // Numbers are fine when they describe the writing itself ("at most 2 emoji").
 // "works best when", "best kept short": about the writing, not a claim
 const STYLE_BEST = /\b(?:works?|worked|working|land|lands|reads?|go(?:es)?) best\b|\bbest (?:when|if|with|kept|left)\b/gi;
@@ -142,6 +144,10 @@ export const lessonProblems = (lesson: string, folder: MemoryFolder) => {
   }
   for (const [re, what] of FACT_PATTERNS) {
     if (re.test(lesson)) problems.push(`it states a fact about the business (${what})`);
+  }
+  // credentials come only from the profile; a lesson may only steer away from them
+  if (!CLAIM_WORDS_ALLOWED.includes(folder) && CREDENTIALS.test(lesson)) {
+    problems.push('it steers posts towards credentials, which come only from the business profile');
   }
   return problems;
 };
