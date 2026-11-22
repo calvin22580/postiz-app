@@ -19,17 +19,18 @@ export const MEMORY_FEATURE = 'memory-update';
 
 export const brandMemoryOn = () => process.env.OURS_BRAND_MEMORY === 'true';
 
-// The keeper for this environment: the memory tool version with an AI key
-// (or the plain-call version when OURS_MEMORY_KEEPER=plain), the labelled
+// The keeper for this environment: the single-call version with an AI key
+// (it matched or beat the memory tool version on the test set at half the
+// cost; OURS_MEMORY_KEEPER=memory-tool swaps that one in), the labelled
 // demo without one, none when memory is off.
 export const createMemoryKeeper = (): MemoryKeeper | null =>
   !brandMemoryOn()
     ? null
     : !process.env.ANTHROPIC_API_KEY
     ? new DemoMemoryKeeper()
-    : process.env.OURS_MEMORY_KEEPER === 'plain'
-    ? new PlainMemoryKeeper()
-    : new AnthropicMemoryKeeper();
+    : process.env.OURS_MEMORY_KEEPER === 'memory-tool'
+    ? new AnthropicMemoryKeeper()
+    : new PlainMemoryKeeper();
 
 @Injectable()
 export class BrandMemoryService {

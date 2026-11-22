@@ -11,7 +11,7 @@ import {
   parseMemoryPath,
 } from './brand.memory';
 import { MemoryRefusedError, MemoryWorkspace } from './brand.memory.workspace';
-import { BrandMemoryService } from './brand.memory.service';
+import { BrandMemoryService, createMemoryKeeper } from './brand.memory.service';
 import { AnthropicMemoryKeeper } from './keepers/anthropic.memory.keeper';
 import { PlainMemoryKeeper } from './keepers/plain.memory.keeper';
 import { DemoMemoryKeeper } from './keepers/demo.memory.keeper';
@@ -97,6 +97,9 @@ describe('lesson rules', () => {
       'No emoji in LinkedIn posts.',
       'Say "groom", not "pamper".',
       'Don\'t address readers as "folks".',
+      // the keeper's own explanations, which used to be refused (round 4)
+      'Leave prices out, since the owner removed a price from every post.',
+      'Leave hashtags off Facebook posts: they are removed every time.',
     ]) {
       expect(lessonProblems(ok, 'voice')).toEqual([]);
     }
@@ -419,6 +422,19 @@ describe('Managed Agents memory store keeper', () => {
 });
 
 describe('brand memory service', () => {
+  it('uses the single-call keeper by default, the memory tool on request', () => {
+    vi.stubEnv('OURS_BRAND_MEMORY', 'true');
+    vi.stubEnv('ANTHROPIC_API_KEY', 'test');
+    expect(createMemoryKeeper()?.name).toBe('plain');
+    vi.stubEnv('OURS_MEMORY_KEEPER', 'memory-tool');
+    expect(createMemoryKeeper()?.name).toBe('anthropic');
+    vi.stubEnv('ANTHROPIC_API_KEY', '');
+    expect(createMemoryKeeper()?.name).toBe('demo');
+    vi.stubEnv('OURS_BRAND_MEMORY', 'false');
+    expect(createMemoryKeeper()).toBeNull();
+    vi.unstubAllEnvs();
+  });
+
   afterEach(() => {
     vi.unstubAllEnvs();
   });

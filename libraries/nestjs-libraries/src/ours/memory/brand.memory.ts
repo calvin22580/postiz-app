@@ -110,12 +110,12 @@ export const parseLessonFile = (text: string): Pick<Lesson, 'lesson' | 'evidence
 // about it. The caption hard rules catch numbers, prices, links, handles and
 // claim words; these catch the rest of the usual ways a fact slips in.
 const FACT_PATTERNS: [RegExp, string][] = [
-  [/\b(?:we|they|the business|the shop|the company)\s+(?:are|is|was|were|has|have|had|sell|sells|serve|serves|offer|offers|make|makes|do|does|run|runs|own|owns|open|opens|close|closes|stock|stocks|provide|provides|deliver|delivers|cover|covers)\b/i, 'says what the business is or does'],
+  [/\b(?:we|the business|the shop|the company)\s+(?:are|is|was|were|has|have|had|sell|sells|serve|serves|offer|offers|make|makes|do|does|run|runs|own|owns|open|opens|close|closes|stock|stocks|provide|provides|deliver|delivers|cover|covers)\b/i, 'says what the business is or does'],
   [/\b(?:open|opens|opening|closed|closes|closing)\s+(?:on|at|from|until|till|every|daily|late|early|monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekends?)\b/i, 'opening times'],
-  [/\b(?:since|founded|established|est\.|years? in|years? of|family[- ]run|family[- ]owned|started (?:the|it|in))\b/i, 'history of the business'],
+  [/\b(?:since (?:19|20)\d\d|founded|established|est\.|years? in|years? of|family[- ]run|family[- ]owned|started (?:the|it|in))\b/i, 'history of the business'],
   // "our address", not "address readers as"
   [/\b(?:located|based in|based at|situated|postcode|parking|(?:our|the|full) address|address is)\b/i, 'where the business is'],
-  [/\b(?:price list|prices? (?:are|is|start|from)|costs? (?:just|only|from)|charges? (?:for|from))\b/i, 'prices'],
+  [/\b(?:price list|prices? (?:are|is|start|from)\s+(?:at\s+)?(?:£|\d)|costs? (?:just|only|from)\s+(?:£|\d)|charges? (?:for|from)\s+(?:£|\d))\b/i, 'prices'],
 ];
 
 // Numbers are fine when they describe the writing itself ("at most 2 emoji").

@@ -60,7 +60,7 @@ Each lesson is one file, /memories/<folder>/<name>.md, where the name uses lower
 - avoid: things the owner removes or rejects
 
 A lesson file has exactly three lines:
-lesson: <one plain sentence, at most 200 characters, written as guidance for whoever writes the posts>
+lesson: <one plain sentence, at most 200 characters, written as guidance for whoever writes the posts; don't explain it with "since" or "because">
 evidence: <the ids of the owner actions that show it, separated by commas>
 against: <the ids of owner actions that went the other way; leave it empty when there are none>
 Kanosena adds a status line when you view a file. You can't change it: a lesson is used in posts once its evidence outweighs what is against it by two actions.
@@ -68,7 +68,7 @@ Kanosena adds a status line when you view a file. You can't change it: a lesson 
 How to work:
 1. Look at your memory first.
 2. For each pattern in the new actions: if a lesson already covers it, add the new ids to its evidence, or to "against" when the owner went the other way. Otherwise create a lesson.
-3. Learn only what the actions show. Don't guess at reasons the owner didn't give, and don't widen a lesson beyond its actions: one rejected Easter post is about Easter, not every holiday. When the owner does something on one platform only, name that platform in the lesson. When actions point both ways, put the ones that disagree under against. One action can start a lesson.
+3. Learn only what the actions show. Don't guess at reasons the owner didn't give, and don't widen a lesson beyond its actions: one rejected Easter post is about Easter, not every holiday. Keep one lesson for a habit the owner shows on two or more platforms; name a platform only when the owner treats platforms differently. When actions point both ways, put the ones that disagree under against; if the owner approves posts both ways (say, long and short), there is no lesson to learn. One action can start a lesson.
 4. Keep the memory small and clear: merge lessons that say the same thing, and delete a lesson the owner's actions clearly contradict.
 5. Lessons marked as written by the owner can only be read. Never learn again, in any wording, a lesson the owner switched off.
 6. If a change is refused, read the reason, then fix the lesson or leave it out.
