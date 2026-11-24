@@ -109,6 +109,9 @@ describe('unsupportedDetails', () => {
       ['Free delivery in Exampletown', 'free'],
       ['The best bread in Exampletown', 'best'],
       ['Rated five-star by our customers', 'five-star'],
+      ['A special offer on sourdough this week', 'offer'],
+      ['Our weekend offer ends Sunday', 'offer'],
+      ['Sourdough is on offer this week', 'offer'],
     ];
     for (const [text, problem] of cases) {
       expect(unsupportedDetails(text, FACTS), text).toContain(problem);
@@ -122,6 +125,9 @@ describe('unsupportedDetails', () => {
       'Open Tuesday to Saturday, 7am to 3pm.',
       'Fresh sourdough loaves from Harbour Lane Bakery. #Exampletown #Sourdough',
       'A day off for the team on Monday, see you Tuesday.',
+      // "offer" as a verb describes what the business does
+      'We offer fresh sourdough every morning.',
+      'Harbour Lane Bakery offers sourdough and on-site seating.',
     ];
     for (const text of ok) {
       expect(unsupportedDetails(text, FACTS), text).toEqual([]);
