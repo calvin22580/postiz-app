@@ -147,7 +147,9 @@ export const LegalPage: FC<{
       </main>
       <footer className="mx-auto flex max-w-[760px] flex-wrap justify-between gap-[12px] px-[16px] pb-[40px] text-[13px] text-textItemBlur">
         <span>
-          {brand.name} is a service of {facts.companyName}.
+          {brand.name} is a trading name of {facts.companyName}, registered in{' '}
+          {facts.jurisdiction}, company number {facts.companyNumber}.
+          Registered office: {facts.registeredAddress}.
         </span>
         <a
           href={brand.sourceCodeUrl}
