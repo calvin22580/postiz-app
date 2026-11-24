@@ -110,6 +110,76 @@ export class BrandMemoryRepository {
     }
   }
 
+  // E5: everything the owner sees on the "What we've learned" screen: the
+  // lessons in use or being tried, and the ones they switched off (not the
+  // ones they deleted).
+  async overview(orgId: string) {
+    const [lessons, lastRun] = await Promise.all([
+      this._ours.model.oursBrandMemory.findMany({
+        where: { organizationId: orgId, deletedAt: null, OR: [{ offAt: { not: null } }, { status: { not: 'retired' } }] },
+        select: { id: true, ...lessonFields, offAt: true, updatedAt: true },
+        orderBy: { createdAt: 'asc' },
+      }),
+      this._ours.model.oursBrandMemoryRun.findFirst({
+        where: { organizationId: orgId },
+        orderBy: { createdAt: 'desc' },
+        select: { createdAt: true, status: true },
+      }),
+    ]);
+    return { lessons: lessons.map((r) => ({ ...r, source: r.source as LessonSource })), lastRun };
+  }
+
+  // The owner actions behind lessons, found by the first characters of their
+  // ids, newest first.
+  async signalsByRefs(orgId: string, refs: string[]) {
+    if (!refs.length) return [];
+    return this._ours.model.oursBrandSignal.findMany({
+      where: { organizationId: orgId, OR: [...new Set(refs)].map((ref) => ({ id: { startsWith: ref } })) },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, kind: true, platform: true, theme: true, before: true, after: true, reason: true, note: true, createdAt: true },
+    });
+  }
+
+  async ownerLesson(orgId: string, id: string) {
+    return this._ours.model.oursBrandMemory.findFirst({
+      where: { organizationId: orgId, id, deletedAt: null },
+      select: { id: true, ...lessonFields, offAt: true },
+    });
+  }
+
+  async addOwnerLesson(orgId: string, path: string, lesson: string) {
+    return this._ours.model.oursBrandMemory.create({
+      data: { organizationId: orgId, path, lesson, evidence: [], against: [], status: 'active', source: 'owner' },
+      select: { id: true },
+    });
+  }
+
+  // The owner's words win: an edited lesson is theirs, and in use.
+  async editLesson(orgId: string, id: string, lesson: string) {
+    await this._ours.model.oursBrandMemory.updateMany({
+      where: { organizationId: orgId, id, deletedAt: null },
+      data: { lesson, source: 'owner', status: 'active' },
+    });
+  }
+
+  // Switched off: hidden from the keeper and the brief, listed for the owner.
+  // Switched back on: the owner chose it, so the keeper can't change it.
+  async setOff(orgId: string, id: string, off: boolean) {
+    await this._ours.model.oursBrandMemory.updateMany({
+      where: { organizationId: orgId, id, deletedAt: null },
+      data: off ? { offAt: new Date() } : { offAt: null, source: 'owner', status: 'active' },
+    });
+  }
+
+  // Deleted: kept as a hidden row so the keeper can't learn it again.
+  async deleteLesson(orgId: string, id: string) {
+    const now = new Date();
+    await this._ours.model.oursBrandMemory.updateMany({
+      where: { organizationId: orgId, id, deletedAt: null },
+      data: { offAt: now, deletedAt: now },
+    });
+  }
+
   async logRun(orgId: string, run: MemoryRunLog) {
     const { id } = await this._ours.model.oursBrandMemoryRun.create({
       data: {

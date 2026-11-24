@@ -11,7 +11,7 @@ import {
   parseMemoryPath,
 } from './brand.memory';
 import { MemoryRefusedError, MemoryWorkspace } from './brand.memory.workspace';
-import { BrandMemoryService, createMemoryKeeper } from './brand.memory.service';
+import { BrandMemoryService, createMemoryKeeper, ownerLessonFolder } from './brand.memory.service';
 import { AnthropicMemoryKeeper } from './keepers/anthropic.memory.keeper';
 import { PlainMemoryKeeper } from './keepers/plain.memory.keeper';
 import { DemoMemoryKeeper } from './keepers/demo.memory.keeper';
@@ -502,6 +502,78 @@ describe('brand memory service', () => {
     expect(await service.brief('org-1')).toBe('');
     vi.stubEnv('OURS_BRAND_MEMORY', 'true');
     expect(await service.brief('org-1')).toBe('How posts should sound:\n- Keep posts short and warm.');
+  });
+});
+
+describe('"What we\'ve learned" (E5)', () => {
+  const row = (over: Record<string, unknown> = {}) => ({
+    id: 'l1',
+    path: '/memories/voice/short.md',
+    lesson: 'Keep posts short.',
+    evidence: ['aaaa1111', 'bbbb2222'],
+    against: [],
+    source: 'keeper',
+    offAt: null as Date | null,
+    updatedAt: new Date('2026-11-22T10:00:00Z'),
+    ...over,
+  });
+  const setup = () => {
+    const repo = {
+      overview: vi.fn(async () => ({
+        lessons: [
+          row(),
+          row({ id: 'l2', path: '/memories/avoid/hype.md', lesson: 'No hard selling.', evidence: ['cccc3333'] }),
+          row({ id: 'l3', lesson: 'Say folks.', offAt: new Date('2026-11-23T10:00:00Z') }),
+        ],
+        lastRun: { createdAt: new Date('2026-11-22T09:00:00Z'), status: 'ok' },
+      })),
+      signalsByRefs: vi.fn(async () => [
+        { id: 'aaaa1111-0000', kind: 'edited', platform: 'facebook', theme: 'Bread', before: 'Long post.', after: 'Short.', reason: null, note: null, createdAt: new Date() },
+        { id: 'cccc3333-0000', kind: 'rejected', platform: 'instagram', theme: 'Sale', before: 'Buy now!', after: null, reason: 'tone', note: null, createdAt: new Date() },
+      ]),
+      ownerLesson: vi.fn(async (_org: string, id: string) => (id === 'l1' ? row() : null)),
+      addOwnerLesson: vi.fn(async () => ({ id: 'new' })),
+      editLesson: vi.fn(async () => undefined),
+      setOff: vi.fn(async () => undefined),
+      deleteLesson: vi.fn(async () => undefined),
+    };
+    return { repo, service: new BrandMemoryService(repo as never, {} as never) };
+  };
+
+  it('shows each lesson with the owner actions that taught it, and switched-off ones apart', async () => {
+    const { repo, service } = setup();
+    const out = await service.overview('org-1');
+    expect(repo.signalsByRefs).toHaveBeenCalledWith('org-1', ['aaaa1111', 'bbbb2222', 'cccc3333', 'aaaa1111', 'bbbb2222']);
+    expect(out.lessons.map((l) => [l.id, l.folder, l.status])).toEqual([
+      ['l1', 'voice', 'active'],
+      ['l2', 'avoid', 'tentative'],
+    ]);
+    expect(out.lessons[0].examples).toEqual([expect.objectContaining({ kind: 'edited', after: 'Short.' })]);
+    expect(out.lessons[1].examples).toEqual([expect.objectContaining({ kind: 'rejected', reason: 'tone' })]);
+    expect(out.switchedOff.map((l) => l.id)).toEqual(['l3']);
+    expect(out.on).toBe(false);
+  });
+
+  it('adds the owner\'s own lesson in the right folder, and turns business details away', async () => {
+    const { repo, service } = setup();
+    expect(ownerLessonFolder("Don't use exclamation marks")).toBe('avoid');
+    expect(ownerLessonFolder('Keep it chatty')).toBe('voice');
+    await service.addLesson('org-1', '  Keep it   chatty ');
+    expect(repo.addOwnerLesson).toHaveBeenCalledWith('org-1', expect.stringMatching(/^\/memories\/voice\/owner-keep-it-chatty-[0-9a-f]{6}\.md$/), 'Keep it chatty');
+    await expect(service.addLesson('org-1', 'Mention we are open till 7 on Thursdays')).rejects.toThrow(/business profile/);
+    await expect(service.addLesson('org-1', 'Say we are fully insured')).rejects.toThrow(/business profile/);
+  });
+
+  it('edits, switches and deletes only the organisation\'s own lessons', async () => {
+    const { repo, service } = setup();
+    await service.editLesson('org-1', 'l1', 'Keep posts very short.');
+    expect(repo.editLesson).toHaveBeenCalledWith('org-1', 'l1', 'Keep posts very short.');
+    await service.switchLesson('org-1', 'l1', false);
+    expect(repo.setOff).toHaveBeenCalledWith('org-1', 'l1', true);
+    await service.deleteLesson('org-1', 'l1');
+    expect(repo.deleteLesson).toHaveBeenCalledWith('org-1', 'l1');
+    await expect(service.switchLesson('org-1', 'someone-elses', true)).rejects.toThrow('That lesson no longer exists.');
+    expect(repo.setOff).toHaveBeenCalledTimes(1);
   });
 });
 

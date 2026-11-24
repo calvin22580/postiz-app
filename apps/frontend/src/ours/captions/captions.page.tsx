@@ -23,6 +23,7 @@ import { useBrandKit } from '@gitroom/frontend/ours/graphics/graphics.hooks';
 import { BrandKitPanel } from '@gitroom/frontend/ours/graphics/brand.kit.panel';
 import { UkDatesPanel } from '@gitroom/frontend/ours/seasonal/uk.dates.panel';
 import { PlanMessage } from '@gitroom/frontend/ours/plans/plan.message';
+import { useBrandMemory } from '@gitroom/frontend/ours/memory/memory.hooks';
 import {
   CaptionCard,
   PLATFORMS,
@@ -404,6 +405,7 @@ const WeekList: FC<{ week: CaptionWeek; onChanged: () => void }> = ({ week, onCh
 export const CaptionsPage: FC = () => {
   const profile = useBusinessProfile();
   const { data, error, isLoading, mutate } = useCaptionWeek();
+  const memory = useBrandMemory();
   const fetch = useFetch();
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
@@ -495,6 +497,14 @@ export const CaptionsPage: FC = () => {
               and LinkedIn. We only use details from your business profile, and
               nothing is posted until you approve it.
             </p>
+          )}
+          {/* E5: shown once brand memory is on; it learns from what you do here */}
+          {memory.data?.on && (
+            <Link href="/learned" className="text-[14px] text-textItemBlur underline w-fit" data-testid="captions-memory-link">
+              {memory.data.lessons.length
+                ? `What we’ve learned from your changes (${memory.data.lessons.length})`
+                : 'What we’ve learned from your changes'}
+            </Link>
           )}
         </div>
         {canWrite && (

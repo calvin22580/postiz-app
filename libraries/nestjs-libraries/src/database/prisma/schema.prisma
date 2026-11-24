@@ -2131,6 +2131,8 @@ model OursBrandMemory {
   source         String    @default("keeper")
   // switched off or deleted by the owner: kept hidden so it can't come back
   offAt          DateTime?
+  // E5: deleted by the owner (offAt is set too): no longer listed as switched off
+  deletedAt      DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

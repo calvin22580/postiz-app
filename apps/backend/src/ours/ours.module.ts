@@ -13,6 +13,7 @@ import { CaptionService } from '@gitroom/nestjs-libraries/ours/captions/caption.
 import { CaptionRepository } from '@gitroom/nestjs-libraries/ours/captions/caption.repository';
 import { WebsiteCrawler } from '@gitroom/nestjs-libraries/ours/crawler/website.crawler';
 import { BrandKitController } from '@gitroom/backend/ours/brand.kit.controller';
+import { BrandMemoryController } from '@gitroom/backend/ours/brand.memory.controller';
 import { GraphicService } from '@gitroom/nestjs-libraries/ours/graphics/graphic.service';
 import { BrandKitRepository } from '@gitroom/nestjs-libraries/ours/graphics/brand.kit.repository';
 import { SeasonalController } from '@gitroom/backend/ours/seasonal.controller';
@@ -39,6 +40,7 @@ const authenticatedController = [
   BusinessProfileController,
   CaptionsController,
   BrandKitController,
+  BrandMemoryController,
   SeasonalController,
   PlanController,
   PerformanceController,
