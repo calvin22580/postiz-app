@@ -31,7 +31,7 @@ export const EXAMPLES_PER_LESSON = 3;
 
 // A lesson the owner writes goes in "avoid" when it tells us what not to do.
 export const ownerLessonFolder = (lesson: string): MemoryFolder =>
-  /^\s*(?:don'?t|do not|never|no|avoid|stop|leave out|skip)\b/i.test(lesson) ? 'avoid' : 'voice';
+  /^\s*(?:don['’]?t|do not|never|no|avoid|stop|leave out|skip)\b/i.test(lesson) ? 'avoid' : 'voice';
 
 export const brandMemoryOn = () => process.env.OURS_BRAND_MEMORY === 'true';
 

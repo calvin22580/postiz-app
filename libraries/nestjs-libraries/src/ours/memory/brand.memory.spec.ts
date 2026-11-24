@@ -557,6 +557,7 @@ describe('"What we\'ve learned" (E5)', () => {
   it('adds the owner\'s own lesson in the right folder, and turns business details away', async () => {
     const { repo, service } = setup();
     expect(ownerLessonFolder("Don't use exclamation marks")).toBe('avoid');
+    expect(ownerLessonFolder('Don’t say folks')).toBe('avoid');
     expect(ownerLessonFolder('Keep it chatty')).toBe('voice');
     await service.addLesson('org-1', '  Keep it   chatty ');
     expect(repo.addOwnerLesson).toHaveBeenCalledWith('org-1', expect.stringMatching(/^\/memories\/voice\/owner-keep-it-chatty-[0-9a-f]{6}\.md$/), 'Keep it chatty');
