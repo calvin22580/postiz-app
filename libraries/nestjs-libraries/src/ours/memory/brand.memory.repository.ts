@@ -140,7 +140,7 @@ export class BrandMemoryRepository {
     });
   }
 
-  async ownerLesson(orgId: string, id: string) {
+  async findLesson(orgId: string, id: string) {
     return this._ours.model.oursBrandMemory.findFirst({
       where: { organizationId: orgId, id, deletedAt: null },
       select: { id: true, ...lessonFields, offAt: true },

@@ -25,22 +25,22 @@ export class BrandMemoryController {
   }
 
   @Put('/lessons/:id')
-  async editLesson(@GetOrgFromRequest() org: Organization, @Param('id') id: string, @Body() body: OwnerLessonDto) {
-    await this._brandMemoryService.editLesson(org.id, id, body.lesson);
+  editLesson(@GetOrgFromRequest() org: Organization, @Param('id') id: string, @Body() body: OwnerLessonDto) {
+    return this._brandMemoryService.editLesson(org.id, id, body.lesson);
   }
 
   @Put('/lessons/:id/off')
-  async switchOff(@GetOrgFromRequest() org: Organization, @Param('id') id: string) {
-    await this._brandMemoryService.switchLesson(org.id, id, false);
+  switchOff(@GetOrgFromRequest() org: Organization, @Param('id') id: string) {
+    return this._brandMemoryService.switchLesson(org.id, id, false);
   }
 
   @Put('/lessons/:id/on')
-  async switchOn(@GetOrgFromRequest() org: Organization, @Param('id') id: string) {
-    await this._brandMemoryService.switchLesson(org.id, id, true);
+  switchOn(@GetOrgFromRequest() org: Organization, @Param('id') id: string) {
+    return this._brandMemoryService.switchLesson(org.id, id, true);
   }
 
   @Delete('/lessons/:id')
-  async deleteLesson(@GetOrgFromRequest() org: Organization, @Param('id') id: string) {
-    await this._brandMemoryService.deleteLesson(org.id, id);
+  deleteLesson(@GetOrgFromRequest() org: Organization, @Param('id') id: string) {
+    return this._brandMemoryService.deleteLesson(org.id, id);
   }
 }

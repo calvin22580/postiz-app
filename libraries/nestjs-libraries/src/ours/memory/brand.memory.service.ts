@@ -9,6 +9,7 @@ import {
   brandBrief,
   lessonProblems,
   lessonStatus,
+  MAX_LESSON_LENGTH,
   MEMORY_ROOT,
   MemoryFolder,
   parseMemoryPath,
@@ -32,6 +33,11 @@ export const EXAMPLES_PER_LESSON = 3;
 // A lesson the owner writes goes in "avoid" when it tells us what not to do.
 export const ownerLessonFolder = (lesson: string): MemoryFolder =>
   /^\s*(?:don['’]?t|do not|never|no|avoid|stop|leave out|skip)\b/i.test(lesson) ? 'avoid' : 'voice';
+
+const folderOf = (path: string): MemoryFolder => {
+  const where = parseMemoryPath(path);
+  return where?.kind === 'file' ? where.folder : 'voice';
+};
 
 export const brandMemoryOn = () => process.env.OURS_BRAND_MEMORY === 'true';
 
@@ -128,7 +134,7 @@ export class BrandMemoryService {
     const shape = (l: (typeof lessons)[number]) => ({
       id: l.id,
       lesson: l.lesson,
-      folder: l.path.split('/')[2],
+      folder: folderOf(l.path),
       status: l.source === 'owner' ? 'active' : lessonStatus(l),
       source: l.source,
       examples: signals
@@ -157,8 +163,7 @@ export class BrandMemoryService {
 
   async editLesson(orgId: string, id: string, text: string) {
     const current = await this.findLesson(orgId, id);
-    const where = parseMemoryPath(current.path);
-    const lesson = this.ownerText(text, where?.kind === 'file' ? where.folder : 'voice');
+    const lesson = this.ownerText(text, folderOf(current.path));
     await this._brandMemoryRepository.editLesson(orgId, id, lesson);
   }
 
@@ -173,7 +178,7 @@ export class BrandMemoryService {
   }
 
   private async findLesson(orgId: string, id: string) {
-    const lesson = await this._brandMemoryRepository.ownerLesson(orgId, id);
+    const lesson = await this._brandMemoryRepository.findLesson(orgId, id);
     if (!lesson) throw new HttpException('That lesson no longer exists.', 404);
     return lesson;
   }
@@ -181,7 +186,7 @@ export class BrandMemoryService {
   private ownerText(text: string, folder: MemoryFolder) {
     const lesson = text.replace(/\s+/g, ' ').trim();
     const problems = lessonProblems(lesson, folder);
-    if (problems.some((p) => p.startsWith('it is longer'))) {
+    if (lesson.length > MAX_LESSON_LENGTH) {
       throw new HttpException('Please keep it shorter: one sentence works best.', 400);
     }
     if (problems.length) {

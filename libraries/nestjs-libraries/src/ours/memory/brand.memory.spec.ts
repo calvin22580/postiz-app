@@ -531,7 +531,7 @@ describe('"What we\'ve learned" (E5)', () => {
         { id: 'aaaa1111-0000', kind: 'edited', platform: 'facebook', theme: 'Bread', before: 'Long post.', after: 'Short.', reason: null, note: null, createdAt: new Date() },
         { id: 'cccc3333-0000', kind: 'rejected', platform: 'instagram', theme: 'Sale', before: 'Buy now!', after: null, reason: 'tone', note: null, createdAt: new Date() },
       ]),
-      ownerLesson: vi.fn(async (_org: string, id: string) => (id === 'l1' ? row() : null)),
+      findLesson: vi.fn(async (_org: string, id: string) => (id === 'l1' ? row() : null)),
       addOwnerLesson: vi.fn(async () => ({ id: 'new' })),
       editLesson: vi.fn(async () => undefined),
       setOff: vi.fn(async () => undefined),

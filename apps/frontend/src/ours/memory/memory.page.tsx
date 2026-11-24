@@ -11,6 +11,7 @@ import { useToaster } from '@gitroom/react/toaster/toaster';
 import { deleteDialog } from '@gitroom/react/helpers/delete.dialog';
 import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
 import { readError } from '@gitroom/frontend/ours/profile/business.profile.hooks';
+import { PLATFORMS } from '@gitroom/frontend/ours/captions/caption.card';
 import {
   BrandMemoryOverview,
   LearnedLesson,
@@ -18,6 +19,7 @@ import {
   useBrandMemory,
 } from '@gitroom/frontend/ours/memory/memory.hooks';
 
+// the most a lesson can hold (MAX_LESSON_LENGTH in brand memory, checked again by the server)
 const MAX_LESSON_LENGTH = 200;
 
 // The folders in the owner's own terms, in the order of the brief.
@@ -28,12 +30,6 @@ const FOLDERS: { key: LearnedLesson['folder']; title: string }[] = [
   { key: 'topics', title: 'What to post about' },
   { key: 'avoid', title: 'What you leave out' },
 ];
-
-const PLATFORM_LABELS: Record<string, string> = {
-  facebook: 'Facebook',
-  instagram: 'Instagram',
-  linkedin: 'LinkedIn',
-};
 
 const REASONS: Record<string, string> = {
   tone: 'it didn’t sound like you',
@@ -193,7 +189,7 @@ const Examples: FC<{ lesson: LearnedLesson }> = ({ lesson }) => {
             <li key={i} className="flex flex-col gap-[2px]">
               <span className="text-[14px] leading-[1.5]">{exampleText(e)}</span>
               <span className="text-[13px] text-textItemBlur">
-                {[e.platform && (PLATFORM_LABELS[e.platform] || e.platform), formatDate(e.createdAt)].filter(Boolean).join(' · ')}
+                {[e.platform && (PLATFORMS[e.platform as keyof typeof PLATFORMS]?.label || e.platform), formatDate(e.createdAt)].filter(Boolean).join(' · ')}
               </span>
             </li>
           ))}
