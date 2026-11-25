@@ -516,7 +516,8 @@ Browser test: `email-list.spec.ts` (reads the signing secret from the repo's `.e
 
 Off unless `OURS_EMAIL_SENDER` is set. `simulated` records every email in our
 own tables and never sends; the Email screen says so. `ses` sends through
-Amazon SES v2 in London.
+Amazon SES v2 in Stockholm (eu-north-1): our AWS account is limited to that
+EU Region, which is fine for UK GDPR.
 
 - **What goes out**: confirmation emails for form sign-ups (within 7 days of
   signing up; the link opens `/confirm-email.html?t=<token>`, and only its
@@ -556,10 +557,11 @@ Amazon SES v2 in London.
 |---|---|---|
 | `OURS_EMAIL_SENDER` | off | `simulated` or `ses`. |
 | `OURS_EMAIL_FROM_DOMAIN` | `news.kanosena.com` | Domain verified in SES; every sending address is on it. |
-| `OURS_EMAIL_SES_REGION` | `eu-west-2` | SES region. |
+| `OURS_EMAIL_SES_REGION` | `eu-north-1` | SES region. |
 | `OURS_EMAIL_AWS_ACCESS_KEY_ID`, `OURS_EMAIL_AWS_SECRET_ACCESS_KEY` | none | IAM keys for sending and tenant set-up. Kept apart from upstream's `SES_*` email provider. |
 | `OURS_EMAIL_SES_IDENTITY_ARN` | none | ARN of the verified domain identity, associated with each business's tenant. |
 | `OURS_EMAIL_SNS_TOPIC_ARN` | none | Topic for SES events. Events from any other topic are ignored. |
+| `OURS_EMAIL_LIVE_TO` | none | Only for the live SES test (`ses.live.spec.ts`): the verified address it sends one test email to. |
 | `OURS_EMAIL_SEND_PER_SECOND` | 1 | Messages a second (SES's sandbox allows 1). |
 | `OURS_EMAIL_TENANT_PREFIX` | `kanosena` | Start of each business's SES tenant and configuration set name. Don't change it once businesses have sent. |
 

@@ -1,5 +1,6 @@
 // OURS: sends list emails through Amazon SES v2 (email campaigns EM2), in
-// OURS_EMAIL_SES_REGION (London, eu-west-2), with our own OURS_EMAIL_AWS_*
+// OURS_EMAIL_SES_REGION (Stockholm, eu-north-1: our AWS account is limited
+// to that EU Region), with our own OURS_EMAIL_AWS_*
 // keys so upstream's SES email provider (SES_*) is never switched on by this.
 // Each business gets its own SES tenant and configuration set, so one bad
 // sender's bounces and complaints can't hurt the others, and events reach us
@@ -45,7 +46,7 @@ export class SesEmailSender implements EmailCampaignSender {
 
   constructor(
     private _client = new SESv2Client({
-      region: process.env.OURS_EMAIL_SES_REGION || 'eu-west-2',
+      region: process.env.OURS_EMAIL_SES_REGION || 'eu-north-1',
       // well inside the send loop's two-minute lease
       requestHandler: { connectionTimeout: 5000, requestTimeout: 30000 },
       ...(process.env.OURS_EMAIL_AWS_ACCESS_KEY_ID

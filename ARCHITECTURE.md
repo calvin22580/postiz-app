@@ -168,7 +168,7 @@ Upstream's public API, CLI and MCP/agent tools all create posts through `PostsSe
 
 ## Email campaigns: sending (EM2, 25/11/2026)
 
-- One `EmailCampaignSender` interface (`libs/ours/email/senders/`), two senders: Amazon SES v2 in eu-west-2 and a simulated one, picked by `OURS_EMAIL_SENDER` (off by default). Our own `OURS_EMAIL_AWS_*` keys, so upstream's SES email provider is untouched.
+- One `EmailCampaignSender` interface (`libs/ours/email/senders/`), two senders: Amazon SES v2 in eu-north-1 (our AWS account allows only that EU Region) and a simulated one, picked by `OURS_EMAIL_SENDER` (off by default). Our own `OURS_EMAIL_AWS_*` keys, so upstream's SES email provider is untouched.
 - An in-process send loop (`EmailCampaignService`, every minute, like `ErasureService`) rather than a Temporal workflow, so the orchestrator is untouched. Safe with several backends: campaigns are leased with a conditional update naming the process (`leaseOwner`, renewed before every message; the SES client times out well inside the lease), and each `ours_email_delivery` row moves `QUEUED → SENDING → SENT` with a conditional update, so a message goes at most once. Finding due campaigns and pending confirmations are system queries across organisations; every write after uses the row's own organisation.
 - One SES tenant and configuration set per organisation, so SES can pause one business without stopping the others, and events come back per business through SNS.
 - SES events arrive at a public route (`/ours/email/public/events`). They're trusted only with a valid SNS signature from a certificate on Amazon's own host and our own topic ARN. Finding a delivery by its SES message id is the one other unscoped query; the signature is the proof.
