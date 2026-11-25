@@ -14,6 +14,23 @@ Sources, checked 16/11/2026:
 - **Standard tier** next, once the integration works: company and product overview, use case description, test credentials, a valid privacy policy, and a high-resolution, downloadable screencast of "all core functionality".
 - **A rejection at either tier means a new app.** "You will not be able to re-apply … with your existing app." So nothing is submitted until every field below is filled in and the legal pages are out of draft.
 
+## Development tier denied (24/11/2026)
+
+LinkedIn denied app "Kanosena" (Client ID 78xvyinuq3th8y, application 266771074) with "Access Denied: Business verification failed". No further reason given. LinkedIn's docs: "If your application is rejected, review the qualifications, create a new app, and submit a new Development tier access request form. You won't be able to re-apply for Development tier access with your existing app."
+
+Likely causes (our reading; LinkedIn does not say which):
+1. The website on the form was the app's About page (app.kanosena.com/about.html). It named Steady Lamp Ltd but showed no company number or registered office, and kanosena.com itself had no website until 20/11, the day after we applied.
+2. The legal name (Steady Lamp Ltd) did not visibly match the LinkedIn Page ("Kanosena", created days earlier, with little on it).
+3. The form went in without the use case description.
+
+Fixed: the legal and About pages now carry "Kanosena is a trading name of Steady Lamp Ltd, registered in England and Wales, company number 17533499. Registered office: 128 City Road, London, EC1V 2NX." The kanosena.com homepage already shows the same.
+
+Before the new application:
+- LinkedIn Page "Kanosena": website https://kanosena.com, About text naming Steady Lamp Ltd with company number and address, logo, cover, a few posts.
+- New app (a name without "LinkedIn"/"Microsoft", e.g. "Kanosena Publisher"), on the same Page, verified by the Page super admin, same four redirect URLs, logo, privacy policy.
+- Form: legal name Steady Lamp Ltd, address as above, email support@kanosena.com, **website https://kanosena.com**, privacy https://app.kanosena.com/privacy.html, Page Management and Page Analytics, the full use case description above.
+- After approval: new LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET on the Worker, then the "Deploy to Cloudflare (ours)" workflow.
+
 ## Products and scopes (settled 19/11/2026)
 
 The clash is real. With **Community Management API** requested, the Products tab greys out **Sign In with LinkedIn using OpenID Connect** and **Share on LinkedIn**: "Your application has another product requested or added to it which requires that it be the only product on the application for legal and security reasons."
