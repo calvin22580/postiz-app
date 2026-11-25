@@ -42,17 +42,19 @@ const Price: FC<{ pence: number; pricing: PlanOverview['pricing'] }> = ({ pence,
 );
 
 // what each limit means on a plan card
-const included: Record<MetricKey | 'channels', (n: number) => string> = {
+const included: Record<MetricKey | 'channels' | 'contacts', (n: number) => string> = {
   postsScheduled: (n) => `Up to ${n} scheduled posts a month`,
   captionWeeks: (n) => (n >= 5 ? 'A new week of posts every week' : `${n} weeks of posts a month`),
   rewrites: (n) => `${n} new versions of a post a month`,
   profileBuilds: (n) => `${n} website ${n === 1 ? 'read' : 'reads'} a month to refresh your profile`,
   channels: (n) => `Up to ${n} connected channels`,
+  contacts: (n) => `Up to ${n} people on your email list`,
 };
-const INCLUDED_ORDER: (MetricKey | 'channels')[] = [
+const INCLUDED_ORDER: (MetricKey | 'channels' | 'contacts')[] = [
   'postsScheduled',
   'captionWeeks',
   'channels',
+  'contacts',
   'rewrites',
   'profileBuilds',
 ];
@@ -245,6 +247,13 @@ const Usage: FC<{ data: PlanOverview }> = ({ data }) => (
         limit={data.channels.limit}
         note="Channels you have connected now. Removing one frees a place."
         testId="plan-meter-channels"
+      />
+      <Meter
+        title="People on your email list"
+        used={data.contacts.used}
+        limit={data.contacts.limit}
+        note="Subscribed, or waiting to confirm. Removing someone frees a place."
+        testId="plan-meter-contacts"
       />
     </ul>
     {data.fairUseReached && (

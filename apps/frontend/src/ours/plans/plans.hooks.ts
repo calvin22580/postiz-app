@@ -11,7 +11,7 @@ export interface PlanCard {
   summary: string;
   // per month in pence, before VAT; null for the free trial
   monthlyPence: number | null;
-  limits: Record<MetricKey | 'channels', number>;
+  limits: Record<MetricKey | 'channels' | 'contacts', number>;
 }
 
 export interface PlanOverview {
@@ -24,6 +24,8 @@ export interface PlanOverview {
   period: { start: string; resetsOn: string | null };
   usage: { key: MetricKey; title: string; used: number; limit: number }[];
   channels: { used: number; limit: number };
+  // people on the email list (email campaigns EM1)
+  contacts: { used: number; limit: number };
   fairUseReached: boolean;
   plans: PlanCard[];
   metrics: { key: MetricKey; title: string }[];

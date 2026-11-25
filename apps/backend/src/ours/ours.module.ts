@@ -32,6 +32,10 @@ import { ErasureRepository } from '@gitroom/nestjs-libraries/ours/erasure/erasur
 import { BrandSignalService } from '@gitroom/nestjs-libraries/ours/memory/brand.signal.service';
 import { BrandSignalRepository } from '@gitroom/nestjs-libraries/ours/memory/brand.signal.repository';
 import { ErasureInterceptor } from '@gitroom/backend/ours/erasure.interceptor';
+import { EmailController } from '@gitroom/backend/ours/email.controller';
+import { EmailPublicController } from '@gitroom/backend/ours/email.public.controller';
+import { EmailService } from '@gitroom/nestjs-libraries/ours/email/email.service';
+import { EmailRepository } from '@gitroom/nestjs-libraries/ours/email/email.repository';
 
 const authenticatedController = [
   BusinessProfileController,
@@ -40,11 +44,12 @@ const authenticatedController = [
   SeasonalController,
   PlanController,
   PerformanceController,
+  EmailController,
 ];
 
 // No sign-in: callers prove who they are another way (Stripe signs its
-// webhooks)
-const publicController = [StripeWebhookController];
+// webhooks; the email list's public pages carry a form id or a signed token)
+const publicController = [StripeWebhookController, EmailPublicController];
 
 @Module({
   imports: [],
@@ -69,6 +74,8 @@ const publicController = [StripeWebhookController];
     ErasureRepository,
     BrandSignalService,
     BrandSignalRepository,
+    EmailService,
+    EmailRepository,
     // Milestone 7: our plan's channel limit on upstream's "add a channel"
     // routes (global, so upstream's modules need no change)
     {

@@ -126,7 +126,7 @@ export const planStatus = (
 };
 
 // The next plan up that allows more of something, for the "move to …" hint.
-export const biggerPlan = (current: PlanDefinition, key: MeteredKey | 'channels') =>
+export const biggerPlan = (current: PlanDefinition, key: MeteredKey | 'channels' | 'contacts') =>
   PAID_PLANS.find((p) => p.limits[key] > current.limits[key]);
 
 const metricLabel = (key: MeteredKey) => METRICS.find((m) => m.key === key)!.label;
@@ -165,6 +165,16 @@ export const channelLimitMessage = (plan: PlanDefinition, used: number) => {
     : 'Remove one to connect another.';
   const intro = planPhrase(plan);
   return `${intro[0].toUpperCase()}${intro.slice(1)} includes ${plan.limits.channels} connected channels, and you’re using ${used}. ${ask}`;
+};
+
+// Email campaigns EM1: the list is full (or an upload didn't fit).
+export const contactLimitMessage = (plan: PlanDefinition, used: number) => {
+  const next = biggerPlan(plan, 'contacts');
+  const intro = planPhrase(plan);
+  return [
+    `${intro[0].toUpperCase()}${intro.slice(1)} includes ${plan.limits.contacts} people on your email list, and you have ${used}.`,
+    next ? `${next.name} includes ${next.limits.contacts}: see Plan and usage.` : 'Remove someone to add another.',
+  ].join(' ');
 };
 
 @Injectable()
@@ -255,14 +265,29 @@ export class PlanService {
     }
   }
 
+  // How many more people the email list can take (email campaigns EM1).
+  // Counts subscribed and waiting people, as the channel limit counts
+  // channels. Throws when the plan has ended, like other new work.
+  async contactRoom(orgId: string) {
+    const { row, plan, status } = await this.current(orgId);
+    this.assertUsable(row, status);
+    const used = await this._planRepository.contactsUsed(orgId);
+    return {
+      room: Math.max(0, plan.limits.contacts - used),
+      limit: plan.limits.contacts,
+      message: contactLimitMessage(plan, used),
+    };
+  }
+
   async overview(orgId: string, canManage: boolean) {
     const now = new Date();
     const { row, plan, status } = await this.current(orgId, now);
     const period = allowancePeriod(row, now);
-    const [used, channels, spent] = await Promise.all([
+    const [used, channels, spent, contacts] = await Promise.all([
       this._planRepository.getUsage(orgId, period.key),
       this.channelsUsed(orgId),
       this._planRepository.aiSpendUsd(orgId, period.spendFrom, now),
+      this._planRepository.contactsUsed(orgId),
     ]);
     const mode = billingMode();
     const provider = paymentProviderFor(mode);
@@ -283,6 +308,7 @@ export class PlanService {
         limit: plan.limits[m.key],
       })),
       channels: { used: channels, limit: plan.limits.channels },
+      contacts: { used: contacts, limit: plan.limits.contacts },
       fairUseReached: spent >= plan.limits.aiSpendUsd,
       plans: PAID_PLANS.map((p) => ({
         key: p.key,
@@ -292,6 +318,7 @@ export class PlanService {
         limits: {
           ...Object.fromEntries(METRICS.map((m) => [m.key, p.limits[m.key]])),
           channels: p.limits.channels,
+          contacts: p.limits.contacts,
         },
       })),
       metrics: METRICS.map((m) => ({ key: m.key, title: m.title })),

@@ -244,6 +244,7 @@ const makeService = (row: Record<string, unknown> | null) => {
     }),
     startTrial: vi.fn(),
     aiSpendUsd: vi.fn(async () => 0),
+    contactsUsed: vi.fn(async () => 0),
     claim: vi.fn(async () => true),
     getUsage: vi.fn(async () => ({})),
   };

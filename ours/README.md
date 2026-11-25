@@ -448,7 +448,8 @@ channel as deleted. Ours then erases the data, so the data deletion page is true
 
 - **Account deleted** (Settings > Global Settings > Delete Account): our
   business profile, captions, weeks, brand kit, UK date choices, post
-  results and owner signals are deleted; upstream's post text, comments, signatures, sets,
+  results, owner signals and the email list (contacts, uploads, blocked
+  addresses, sign-up form) are deleted; upstream's post text, comments, signatures, sets,
   webhooks, auto-post feeds, plugs, error logs and notifications are deleted or
   emptied; uploaded files and approved graphics are removed from storage; stored
   third-party keys and app tokens are hashed or cleared; the organisation is
@@ -470,6 +471,46 @@ channel as deleted. Ours then erases the data, so the data deletion page is true
 
 The browser test `prelaunch.spec.ts` checks the database directly, at
 `E2E_DATABASE_URL` (default: the local dev database).
+
+## Email list (email campaigns EM1)
+
+Screen: `/email` ("Email" in the menu). Public pages: `/subscribe.html?f=<form id>`
+and `/unsubscribe.html?t=<token>` (in the `(legal)` route group, so no sign-in).
+Code: `libraries/nestjs-libraries/src/ours/email/`, `apps/backend/src/ours/email*.controller.ts`,
+`apps/frontend/src/ours/email/`. Nothing is sent yet: sending is EM2.
+
+- **Adding people**: upload a CSV (a column headed "Email"; "Name" or
+  "First name" + "Last name" used if there; commas, semicolons or tabs; up to
+  5 MB and 20,000 rows), paste addresses, or add one. Every upload first asks
+  how these people gave their address: *they signed up* (consent) or *they
+  bought or asked for a quote and could opt out* (PECR soft opt-in). The
+  owner ticks a statement naming their business, stored word for word with
+  the upload in `ours_email_import`. *Bought a list, or something else* is
+  refused.
+- **Blocked addresses**: unsubscribing (or, from EM2, a bounce or complaint)
+  adds a hash of the address to `ours_email_suppression`, which outlives
+  removing the contact. A blocked address can never be uploaded or added again.
+- **Sign-up form**: the owner turns it on and shares the link. Sign-ups wait
+  as "waiting to confirm" (double opt-in; the confirmation email comes with
+  EM2). A hidden field catches bots. The answer never says whether an address
+  was already on the list.
+- **Unsubscribe link**: `base64url(contactId).HMAC-SHA256`, signed with
+  `OURS_EMAIL_TOKEN_SECRET` (falls back to `JWT_SECRET`). Never expires.
+  Opening the page changes nothing; its button (or a mail app's RFC 8058
+  one-click POST) unsubscribes. Changing the secret breaks links in emails
+  already sent.
+- **Limit**: people subscribed or waiting count towards the plan's `contacts`
+  (Starter 500, Growth 2,000, Pro 5,000, trial 100). An upload past the limit
+  adds as many as fit and says why.
+- **Download**: the owner's whole list as CSV (cells starting `= + - @` are
+  neutralised for spreadsheets).
+- Public routes are capped per visitor IP (20 sign-ups and 120 page loads an hour).
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `OURS_EMAIL_TOKEN_SECRET` | `JWT_SECRET` | Signs unsubscribe links. Set it once in production and never change it. |
+
+Browser test: `email-list.spec.ts` (reads the signing secret from the repo's `.env`, or `OURS_EMAIL_TOKEN_SECRET` / `JWT_SECRET`).
 
 ## Content engine (owner signals and AI cost)
 

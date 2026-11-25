@@ -2103,3 +2103,99 @@ model OursBrandSignal {
   @@index([organizationId, createdAt])
   @@map("ours_brand_signal")
 }
+
+// Email campaigns EM1 (25/11/2026): the business's own email list and the
+// consent behind each address. Nothing is sent from these tables yet (EM2).
+// Holds third parties' personal data, so every row is erased with the
+// organisation.
+enum OursEmailContactStatus {
+  SUBSCRIBED
+  // signed up on the business's form, not yet confirmed by email
+  PENDING_CONFIRMATION
+  UNSUBSCRIBED
+  BOUNCED
+  COMPLAINED
+}
+
+// how the person agreed to hear from the business (ICO PECR guidance)
+enum OursEmailContactBasis {
+  CONSENT
+  SOFT_OPT_IN
+}
+
+enum OursEmailContactSource {
+  IMPORT
+  FORM
+  MANUAL
+}
+
+model OursEmailContact {
+  id              String                 @id @default(uuid())
+  organizationId  String
+  // trimmed and lower-cased, so the same address can't be on a list twice
+  email           String
+  name            String?
+  status          OursEmailContactStatus @default(SUBSCRIBED)
+  basis           OursEmailContactBasis
+  source          OursEmailContactSource
+  // the upload this contact came from (source IMPORT)
+  importId        String?
+  // when they agreed (for an upload: when the owner told us they had)
+  consentAt       DateTime               @default(now())
+  statusChangedAt DateTime               @default(now())
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  @@unique([organizationId, email])
+  @@index([organizationId, status])
+  @@map("ours_email_contact")
+}
+
+// One row per upload or paste: what the owner told us about where the
+// addresses came from, and what happened to them.
+model OursEmailImport {
+  id             String                @id @default(uuid())
+  organizationId String
+  userId         String
+  // the file's name, or null for pasted addresses
+  fileName       String?
+  basis          OursEmailContactBasis
+  // the statement the owner ticked, word for word
+  statement      String
+  added          Int                   @default(0)
+  alreadyOnList  Int                   @default(0)
+  invalid        Int                   @default(0)
+  blocked        Int                   @default(0)
+  overLimit      Int                   @default(0)
+  createdAt      DateTime              @default(now())
+
+  @@index([organizationId, createdAt])
+  @@map("ours_email_import")
+}
+
+// Addresses that must never be emailed again by this business (unsubscribed,
+// bounced, complained). Kept as a SHA-256 of the lower-cased address, so the
+// block outlives a deleted contact without keeping the address itself.
+model OursEmailSuppression {
+  id             String   @id @default(uuid())
+  organizationId String
+  emailHash      String
+  // unsubscribed | bounced | complained
+  reason         String
+  createdAt      DateTime @default(now())
+
+  @@unique([organizationId, emailHash])
+  @@map("ours_email_suppression")
+}
+
+// The business's sign-up form. publicId goes in the form's link.
+model OursEmailForm {
+  id             String   @id @default(uuid())
+  organizationId String   @unique
+  publicId       String   @unique
+  enabled        Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("ours_email_form")
+}

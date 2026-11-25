@@ -42,6 +42,9 @@ export interface PlanLimits extends Record<MeteredKey, number> {
   channels: number;
   // platforms a week of posts is written for (Facebook, Instagram, LinkedIn)
   platforms: number;
+  // people on the email list at any one time (not monthly): subscribed, or
+  // waiting to confirm. Email campaigns EM1, agreed 25/11/2026.
+  contacts: number;
   // fair-use safety net: AI cost in USD per month (ours_ai_usage.costUsd).
   // Never shown to the owner as an amount.
   aiSpendUsd: number;
@@ -76,6 +79,7 @@ export const PAID_PLANS: PlanDefinition[] = [
       profileBuilds: 3,
       channels: 2,
       platforms: 1,
+      contacts: 500,
       aiSpendUsd: 8,
     },
   },
@@ -92,6 +96,7 @@ export const PAID_PLANS: PlanDefinition[] = [
       profileBuilds: 4,
       channels: 4,
       platforms: 2,
+      contacts: 2000,
       aiSpendUsd: 15,
     },
   },
@@ -108,6 +113,7 @@ export const PAID_PLANS: PlanDefinition[] = [
       profileBuilds: 10,
       channels: 8,
       platforms: 3,
+      contacts: 5000,
       aiSpendUsd: 30,
     },
   },
@@ -128,6 +134,7 @@ export const TRIAL_PLAN: PlanDefinition = {
     profileBuilds: 3,
     channels: 3,
     platforms: 3,
+    contacts: 100,
     aiSpendUsd: 3,
   },
 };

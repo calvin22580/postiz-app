@@ -55,6 +55,10 @@ export class ErasureRepository {
       | 'oursSeasonalSettings'
       | 'oursPostPerformance'
       | 'oursBrandSignal'
+      | 'oursEmailContact'
+      | 'oursEmailImport'
+      | 'oursEmailSuppression'
+      | 'oursEmailForm'
     >
   ) {}
 
@@ -191,6 +195,12 @@ export class ErasureRepository {
     await this._ours.model.oursBusinessProfile.deleteMany({ where: org });
     await this._ours.model.oursBrandKit.deleteMany({ where: org });
     await this._ours.model.oursSeasonalSettings.deleteMany({ where: org });
+    // email campaigns EM1: the business's email list (its customers'
+    // addresses), uploads, blocked addresses and sign-up form
+    await this._ours.model.oursEmailContact.deleteMany({ where: org });
+    await this._ours.model.oursEmailImport.deleteMany({ where: org });
+    await this._ours.model.oursEmailSuppression.deleteMany({ where: org });
+    await this._ours.model.oursEmailForm.deleteMany({ where: org });
 
     // upstream rows nothing points at
     await this._upstream.model.errors.deleteMany({ where: org });
