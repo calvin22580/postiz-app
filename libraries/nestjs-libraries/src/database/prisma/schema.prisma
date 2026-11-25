@@ -2140,8 +2140,11 @@ model OursEmailContact {
   source          OursEmailContactSource
   // the upload this contact came from (source IMPORT)
   importId        String?
-  // when they agreed (for an upload: when the owner told us they had)
+  // when they agreed (for an upload: when the owner told us they had; for
+  // the form: when they confirmed by email)
   consentAt       DateTime               @default(now())
+  // a form sign-up's confirmation email went out (EM2)
+  confirmationSentAt DateTime?
   statusChangedAt DateTime               @default(now())
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt
@@ -2198,4 +2201,101 @@ model OursEmailForm {
   updatedAt      DateTime @updatedAt
 
   @@map("ours_email_form")
+}
+
+// Email campaigns EM2 (25/11/2026): sending. One campaign is one email to the
+// list (or, for a test, to the owner alone). A delivery row per recipient
+// makes a restarted send carry on without emailing anyone twice.
+enum OursEmailCampaignStatus {
+  // written, waiting for the owner (EM3)
+  WAITING
+  // approved and scheduled: the send loop picks it up at scheduledAt
+  APPROVED
+  SENDING
+  SENT
+  REJECTED
+  CANCELLED
+  FAILED
+}
+
+enum OursEmailDeliveryStatus {
+  QUEUED
+  // handed to the sender; if the backend stopped here we don't know whether
+  // it went, so it is never sent again
+  SENDING
+  SENT
+  // recorded by the simulated sender, never sent
+  SIMULATED
+  DELIVERED
+  BOUNCED
+  COMPLAINED
+  // unsubscribed or blocked after the send was planned
+  SKIPPED
+  FAILED
+}
+
+model OursEmailCampaign {
+  id             String                  @id @default(uuid())
+  organizationId String
+  status         OursEmailCampaignStatus @default(WAITING)
+  // a test goes only to the signed-in owner's own address
+  test           Boolean                 @default(false)
+  testTo         String?
+  subject        String
+  previewText    String?
+  // plain text paragraphs; the footer is added when it is sent
+  body           String
+  scheduledAt    DateTime?
+  approvedAt     DateTime?
+  approvedBy     String?
+  // the send loop's lease, so two backends never send the same campaign;
+  // leaseOwner is the backend process holding it
+  leaseUntil     DateTime?
+  leaseOwner     String?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  // simulated | ses: which sender sent it
+  sentWith       String?
+  recipients     Int                     @default(0)
+  sent           Int                     @default(0)
+  failed         Int                     @default(0)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@index([status, scheduledAt])
+  @@index([organizationId, createdAt])
+  @@map("ours_email_campaign")
+}
+
+model OursEmailDelivery {
+  id             String                  @id @default(uuid())
+  organizationId String
+  campaignId     String
+  // null for a test sent to the owner
+  contactId      String?
+  email          String
+  status         OursEmailDeliveryStatus @default(QUEUED)
+  messageId      String?
+  error          String?
+  sentAt         DateTime?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@unique([campaignId, email])
+  @@index([campaignId, status])
+  @@index([messageId])
+  @@map("ours_email_delivery")
+}
+
+// The business's set-up at the sender (SES tenant and configuration set),
+// made by our code the first time it sends.
+model OursEmailSender {
+  id               String   @id @default(uuid())
+  organizationId   String   @unique
+  tenantName       String
+  configurationSet String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("ours_email_sender")
 }

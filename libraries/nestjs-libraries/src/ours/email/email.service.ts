@@ -22,6 +22,7 @@ import {
   ParsedList,
   parseContactsCsv,
   parsePastedContacts,
+  readConfirmToken,
   readUnsubscribeToken,
   REFUSED_BASIS,
   REFUSED_BASIS_MESSAGE,
@@ -78,17 +79,27 @@ export class EmailService {
   // The business's name as its customers know it: the profile's, or the
   // organisation's own name until there is a profile.
   async businessName(orgId: string) {
+    return (await this.businessDetails(orgId)).name;
+  }
+
+  // Who list emails come from (EM2): the name, plus the postal address and
+  // contact email from the profile when it has them. Facts only from the
+  // profile, never made up.
+  async businessDetails(orgId: string) {
+    let fields: ProfileFields | undefined;
     try {
       const { profile } = await this._businessProfileService.getProfile(orgId);
-      const fields = profile?.fields as ProfileFields | undefined;
-      const name = fields?.businessName?.claims?.[0]?.value?.trim();
-      if (name) {
-        return name;
-      }
+      fields = profile?.fields as ProfileFields | undefined;
     } catch (e) {
-      this._logger.warn(`No profile name for org=${orgId}: ${(e as Error).message}`);
+      this._logger.warn(`No profile for org=${orgId}: ${(e as Error).message}`);
     }
-    return (await this._emailRepository.organisationName(orgId)) || 'this business';
+    const value = (key: keyof ProfileFields) => fields?.[key]?.claims?.[0]?.value?.trim() || null;
+    const email = normaliseEmail(value('email') || '');
+    return {
+      name: value('businessName') || (await this._emailRepository.organisationName(orgId)) || 'this business',
+      address: value('address'),
+      email: isValidEmail(email) ? email : null,
+    };
   }
 
   async overview(orgId: string) {
@@ -345,6 +356,38 @@ export class EmailService {
       this._logger.error(`Unsubscribe failed: ${(e as Error).message}`);
       return false;
     }
+  }
+
+  // What the confirm page shows (a form sign-up confirming by email). 404 for
+  // a link that isn't ours or whose contact is gone.
+  async confirmInfo(token: string) {
+    const contact = await this.contactForConfirm(token);
+    if (!contact) {
+      throw new HttpException('This confirmation link isn’t valid.', 404);
+    }
+    return {
+      businessName: await this.businessName(contact.organizationId),
+      confirmed: contact.status === 'SUBSCRIBED',
+      // unsubscribed or blocked since: confirming can't bring them back
+      closed: !ACTIVE_STATUSES.includes(contact.status),
+    };
+  }
+
+  // The confirm page's button. Opening the link alone changes nothing, so a
+  // mail system's link checker can't confirm for someone.
+  async confirm(token: string) {
+    const contact = await this.contactForConfirm(token);
+    if (!contact) {
+      throw new HttpException('This confirmation link isn’t valid.', 404);
+    }
+    await this._emailRepository.confirmContact(contact.organizationId, contact.id);
+    this._logger.log(`Confirmed sign-up contact=${contact.id} org=${contact.organizationId}`);
+    return this.confirmInfo(token);
+  }
+
+  private async contactForConfirm(token: string) {
+    const id = readConfirmToken(token);
+    return id ? this._emailRepository.contactForToken(id) : null;
   }
 
   private async contactForToken(token: string) {

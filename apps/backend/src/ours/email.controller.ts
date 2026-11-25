@@ -20,6 +20,7 @@ import { Organization, User } from '@prisma/client';
 import { GetOrgFromRequest } from '@gitroom/nestjs-libraries/user/org.from.request';
 import { GetUserFromRequest } from '@gitroom/nestjs-libraries/user/user.from.request';
 import { EmailService } from '@gitroom/nestjs-libraries/ours/email/email.service';
+import { EmailCampaignService } from '@gitroom/nestjs-libraries/ours/email/email.campaign.service';
 import { MAX_UPLOAD_BYTES } from '@gitroom/nestjs-libraries/ours/email/email.contacts';
 import {
   AddContactDto,
@@ -31,7 +32,10 @@ import {
 @ApiTags('Email list')
 @Controller('/ours/email')
 export class EmailController {
-  constructor(private _emailService: EmailService) {}
+  constructor(
+    private _emailService: EmailService,
+    private _emailCampaignService: EmailCampaignService
+  ) {}
 
   @Get('/')
   getOverview(@GetOrgFromRequest() org: Organization) {
@@ -79,6 +83,18 @@ export class EmailController {
     res.setHeader('Content-Disposition', 'attachment; filename="email-list.csv"');
     res.setHeader('Cache-Control', 'no-store');
     res.send(csv);
+  }
+
+  // which sender is on, and the owner's latest test email (EM2)
+  @Get('/sending')
+  getSending(@GetOrgFromRequest() org: Organization) {
+    return this._emailCampaignService.status(org.id);
+  }
+
+  // one test email to the signed-in owner's own address
+  @Post('/test')
+  sendTest(@GetOrgFromRequest() org: Organization, @GetUserFromRequest() user: User) {
+    return this._emailCampaignService.sendTest(org.id, user);
   }
 
   @Put('/form')

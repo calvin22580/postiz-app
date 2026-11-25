@@ -42,7 +42,8 @@ export class EmailRepository {
     private _import: PrismaRepository<'oursEmailImport'>,
     private _suppression: PrismaRepository<'oursEmailSuppression'>,
     private _form: PrismaRepository<'oursEmailForm'>,
-    private _organization: PrismaRepository<'organization'>
+    private _organization: PrismaRepository<'organization'>,
+    private _delivery: PrismaRepository<'oursEmailDelivery'>
   ) {}
 
   async countsByStatus(orgId: string) {
@@ -172,7 +173,21 @@ export class EmailRepository {
     });
   }
 
-  deleteContact(orgId: string, id: string) {
+  // A form sign-up confirmed by email: subscribed from now, with the moment
+  // they confirmed as their consent. Only from waiting to confirm.
+  confirmContact(orgId: string, id: string) {
+    const now = new Date();
+    return this._contact.model.oursEmailContact.updateMany({
+      where: { id, organizationId: orgId, status: 'PENDING_CONFIRMATION' },
+      data: { status: 'SUBSCRIBED', consentAt: now, statusChangedAt: now },
+    });
+  }
+
+  // Their address goes from past sends too; a campaign's own counts stay.
+  async deleteContact(orgId: string, id: string) {
+    await this._delivery.model.oursEmailDelivery.deleteMany({
+      where: { organizationId: orgId, contactId: id, status: { not: 'SENDING' } },
+    });
     return this._contact.model.oursEmailContact.deleteMany({
       where: { id, organizationId: orgId },
     });

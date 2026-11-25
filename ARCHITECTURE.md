@@ -164,4 +164,12 @@ Upstream's public API, CLI and MCP/agent tools all create posts through `PostsSe
 - Plan limit `contacts` is a standing limit like channels: counted live from contacts subscribed or waiting (`PlanRepository.contactsUsed`), not in `ours_usage_counter`.
 - Public pages call the backend from the visitor's browser (not server-side through `internalFetch`), so the per-IP throttle counts each visitor rather than the frontend server.
 - The unsubscribe token is stateless (HMAC of the contact id), so any email ever sent keeps a working link without a token table. Looking a contact up from it is the one query not scoped by organisation; the signature is the proof and every write after it uses the contact's own organisation.
-- Sending (EM2) will go through a sender adapter (Amazon SES in eu-west-2, plus a labelled simulated sender), with an in-process send loop rather than a Temporal workflow, to avoid orchestrator edits. Plan: https://claude.ai/artifact/Jz3ibvc6SSuZXqS4ZtHqbH
+- Plan: https://claude.ai/artifact/Jz3ibvc6SSuZXqS4ZtHqbH
+
+## Email campaigns: sending (EM2, 25/11/2026)
+
+- One `EmailCampaignSender` interface (`libs/ours/email/senders/`), two senders: Amazon SES v2 in eu-west-2 and a simulated one, picked by `OURS_EMAIL_SENDER` (off by default). Our own `OURS_EMAIL_AWS_*` keys, so upstream's SES email provider is untouched.
+- An in-process send loop (`EmailCampaignService`, every minute, like `ErasureService`) rather than a Temporal workflow, so the orchestrator is untouched. Safe with several backends: campaigns are leased with a conditional update naming the process (`leaseOwner`, renewed before every message; the SES client times out well inside the lease), and each `ours_email_delivery` row moves `QUEUED → SENDING → SENT` with a conditional update, so a message goes at most once. Finding due campaigns and pending confirmations are system queries across organisations; every write after uses the row's own organisation.
+- One SES tenant and configuration set per organisation, so SES can pause one business without stopping the others, and events come back per business through SNS.
+- SES events arrive at a public route (`/ours/email/public/events`). They're trusted only with a valid SNS signature from a certificate on Amazon's own host and our own topic ARN. Finding a delivery by its SES message id is the one other unscoped query; the signature is the proof.
+- Confirm tokens are HMAC-signed like unsubscribe tokens but with a different purpose prefix, so neither can stand in for the other.

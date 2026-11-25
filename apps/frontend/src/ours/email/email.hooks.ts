@@ -1,5 +1,5 @@
 'use client';
-// OURS: data for the email list screen (email campaigns EM1).
+// OURS: data for the email list screen (email campaigns EM1, EM2).
 import useSWR from 'swr';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 
@@ -79,5 +79,35 @@ export const useEmailContacts = (search: string, status: ContactFilter, page: nu
       return res.json();
     },
     { revalidateOnFocus: false, keepPreviousData: true }
+  );
+};
+
+export interface EmailSending {
+  // off: nothing can be sent; simulated: recorded, never sent; ses: real email
+  sender: 'off' | 'simulated' | 'ses';
+  latestTest: {
+    to: string;
+    status: 'WAITING' | 'APPROVED' | 'SENDING' | 'SENT' | 'REJECTED' | 'CANCELLED' | 'FAILED';
+    sentWith: 'simulated' | 'ses' | null;
+    createdAt: string;
+    finishedAt: string | null;
+  } | null;
+}
+
+export const useEmailSending = () => {
+  const fetch = useFetch();
+  return useSWR<EmailSending>(
+    'ours-email-sending',
+    async () => {
+      const res = await fetch('/ours/email/sending');
+      if (!res.ok) throw new Error('load failed');
+      return res.json();
+    },
+    {
+      revalidateOnFocus: false,
+      // while a test is on its way, check again every few seconds
+      refreshInterval: (data) =>
+        data?.latestTest && ['APPROVED', 'SENDING'].includes(data.latestTest.status) ? 3000 : 0,
+    }
   );
 };

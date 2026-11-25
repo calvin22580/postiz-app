@@ -59,6 +59,9 @@ export class ErasureRepository {
       | 'oursEmailImport'
       | 'oursEmailSuppression'
       | 'oursEmailForm'
+      | 'oursEmailCampaign'
+      | 'oursEmailDelivery'
+      | 'oursEmailSender'
     >
   ) {}
 
@@ -201,6 +204,10 @@ export class ErasureRepository {
     await this._ours.model.oursEmailImport.deleteMany({ where: org });
     await this._ours.model.oursEmailSuppression.deleteMany({ where: org });
     await this._ours.model.oursEmailForm.deleteMany({ where: org });
+    // EM2: emails sent, who each went to, and the sender set-up
+    await this._ours.model.oursEmailDelivery.deleteMany({ where: org });
+    await this._ours.model.oursEmailCampaign.deleteMany({ where: org });
+    await this._ours.model.oursEmailSender.deleteMany({ where: org });
 
     // upstream rows nothing points at
     await this._upstream.model.errors.deleteMany({ where: org });

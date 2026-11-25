@@ -1,9 +1,11 @@
-// OURS: the email list (email campaigns EM1). The owner adds people with a
-// stated basis (a bought list is refused), sees them counted, and turns on a
-// sign-up form whose sign-ups wait to confirm. Someone who unsubscribes from
-// the public page can't be added back by a later upload.
-// Needs the stack running as described in ours/README.md. The unsubscribe
-// link is signed with the backend's secret, read from the same .env the stack
+// OURS: the email list (email campaigns EM1 and EM2). The owner adds people
+// with a stated basis (a bought list is refused), sees them counted, and turns
+// on a sign-up form whose sign-ups wait to confirm. Someone who unsubscribes
+// from the public page can't be added back by a later upload. With sending in
+// test mode (OURS_EMAIL_SENDER=simulated), a sign-up confirms from the link in
+// their email and the owner's test email is recorded, never sent.
+// Needs the stack running as described in ours/README.md. The signed links
+// are signed with the backend's secret, read from the same .env the stack
 // uses (or OURS_EMAIL_TOKEN_SECRET / JWT_SECRET in this test's environment).
 import { createHmac } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -20,10 +22,20 @@ const tokenSecret = () => {
   return value('OURS_EMAIL_TOKEN_SECRET') || value('JWT_SECRET');
 };
 
-// the same signed link the emails will carry (email.contacts.ts)
-const unsubscribeLink = (contactId: string) => {
-  const signature = createHmac('sha256', tokenSecret()).update(`ours-email-unsubscribe:${contactId}`).digest('base64url');
-  return `/unsubscribe.html?t=${Buffer.from(contactId).toString('base64url')}.${signature}`;
+// the same signed links the emails carry (email.contacts.ts)
+const signedLink = (page: string, purpose: 'unsubscribe' | 'confirm', contactId: string) => {
+  const signature = createHmac('sha256', tokenSecret()).update(`ours-email-${purpose}:${contactId}`).digest('base64url');
+  return `/${page}?t=${Buffer.from(contactId).toString('base64url')}.${signature}`;
+};
+const unsubscribeLink = (contactId: string) => signedLink('unsubscribe.html', 'unsubscribe', contactId);
+const confirmLink = (contactId: string) => signedLink('confirm-email.html', 'confirm', contactId);
+
+const contactId = async (page: Page, email: string) => {
+  const auth = (await page.context().cookies()).find((c) => c.name === 'auth')!.value;
+  const res = await page.request.get(`${BACKEND}/ours/email/contacts?search=${encodeURIComponent(email)}&page=0`, {
+    headers: { auth },
+  });
+  return (await res.json()).contacts[0].id as string;
 };
 
 const count = (page: Page, key: string) => page.getByTestId(`email-count-${key}`);
@@ -74,9 +86,7 @@ test('adding people, refusing a bought list, the sign-up form and unsubscribing'
   await expect(contact(page, 'cara@example.com')).toHaveAttribute('data-status', 'PENDING_CONFIRMATION');
 
   // 4. Ann unsubscribes from her link; opening the page alone changes nothing
-  const auth = (await page.context().cookies()).find((c) => c.name === 'auth')!.value;
-  const res = await page.request.get(`${BACKEND}/ours/email/contacts?search=ann%40example.com&page=0`, { headers: { auth } });
-  const annId = (await res.json()).contacts[0].id as string;
+  const annId = await contactId(page, 'ann@example.com');
   await visitor.goto(unsubscribeLink(annId));
   await expect(visitor.getByTestId('email-unsubscribe-submit')).toBeVisible();
   await page.reload();
@@ -114,5 +124,49 @@ test('adding people, refusing a bought list, the sign-up form and unsubscribing'
   await expect(page.getByTestId('email-import-added')).toHaveAttribute('data-value', '98');
   await expect(page.getByTestId('email-import-result')).toContainText('your list is full');
   await expect(page.getByTestId('email-limit')).toContainText('100 of 100');
+  await visitor.close();
+});
+
+test('in test mode: a sign-up confirms from their email, and the owner’s test email is recorded, not sent', async ({
+  page,
+  browser,
+}) => {
+  await signUp(page);
+  await page.goto('/email');
+  await expect(page.getByTestId('email-sending')).toBeVisible();
+  test.skip(
+    await page.getByTestId('email-sending-off').isVisible(),
+    'Start the stack with OURS_EMAIL_SENDER=simulated to test sending'
+  );
+  await expect(page.getByTestId('email-simulated')).toContainText('never actually sent');
+
+  // 1. the owner's test email goes through the whole pipe, labelled as simulated
+  await page.getByTestId('email-test-send').click();
+  await expect(page.getByTestId('email-test-status')).toHaveAttribute('data-status', 'SENT', { timeout: 30000 });
+  await expect(page.getByTestId('email-test-status')).toContainText('simulated, not delivered');
+
+  // 2. a form sign-up confirms from the link in their email; opening it alone changes nothing
+  await page.getByTestId('email-form-toggle').click();
+  const formUrl = await page.getByTestId('email-form-url').inputValue();
+  const visitor = await browser.newPage();
+  await visitor.goto(formUrl);
+  await visitor.getByTestId('email-subscribe-address').fill('dev@example.com');
+  await visitor.getByTestId('email-subscribe-consent').check();
+  await visitor.getByTestId('email-subscribe-submit').click();
+  await expect(visitor.getByTestId('email-subscribe-done')).toBeVisible();
+  const devId = await contactId(page, 'dev@example.com');
+  await visitor.goto(confirmLink(devId));
+  await expect(visitor.getByTestId('email-confirm-submit')).toBeVisible();
+  await page.reload();
+  await expect(contact(page, 'dev@example.com')).toHaveAttribute('data-status', 'PENDING_CONFIRMATION');
+  // an unsubscribe link can't confirm anyone
+  await visitor.goto(unsubscribeLink(devId).replace('/unsubscribe.html', '/confirm-email.html'));
+  await expect(visitor.getByTestId('email-public-missing')).toBeVisible();
+  await visitor.goto(confirmLink(devId));
+  await visitor.getByTestId('email-confirm-submit').click();
+  await expect(visitor.getByTestId('email-confirm-done')).toBeVisible();
+  await page.reload();
+  await expect(contact(page, 'dev@example.com')).toHaveAttribute('data-status', 'SUBSCRIBED');
+  await expect(count(page, 'subscribed')).toHaveAttribute('data-value', '1');
   await visitor.close();
 });

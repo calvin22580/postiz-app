@@ -1,5 +1,5 @@
 // OURS: email list helpers (email campaigns EM1). Reading an uploaded or
-// pasted list, and the unsubscribe link's token. No database access here.
+// pasted list, and the tokens in emailed links. No database access here.
 //
 // The rules come from the ICO's PECR guidance on marketing by electronic mail
 // (checked 25/11/2026): marketing email to individuals needs consent, or the
@@ -162,28 +162,28 @@ export const parsePastedContacts = (text: string): ParsedList => {
   return collect(entries.slice(0, MAX_UPLOAD_ROWS), 0, tooMany);
 };
 
-// The unsubscribe link's token: the contact's id and a signature, so a link
-// can't be made up or changed to unsubscribe someone else. It never expires:
-// an old email's link must keep working.
+// The tokens in links we email: the contact's id and a signature, so a link
+// can't be made up or changed to act for someone else. Two purposes, signed
+// apart so one can't stand in for the other: unsubscribing (never expires: an
+// old email's link must keep working) and confirming a form sign-up.
+type TokenPurpose = 'unsubscribe' | 'confirm';
+
 const tokenSecret = (env: NodeJS.ProcessEnv = process.env) =>
   (env.OURS_EMAIL_TOKEN_SECRET || env.JWT_SECRET || '').trim();
 
-const sign = (contactId: string, secret: string) =>
-  createHmac('sha256', secret).update(`ours-email-unsubscribe:${contactId}`).digest('base64url');
+const sign = (purpose: TokenPurpose, contactId: string, secret: string) =>
+  createHmac('sha256', secret).update(`ours-email-${purpose}:${contactId}`).digest('base64url');
 
-export const unsubscribeToken = (contactId: string, env: NodeJS.ProcessEnv = process.env) => {
+const makeToken = (purpose: TokenPurpose, contactId: string, env: NodeJS.ProcessEnv) => {
   const secret = tokenSecret(env);
   if (!secret) {
     throw new Error('OURS_EMAIL_TOKEN_SECRET (or JWT_SECRET) is not set');
   }
-  return `${Buffer.from(contactId).toString('base64url')}.${sign(contactId, secret)}`;
+  return `${Buffer.from(contactId).toString('base64url')}.${sign(purpose, contactId, secret)}`;
 };
 
 // The contact id a token was made for, or null if it isn't one of ours.
-export const readUnsubscribeToken = (
-  token: string | undefined | null,
-  env: NodeJS.ProcessEnv = process.env
-): string | null => {
+const readToken = (purpose: TokenPurpose, token: string | undefined | null, env: NodeJS.ProcessEnv) => {
   const secret = tokenSecret(env);
   if (!secret || !token || token.length > 200) {
     return null;
@@ -193,7 +193,19 @@ export const readUnsubscribeToken = (
     return null;
   }
   const contactId = Buffer.from(idPart, 'base64url').toString('utf8');
-  const expected = Buffer.from(sign(contactId, secret));
+  const expected = Buffer.from(sign(purpose, contactId, secret));
   const given = Buffer.from(signature);
   return given.length === expected.length && timingSafeEqual(given, expected) ? contactId : null;
 };
+
+export const unsubscribeToken = (contactId: string, env: NodeJS.ProcessEnv = process.env) =>
+  makeToken('unsubscribe', contactId, env);
+
+export const readUnsubscribeToken = (token: string | undefined | null, env: NodeJS.ProcessEnv = process.env) =>
+  readToken('unsubscribe', token, env);
+
+export const confirmToken = (contactId: string, env: NodeJS.ProcessEnv = process.env) =>
+  makeToken('confirm', contactId, env);
+
+export const readConfirmToken = (token: string | undefined | null, env: NodeJS.ProcessEnv = process.env) =>
+  readToken('confirm', token, env);

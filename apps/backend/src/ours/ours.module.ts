@@ -36,6 +36,9 @@ import { EmailController } from '@gitroom/backend/ours/email.controller';
 import { EmailPublicController } from '@gitroom/backend/ours/email.public.controller';
 import { EmailService } from '@gitroom/nestjs-libraries/ours/email/email.service';
 import { EmailRepository } from '@gitroom/nestjs-libraries/ours/email/email.repository';
+import { EmailCampaignService } from '@gitroom/nestjs-libraries/ours/email/email.campaign.service';
+import { EmailCampaignRepository } from '@gitroom/nestjs-libraries/ours/email/email.campaign.repository';
+import { EmailEventsService } from '@gitroom/nestjs-libraries/ours/email/email.events.service';
 
 const authenticatedController = [
   BusinessProfileController,
@@ -76,6 +79,9 @@ const publicController = [StripeWebhookController, EmailPublicController];
     BrandSignalRepository,
     EmailService,
     EmailRepository,
+    EmailCampaignService,
+    EmailCampaignRepository,
+    EmailEventsService,
     // Milestone 7: our plan's channel limit on upstream's "add a channel"
     // routes (global, so upstream's modules need no change)
     {

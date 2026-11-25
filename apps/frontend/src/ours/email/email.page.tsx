@@ -1,7 +1,7 @@
 'use client';
 // OURS: "Email" (email campaigns EM1). The business's email list: who's on
 // it, how each person agreed to hear from them, adding people, the sign-up
-// form, and a download. Nothing is sent from here yet.
+// form, a download, and a test email to the owner (EM2). List emails come in EM3.
 import { FC, FormEvent, useState } from 'react';
 import clsx from 'clsx';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
@@ -15,6 +15,7 @@ import {
   EmailOverview,
   ImportResult,
   useEmailContacts,
+  useEmailSending,
   useEmailOverview,
 } from '@gitroom/frontend/ours/email/email.hooks';
 
@@ -494,6 +495,96 @@ const SignUpForm: FC<{ data: EmailOverview; onChanged: (overview: EmailOverview)
   );
 };
 
+const TEST_STATUS: Record<string, string> = {
+  APPROVED: 'On its way…',
+  SENDING: 'On its way…',
+  SENT: 'Sent',
+  FAILED: 'It couldn’t be sent. Please try again later.',
+};
+
+const Sending: FC = () => {
+  const fetch = useFetch();
+  const { data, error: loadError, mutate } = useEmailSending();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const sendTest = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch('/ours/email/test', { method: 'POST' });
+      if (!res.ok) {
+        setError((await readError(res)) || 'We couldn’t send a test just now. Please try again.');
+      } else {
+        await mutate(await res.json(), { revalidate: false });
+      }
+    } catch {
+      setError('We couldn’t send a test just now. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (loadError && !data) {
+    return (
+      <Card testId="email-sending">
+        <Message tone="attention">
+          We couldn’t load your sending settings.{' '}
+          <button type="button" className="underline" onClick={() => mutate()}>
+            Try again
+          </button>
+        </Message>
+      </Card>
+    );
+  }
+  if (!data) {
+    return <div className="h-[120px] rounded-[14px] bg-newBgLineColor animate-pulse" />;
+  }
+  const test = data.latestTest;
+  const simulated = data.sender === 'simulated';
+  return (
+    <Card testId="email-sending">
+      <Heading title="See how your emails look">
+        Send a test email to yourself. It goes out the same way your customers’ emails will, with your business’s
+        name, address and an unsubscribe link at the bottom.
+      </Heading>
+      {data.sender === 'off' ? (
+        <p className="text-[14px] text-textItemBlur" data-testid="email-sending-off">
+          Sending isn’t switched on yet. Your list is saved and ready.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-[12px]">
+          {simulated && (
+            <Message tone="attention" testId="email-simulated">
+              Test mode: emails are recorded here, never actually sent.
+            </Message>
+          )}
+          <button
+            type="button"
+            onClick={sendTest}
+            disabled={busy}
+            data-testid="email-test-send"
+            className={clsx(primaryButton, 'self-start', busy && 'opacity-60')}
+          >
+            {busy ? 'Sending…' : 'Send me a test email'}
+          </button>
+          {test && (
+            <p className="text-[14px]" data-testid="email-test-status" data-status={test.status}>
+              Test to {test.to}: {TEST_STATUS[test.status] || test.status}
+              {test.status === 'SENT' && test.sentWith === 'simulated' ? ' (simulated, not delivered)' : ''}
+            </p>
+          )}
+        </div>
+      )}
+      {error && (
+        <Message tone="attention" testId="email-test-error">
+          {error}
+        </Message>
+      )}
+    </Card>
+  );
+};
+
 const ContactList: FC<{ onChanged: (overview: EmailOverview) => void; total: number }> = ({ onChanged, total }) => {
   const fetch = useFetch();
   const [search, setSearch] = useState('');
@@ -697,7 +788,7 @@ export const EmailPage: FC = () => {
       </h1>
       <p className="text-[16px] leading-[1.6] text-textItemBlur">
         Your customers’ email addresses, and how each person agreed to hear from you. Soon we’ll write an email
-        for them each week, for you to approve like your posts. Nothing is sent from here yet.
+        for them each week, for you to approve like your posts. Nothing goes to your list until you approve it.
       </p>
     </div>
   );
@@ -734,6 +825,7 @@ export const EmailPage: FC = () => {
       <Counts data={data} />
       <AddPeople data={data} onChanged={changed} />
       <SignUpForm data={data} onChanged={changed} />
+      <Sending />
       <ContactList onChanged={changed} total={total} />
     </Shell>
   );

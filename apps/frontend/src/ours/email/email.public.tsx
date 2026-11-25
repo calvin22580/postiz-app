@@ -1,6 +1,7 @@
 'use client';
-// OURS: the email list's two public pages (email campaigns EM1): a business's
-// sign-up form (/subscribe.html?f=…) and the unsubscribe page
+// OURS: the email list's public pages (email campaigns EM1 and EM2): a
+// business's sign-up form (/subscribe.html?f=…), the page its confirmation
+// email links to (/confirm-email.html?t=…) and the unsubscribe page
 // (/unsubscribe.html?t=…). The people using them are the business's own
 // customers, not signed in. They call the backend straight from the browser,
 // so its per-visitor limits apply to each visitor.
@@ -264,6 +265,83 @@ export const UnsubscribePage: FC<{ backendUrl: string; token: string | null }> =
         )}
         <Button busy={busy} testId="email-unsubscribe-submit">
           Unsubscribe
+        </Button>
+      </form>
+    </Frame>
+  );
+};
+
+interface ConfirmInfo {
+  businessName: string;
+  confirmed: boolean;
+  // unsubscribed or blocked since signing up: confirming can't bring them back
+  closed: boolean;
+}
+
+export const ConfirmPage: FC<{ backendUrl: string; token: string | null }> = ({ backendUrl, token }) => {
+  const url = token ? `${backendUrl}/ours/email/public/confirm?t=${encodeURIComponent(token)}` : null;
+  const info = useInfo<ConfirmInfo>(url);
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState('');
+
+  if (info.state !== 'ready') {
+    return <Unavailable state={info.state} title="Confirm your email" missing="We couldn’t find this sign-up. It may have been removed from the list. You can sign up again on the business’s form." />;
+  }
+  const { businessName } = info.data;
+
+  if (info.data.closed) {
+    return (
+      <Frame title="This sign-up is closed">
+        <Note testId="email-confirm-closed">
+          This address has been unsubscribed from {businessName}, so you won’t get their emails.
+        </Note>
+      </Frame>
+    );
+  }
+
+  if (done || info.data.confirmed) {
+    return (
+      <Frame title="You’re on the list">
+        <Note testId="email-confirm-done">
+          Thanks for confirming. You’ll now get emails from {businessName}, and every one has a link to unsubscribe.
+        </Note>
+      </Frame>
+    );
+  }
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setBusy(true);
+    try {
+      const res = await fetch(url!, { method: 'POST' });
+      const body = res.ok ? await res.json().catch(() => null) : null;
+      if (body?.confirmed) {
+        setDone(true);
+      } else if (res.status === 429) {
+        setError('Too many tries from here just now. Please try again later.');
+      } else {
+        setError('That didn’t work. Please try again in a few minutes.');
+      }
+    } catch {
+      setError('We couldn’t reach the server. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Frame title={`Confirm your email for ${businessName}`}>
+      <p>Press the button to start getting emails from {businessName}. If you didn’t sign up, just close this page.</p>
+      <form onSubmit={submit} className="flex flex-col gap-[12px]">
+        {error && (
+          <p role="alert" data-testid="email-confirm-error" className="text-[14px] text-red-600">
+            {error}
+          </p>
+        )}
+        <Button busy={busy} testId="email-confirm-submit">
+          Yes, sign me up
         </Button>
       </form>
     </Frame>
