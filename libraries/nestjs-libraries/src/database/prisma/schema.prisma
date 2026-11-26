@@ -2178,6 +2178,10 @@ model OursBlogPost {
   id             String             @id @default(uuid())
   organizationId String
   status         OursBlogPostStatus @default(WRITING)
+  // the organisation's id while the post is being written or waiting for
+  // approval, otherwise null: the unique key lets only one post be open at
+  // a time, even when two requests start one at once
+  openKey        String?            @unique
   // the owner's answer to "Anything new to tell customers?", in their own
   // words (optional); used as facts for this post only
   news           String?

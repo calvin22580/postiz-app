@@ -7,9 +7,11 @@ import { Organization } from '@prisma/client';
 import { GetOrgFromRequest } from '@gitroom/nestjs-libraries/user/org.from.request';
 import { BlogPostService } from '@gitroom/nestjs-libraries/ours/blog/blog.post.service';
 import {
-  BlogRejectReasonDto,
+  RejectReasonDto,
+  RewriteCaptionDto,
+} from '@gitroom/nestjs-libraries/ours/captions/dtos/caption.dto';
+import {
   EditBlogPostDto,
-  RewriteBlogPostDto,
   WriteBlogPostDto,
 } from '@gitroom/nestjs-libraries/ours/blog/dtos/blog.post.dto';
 
@@ -52,7 +54,7 @@ export class BlogPostsController {
   rejectReason(
     @GetOrgFromRequest() org: Organization,
     @Param('id') id: string,
-    @Body() body: BlogRejectReasonDto
+    @Body() body: RejectReasonDto
   ) {
     return this._blogPostService.setRejectReason(org.id, id, body.reason);
   }
@@ -66,7 +68,7 @@ export class BlogPostsController {
   rewrite(
     @GetOrgFromRequest() org: Organization,
     @Param('id') id: string,
-    @Body() body: RewriteBlogPostDto
+    @Body() body: RewriteCaptionDto
   ) {
     return this._blogPostService.rewrite(org.id, id, body.note);
   }

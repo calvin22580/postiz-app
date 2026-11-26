@@ -4,6 +4,9 @@ import { Injectable } from '@nestjs/common';
 import { OursBlogPostStatus, Prisma } from '@prisma/client';
 import { PrismaRepository } from '@gitroom/nestjs-libraries/database/prisma/prisma.service';
 
+const isOpenPostTaken = (e: unknown) =>
+  e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002';
+
 const POST_SELECT = {
   id: true,
   status: true,
@@ -79,11 +82,20 @@ export class BlogPostRepository {
     return rows.map((r) => r.title).filter(Boolean);
   }
 
-  start(orgId: string, news: string | null) {
-    return this._post.model.oursBlogPost.create({
-      data: { organizationId: orgId, status: OursBlogPostStatus.WRITING, news },
-      select: POST_SELECT,
-    });
+  // null when another post is already open (openKey is unique), for
+  // example when two requests start writing at once
+  async start(orgId: string, news: string | null) {
+    try {
+      return await this._post.model.oursBlogPost.create({
+        data: { organizationId: orgId, status: OursBlogPostStatus.WRITING, openKey: orgId, news },
+        select: POST_SELECT,
+      });
+    } catch (e) {
+      if (isOpenPostTaken(e)) {
+        return null;
+      }
+      throw e;
+    }
   }
 
   // Changes a post only while it has the given status, so a post that timed
@@ -117,6 +129,7 @@ export class BlogPostRepository {
   fail(orgId: string, id: string, errorMessage: string) {
     return this.whileStatus(orgId, id, OursBlogPostStatus.WRITING, {
       status: OursBlogPostStatus.FAILED,
+      openKey: null,
       errorMessage,
     });
   }
@@ -128,7 +141,7 @@ export class BlogPostRepository {
       orgId,
       id,
       OursBlogPostStatus.PENDING_APPROVAL,
-      { status: OursBlogPostStatus.APPROVED, approvedAt: new Date() },
+      { status: OursBlogPostStatus.APPROVED, openKey: null, approvedAt: new Date() },
       words
     );
   }
@@ -145,16 +158,26 @@ export class BlogPostRepository {
   reject(orgId: string, id: string) {
     return this.whileStatus(orgId, id, OursBlogPostStatus.PENDING_APPROVAL, {
       status: OursBlogPostStatus.REJECTED,
+      openKey: null,
       rejectedAt: new Date(),
     });
   }
 
-  restore(orgId: string, id: string) {
-    return this.whileStatus(orgId, id, OursBlogPostStatus.REJECTED, {
-      status: OursBlogPostStatus.PENDING_APPROVAL,
-      rejectedAt: null,
-      rejectReason: null,
-    });
+  // false when another post is open by now
+  async restore(orgId: string, id: string) {
+    try {
+      return await this.whileStatus(orgId, id, OursBlogPostStatus.REJECTED, {
+        status: OursBlogPostStatus.PENDING_APPROVAL,
+        openKey: orgId,
+        rejectedAt: null,
+        rejectReason: null,
+      });
+    } catch (e) {
+      if (isOpenPostTaken(e)) {
+        return false;
+      }
+      throw e;
+    }
   }
 
   setRejectReason(orgId: string, id: string, reason: string) {

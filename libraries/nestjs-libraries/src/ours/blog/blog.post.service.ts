@@ -108,13 +108,15 @@ const wordsOf = (p: Pick<StoredBlogPost, 'title' | 'description' | 'body'>): Blo
 });
 
 // Content engine E1: which post an owner signal is about, and its words as
-// one text, as the keeper reads them.
+// one text, as the keeper reads them. Only the title and search description:
+// the keeper reads blog signals next to captions, and whole posts would
+// swamp its prompt (and its cost). Learning from body edits can come later.
 const signalTarget = (p: Pick<StoredBlogPost, 'id' | 'title'>) => ({
   draftId: p.id,
   platform: 'blog',
   theme: p.title.slice(0, 120),
 });
-const asText = (p: BlogContent) => `${p.title}\n\n${p.description}\n\n${p.body}`;
+const asText = (p: Pick<BlogContent, 'title' | 'description'>) => `${p.title}\n\n${p.description}`;
 
 @Injectable()
 export class BlogPostService {
@@ -191,7 +193,7 @@ export class BlogPostService {
 
     // one post from the plan's monthly allowance
     const ticket = await this._planService.claim(orgId, 'blogPosts');
-    let post: StoredBlogPost;
+    let post: StoredBlogPost | null;
     let recentTitles: string[];
     try {
       recentTitles = await this._blogPostRepository.recentTitles(orgId, RECENT_TITLES);
@@ -199,6 +201,11 @@ export class BlogPostService {
     } catch (e) {
       await this._planService.giveBack(orgId, ticket);
       throw e;
+    }
+    if (!post) {
+      // another request started a post a moment ago (a double click)
+      await this._planService.giveBack(orgId, ticket);
+      return this.overview(orgId);
     }
     // background: the request returns now, the screen polls for progress
     this.runWriting(orgId, post.id, [...facts, ...newsFacts(cleanNews)], toneFromProfile(fields), recentTitles, ticket).catch((e) =>

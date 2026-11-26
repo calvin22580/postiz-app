@@ -335,6 +335,14 @@ describe('BlogPostService', () => {
     expect(plans.claim).not.toHaveBeenCalled();
   });
 
+  it('gives the allowance back when another request opened a post a moment ago', async () => {
+    const { service, repo, plans } = makeService();
+    repo.start.mockResolvedValue(null as any);
+    await service.startWriting('org-1');
+    expect(plans.claim).toHaveBeenCalledWith('org-1', 'blogPosts');
+    expect(plans.giveBack).toHaveBeenCalledTimes(1);
+  });
+
   it('saves a checked post waiting for approval and logs the cost', async () => {
     const { service, repo, usage, plans } = makeService();
     const writer = { name: 'anthropic' as const, write: vi.fn(async () => ({ raw: goodRaw(), usages: [anthropicUsage] })), rewrite: vi.fn() };

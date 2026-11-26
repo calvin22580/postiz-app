@@ -265,6 +265,7 @@ const WaitingPost: FC<{ post: BlogPost; data: Ready; onChanged: () => void }> = 
             />
           </label>
           <p className="text-[13px] leading-[1.5] text-textItemBlur">
+            {post.editedAt ? 'The new version replaces the changes you made. ' : ''}
             {data.demo
               ? 'Demo mode: no AI service is connected, so you’ll get the other prepared version of this post, and notes can’t be used.'
               : 'We only use details from your business profile and what you told us. To mention something new, add it to your profile first.'}{' '}
