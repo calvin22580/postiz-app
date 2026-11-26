@@ -30,12 +30,24 @@ export const METRICS = [
     label: 'website reads',
     title: 'Website reads for your profile',
   },
+  // blog posts B1: posts written for the business's website
+  {
+    key: 'blogPosts',
+    label: 'blog posts',
+    title: 'Blog posts written',
+  },
 ] as const;
 
 export type MeteredKey = (typeof METRICS)[number]['key'];
 
 // metrics that make an AI call, so they also count towards the fair-use cap
-export const AI_METRICS: MeteredKey[] = ['captionWeeks', 'rewrites', 'profileBuilds'];
+export const AI_METRICS: MeteredKey[] = ['captionWeeks', 'rewrites', 'profileBuilds', 'blogPosts'];
+
+// Allowances that depend on a feature that may be switched off: blog posts
+// are only shown once they are on (OURS_BLOG_POSTS), so nobody is offered
+// something they can't use yet.
+export const shownMetrics = (env: NodeJS.ProcessEnv = process.env) =>
+  METRICS.filter((m) => m.key !== 'blogPosts' || env.OURS_BLOG_POSTS === 'true');
 
 export interface PlanLimits extends Record<MeteredKey, number> {
   // connected channels at any one time (not monthly)
@@ -76,6 +88,8 @@ export const PAID_PLANS: PlanDefinition[] = [
       profileBuilds: 3,
       channels: 2,
       platforms: 1,
+      // blog posts B1, agreed 26/11/2026
+      blogPosts: 2,
       aiSpendUsd: 8,
     },
   },
@@ -92,6 +106,7 @@ export const PAID_PLANS: PlanDefinition[] = [
       profileBuilds: 4,
       channels: 4,
       platforms: 2,
+      blogPosts: 4,
       aiSpendUsd: 15,
     },
   },
@@ -108,6 +123,7 @@ export const PAID_PLANS: PlanDefinition[] = [
       profileBuilds: 10,
       channels: 8,
       platforms: 3,
+      blogPosts: 8,
       aiSpendUsd: 30,
     },
   },
@@ -128,6 +144,7 @@ export const TRIAL_PLAN: PlanDefinition = {
     profileBuilds: 3,
     channels: 3,
     platforms: 3,
+    blogPosts: 1,
     aiSpendUsd: 3,
   },
 };

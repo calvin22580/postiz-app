@@ -1,0 +1,524 @@
+{
+  "profiles": {
+    "quillspindle": {
+      "name": "Quillspindle Ledger Studio (fictional persona)",
+      "facts": [
+        {
+          "id": "businessName.0",
+          "field": "businessName",
+          "value": "Quillspindle Ledger Studio"
+        },
+        {
+          "id": "whatTheyDo.0",
+          "field": "whatTheyDo",
+          "value": "Bookkeeping for sole traders, opened in 2021."
+        },
+        {
+          "id": "services.0",
+          "field": "services",
+          "value": "Monthly bookkeeping: recording sales and purchases, and bank reconciliation. Starts at £95 per month."
+        },
+        {
+          "id": "services.1",
+          "field": "services",
+          "value": "One-off records review, £65, including a written list of queries."
+        },
+        {
+          "id": "location.0",
+          "field": "location",
+          "value": "Perth, Scotland"
+        },
+        {
+          "id": "audience.0",
+          "field": "audience",
+          "value": "Sole traders"
+        },
+        {
+          "id": "highlights.0",
+          "field": "highlights",
+          "value": "Linnet Velquill is the proprietor and holds a diploma in bookkeeping."
+        },
+        {
+          "id": "openingHours.0",
+          "field": "openingHours",
+          "value": "Appointments Tuesday to Thursday, 09:30 to 15:30, booked in advance."
+        },
+        {
+          "id": "phone.0",
+          "field": "phone",
+          "value": "01632 960347"
+        },
+        {
+          "id": "email.0",
+          "field": "email",
+          "value": "quillspindle.studio@example.test"
+        }
+      ]
+    },
+    "sproggit": {
+      "name": "Nimble Sproggit Plumbing (fictional persona)",
+      "facts": [
+        {
+          "id": "businessName.0",
+          "field": "businessName",
+          "value": "Nimble Sproggit Plumbing"
+        },
+        {
+          "id": "whatTheyDo.0",
+          "field": "whatTheyDo",
+          "value": "Domestic plumbing, started in 2018. No emergency call-outs."
+        },
+        {
+          "id": "services.0",
+          "field": "services",
+          "value": "Tap washer replacement, £36 per tap"
+        },
+        {
+          "id": "services.1",
+          "field": "services",
+          "value": "Toilet cistern repairs"
+        },
+        {
+          "id": "services.2",
+          "field": "services",
+          "value": "Outdoor tap fitting"
+        },
+        {
+          "id": "location.0",
+          "field": "location",
+          "value": "Oswestry"
+        },
+        {
+          "id": "openingHours.0",
+          "field": "openingHours",
+          "value": "Appointments Monday to Thursday, 08:00 to 16:00"
+        },
+        {
+          "id": "phone.0",
+          "field": "phone",
+          "value": "01632 960231"
+        },
+        {
+          "id": "email.0",
+          "field": "email",
+          "value": "jobs.sproggit@example.test"
+        }
+      ]
+    },
+    "thimblewick": {
+      "name": "Apricot Thimblewick Café (fictional persona)",
+      "facts": [
+        {
+          "id": "businessName.0",
+          "field": "businessName",
+          "value": "Apricot Thimblewick Café"
+        },
+        {
+          "id": "whatTheyDo.0",
+          "field": "whatTheyDo",
+          "value": "A café in Monmouth, Wales, opened in 2021."
+        },
+        {
+          "id": "services.0",
+          "field": "services",
+          "value": "Apricot and oat loaf, £3.40 a slice"
+        },
+        {
+          "id": "services.1",
+          "field": "services",
+          "value": "Carrot and cumin soup, £4.80 a bowl, served with a bread roll"
+        },
+        {
+          "id": "location.0",
+          "field": "location",
+          "value": "Monmouth, Wales"
+        },
+        {
+          "id": "highlights.0",
+          "field": "highlights",
+          "value": "Lunch is eat-in only."
+        },
+        {
+          "id": "highlights.1",
+          "field": "highlights",
+          "value": "No table bookings."
+        },
+        {
+          "id": "openingHours.0",
+          "field": "openingHours",
+          "value": "Tuesday to Saturday, 09:00 to 15:00. Closed Sundays and Mondays."
+        },
+        {
+          "id": "phone.0",
+          "field": "phone",
+          "value": "01632 960427"
+        },
+        {
+          "id": "email.0",
+          "field": "email",
+          "value": "counter@example.test"
+        }
+      ]
+    }
+  },
+  "posts": [
+    {
+      "id": "quill-monthly",
+      "profile": "quillspindle",
+      "title": "What monthly bookkeeping covers for sole traders",
+      "description": "A plain guide to what Quillspindle Ledger Studio's monthly bookkeeping includes for sole traders in Perth, and how to book an appointment.",
+      "body": "If you run your business on your own, the paperwork can pile up quickly. Sales, purchases and bank statements arrive every week, and it is easy to fall behind. Quillspindle Ledger Studio in Perth, Scotland has provided bookkeeping for sole traders since it opened in 2021, and this post explains what our monthly bookkeeping includes, so you know what to expect before you get in touch.\n\n## What the monthly service includes\n\nEach month we record your sales and purchases and reconcile your bank account. Reconciliation simply means checking that what your records say matches what actually went in and out of the bank. When the two agree, you can trust the figures in front of you. When they don't, we find out why and put it right in your records.\n\nMonthly bookkeeping starts at £95 per month.\n\n## Why a monthly routine helps\n\nKeeping records up to date little and often is usually easier than catching up once a year. Small questions get answered while you still remember the details, and you have a clearer picture of how the business is doing as you go. It also means fewer surprises when the end of the year comes round.\n\n- Your sales and purchases are recorded as you go.\n- Your bank account is reconciled every month.\n- Questions are dealt with while they are fresh.\n\n## Who we work with\n\nWe work with sole traders. Whether you have just started out or have been trading for some time, the aim is the same: tidy, accurate records that you understand and can rely on.\n\n## Who you will be working with\n\nLinnet Velquill is the proprietor of Quillspindle Ledger Studio and holds a diploma in bookkeeping. When you work with us, you work directly with Linnet, so you always know who is looking after your records.\n\n## Getting ready for your first appointment\n\nBefore your first appointment, it helps to gather your recent bank statements and any receipts or invoices you have kept. They don't need to be perfectly organised. Bringing what you have is enough to start a useful conversation about what you need.\n\n## Booking an appointment\n\nAppointments are on Tuesday to Thursday, from 09:30 to 15:30, and are booked in advance. If you would like to talk about monthly bookkeeping, call us on 01632 960347 or email quillspindle.studio@example.test and we will find a time that suits you."
+    },
+    {
+      "id": "quill-review",
+      "profile": "quillspindle",
+      "title": "Not sure your records are right? Try a one-off review",
+      "description": "How the one-off records review from Quillspindle Ledger Studio works, what you receive afterwards and how to book it in Perth.",
+      "body": "Many sole traders keep their own books, and plenty do it well. Still, it is natural to wonder now and then whether everything is where it should be. If that sounds familiar, a one-off records review from Quillspindle Ledger Studio could give you the reassurance you are looking for, without signing up to anything ongoing.\n\n## What the review is\n\nThe one-off records review is a single look through the records you already keep. It is designed for sole traders who want a second pair of eyes on their bookkeeping. The review costs £65.\n\n## What you receive\n\nThe review includes a written list of queries. That means you come away with something you can work through in your own time, rather than trying to remember everything that was said in a meeting. Each query is something worth checking or tidying up in your records.\n\n- A look through the records you keep.\n- A written list of queries to work through.\n- A clear idea of what, if anything, needs attention.\n\n## When a review makes sense\n\nA review can be useful at almost any point. You might have just finished your first year of trading and want to know you are on the right track. You might have changed how you keep your records and want to check nothing has slipped through. Or you might simply want peace of mind.\n\n## Getting your records together\n\nBefore the review, gather what you have: your sales and purchase records, bank statements and any notes you keep. It doesn't need to be perfect, and it is fine to bring things as they are. Seeing your records as you really keep them is the point of the review.\n\n## If you want ongoing help\n\nSome people find after a review that they would rather hand the bookkeeping over. Our monthly bookkeeping covers recording sales and purchases and bank reconciliation, and starts at £95 per month. There is no need to decide that straight away.\n\n## Who carries out the review\n\nLinnet Velquill, the proprietor, holds a diploma in bookkeeping and carries out the work at Quillspindle Ledger Studio in Perth, Scotland.\n\n## Booking your review\n\nAppointments are on Tuesday to Thursday, 09:30 to 15:30, and are booked in advance. Call 01632 960347 or email quillspindle.studio@example.test to arrange a time."
+    },
+    {
+      "id": "sproggit-tap",
+      "profile": "sproggit",
+      "title": "What to do about a dripping tap in your home",
+      "description": "Why taps drip, why a worn washer is worth replacing, and how Nimble Sproggit Plumbing in Oswestry can replace it for you.",
+      "body": "A dripping tap is one of those jobs that is easy to ignore. The drip starts small, then one day you notice it is louder at night or leaving a mark on the sink. At Nimble Sproggit Plumbing we have looked after domestic plumbing in Oswestry since we started in 2018, and a dripping tap is one of the most common things people ask us about.\n\n## Why taps drip\n\nIn many traditional taps, a small washer inside the tap presses down to stop the water. Over time that washer wears, and once it no longer seals properly, water gets past it and the tap drips. Turning the tap off harder might slow the drip for a while, but it usually wears the washer further.\n\n## Why it is worth sorting out\n\nA drip can seem harmless, but it is water going down the drain all day and night. It can also leave stains on sinks and baths, and the noise can be annoying in a quiet house. Dealing with it sooner keeps a small job small.\n\n- A worn washer is a common cause of a drip.\n- Turning the tap off harder rarely fixes it.\n- Sorting it early keeps the job simple.\n\n## How we can help\n\nTap washer replacement is one of our everyday jobs. We replace the worn washer so the tap seals properly again. Tap washer replacement costs £36 per tap, so you know the price before we start.\n\n## Other jobs while we are there\n\nIf something else needs attention, mention it when you book. We also carry out toilet cistern repairs and outdoor tap fitting, so it can make sense to look at more than one job in the same visit.\n\n## Please note\n\nWe are a domestic plumbing business and we don't offer emergency call-outs. If you have a dripping tap or another job that can be planned, we will be glad to help.\n\n## Booking an appointment\n\nAppointments are Monday to Thursday, 08:00 to 16:00. To book, call 01632 960231 or email jobs.sproggit@example.test with a short description of the problem, and we will arrange a time with you."
+    },
+    {
+      "id": "sproggit-outdoor",
+      "profile": "sproggit",
+      "title": "Is an outdoor tap worth having?",
+      "description": "Some everyday reasons to have an outdoor tap fitted, what to think about first, and how Nimble Sproggit Plumbing in Oswestry can help.",
+      "body": "If you have ever carried a watering can through the kitchen or run a hose from the sink out of the back door, you will know why people ask about outdoor taps. Nimble Sproggit Plumbing is a domestic plumbing business in Oswestry, and outdoor tap fitting is one of the services we provide.\n\n## Everyday uses for an outdoor tap\n\nAn outdoor tap makes plenty of jobs easier. Watering the garden, washing the car, rinsing muddy boots and filling a paddling pool all become simpler when the water is right where you need it.\n\n- Watering plants and lawns.\n- Washing cars, bikes and garden furniture.\n- Cleaning boots, tools and bins.\n\n## Things to think about first\n\nBefore booking, have a think about where you would use the tap most. A tap near the garden is handy for watering, while one near the drive suits car washing. It also helps to think about how far a hose needs to reach from that spot. If you are not sure, we can talk it through when you get in touch.\n\n## Looking after an outdoor tap in cold weather\n\nA little care in cold weather helps. Many people disconnect their hose when the weather turns cold and keep the tap covered. These are simple, sensible habits that help you keep the tap in good order.\n\n## Other jobs we can help with\n\nIf you have other plumbing jobs around the house, it can be worth mentioning them when you book. We also replace tap washers, at £36 per tap, and carry out toilet cistern repairs.\n\n## How we work\n\nWe have provided domestic plumbing since 2018. We work by appointment and don't offer emergency call-outs, so planned jobs like fitting an outdoor tap are exactly the kind of work we do.\n\n## Booking an appointment\n\nAppointments are Monday to Thursday, 08:00 to 16:00. Call us on 01632 960231 or email jobs.sproggit@example.test to tell us what you have in mind and arrange a time."
+    },
+    {
+      "id": "thimble-soup",
+      "profile": "thimblewick",
+      "title": "A warming bowl of carrot and cumin soup in Monmouth",
+      "description": "Our carrot and cumin soup, served with a bread roll, plus when to find us at Apricot Thimblewick Café in Monmouth, Wales.",
+      "body": "When the weather turns cold, there is a lot to be said for a bowl of soup. At Apricot Thimblewick Café in Monmouth, Wales, our carrot and cumin soup is a favourite way to warm up at lunchtime, and this post tells you a little more about it and how to come and try it.\n\n## Our carrot and cumin soup\n\nCarrot and cumin is a classic pairing. The sweetness of the carrot sits well with the gentle warmth of the cumin, and it makes a soup that is filling without being heavy. We serve it with a bread roll, which is just right for dipping.\n\nA bowl of carrot and cumin soup costs £4.80.\n\n## Something sweet to follow\n\nIf you have room afterwards, our apricot and oat loaf is £3.40 a slice. It goes well with a hot drink and makes a nice end to lunch.\n\n- Carrot and cumin soup, served with a bread roll.\n- Apricot and oat loaf by the slice.\n- A warm place to sit and enjoy them.\n\n## Eating in with us\n\nLunch is eat-in only, so come along, take a seat and enjoy your soup at the café. We don't take table bookings, so just drop in when it suits you.\n\n## A little about us\n\nApricot Thimblewick Café opened in 2021 in Monmouth. We like to keep things simple, with food that is easy to enjoy and a relaxed place to stop for a while.\n\n## When to find us\n\nWe are open Tuesday to Saturday, from 09:00 to 15:00. We are closed on Sundays and Mondays, so plan your visit for later in the week. If you have a question before you come, call us on 01632 960427 or email counter@example.test. We look forward to seeing you."
+    },
+    {
+      "id": "thimble-loaf",
+      "profile": "thimblewick",
+      "title": "Meet our apricot and oat loaf",
+      "description": "A closer look at the apricot and oat loaf at Apricot Thimblewick Café in Monmouth, Wales, with our opening times and how to visit.",
+      "body": "Every café has something people come back for. At Apricot Thimblewick Café in Monmouth, Wales, the apricot and oat loaf is a natural choice: after all, it shares a name with us. Here is a little more about it, and about when you can come and have a slice.\n\n## What it is\n\nOur apricot and oat loaf combines fruity apricot with the comforting texture of oats. It is the kind of cake that suits a mid-morning break or an afternoon cup of tea, and it is easy to enjoy on its own.\n\nIt costs £3.40 a slice.\n\n## Making a visit of it\n\nA slice of loaf is a good excuse to sit down for a while. If you are visiting at lunchtime, our carrot and cumin soup is £4.80 a bowl and comes with a bread roll. Lunch is eat-in only, so you can take your time.\n\n- Apricot and oat loaf, £3.40 a slice.\n- Carrot and cumin soup with a bread roll at lunch.\n- A relaxed table to enjoy them at.\n\n## No need to book\n\nWe don't take table bookings. Just come in when it suits you and find a seat. It keeps things simple for everyone.\n\n## Our café\n\nWe opened Apricot Thimblewick Café in Monmouth in 2021. Since then we have kept our menu short and our welcome warm, so you always know what you are coming in for.\n\n## Opening times\n\nWe are open Tuesday to Saturday, 09:00 to 15:00, and closed on Sundays and Mondays. If you would like to ask us anything before you visit, you can call 01632 960427 or email counter@example.test.\n\n## Come and try a slice\n\nWhether you are local to Monmouth or passing through, we would love you to stop by. Pull up a chair, order a slice of apricot and oat loaf and enjoy a quiet moment with us."
+    }
+  ],
+  "plants": [
+    {
+      "id": "quill-monthly-tax-return",
+      "post": "quill-monthly",
+      "part": "body",
+      "find": "Monthly bookkeeping starts at £95 per month.",
+      "replace": "Monthly bookkeeping starts at £95 per month. We can also prepare and file your Self Assessment tax return for you.",
+      "label": {
+        "kind": "invented",
+        "detail": "prepare and file your Self Assessment tax return",
+        "grade": "clear"
+      },
+      "tags": [
+        "unlisted-service",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "quill-monthly-hours-saved",
+      "post": "quill-monthly",
+      "part": "body",
+      "find": "It also means fewer surprises when the end of the year comes round.",
+      "replace": "It also means fewer surprises when the end of the year comes round. Our clients save around 6 hours a month on paperwork.",
+      "label": {
+        "kind": "invented",
+        "detail": "Our clients save around 6 hours a month on paperwork.",
+        "grade": "clear"
+      },
+      "tags": [
+        "statistic"
+      ]
+    },
+    {
+      "id": "quill-monthly-decade",
+      "post": "quill-monthly",
+      "part": "body",
+      "find": "holds a diploma in bookkeeping.",
+      "replace": "holds a diploma in bookkeeping. She has worked with sole traders across Scotland for more than a decade.",
+      "label": {
+        "kind": "invented",
+        "detail": "for more than a decade",
+        "grade": "clear"
+      },
+      "tags": [
+        "experience",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "quill-review-hmrc",
+      "post": "quill-review",
+      "part": "body",
+      "find": "It doesn't need to be perfect, and it is fine to bring things as they are.",
+      "replace": "HMRC expects sole traders to keep their records for at least five years after the filing deadline. It doesn't need to be perfect, and it is fine to bring things as they are.",
+      "label": {
+        "kind": "invented",
+        "detail": "keep their records for at least five years after the filing deadline",
+        "grade": "clear"
+      },
+      "tags": [
+        "regulation",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "quill-review-saturday",
+      "post": "quill-review",
+      "part": "body",
+      "find": "and are booked in advance. Call",
+      "replace": "and are booked in advance. We now also see clients on Saturday mornings. Call",
+      "label": {
+        "kind": "invented",
+        "detail": "We now also see clients on Saturday mornings.",
+        "grade": "clear"
+      },
+      "tags": [
+        "hours",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "quill-review-receipts-tip",
+      "post": "quill-review",
+      "part": "body",
+      "find": "Seeing your records as you really keep them is the point of the review.",
+      "replace": "Seeing your records as you really keep them is the point of the review. If you can, keep receipts in one folder or envelope from now on, as it makes any future check quicker.",
+      "label": {
+        "kind": "true"
+      },
+      "tags": [
+        "general-advice"
+      ]
+    },
+    {
+      "id": "sproggit-tap-emergency",
+      "post": "sproggit-tap",
+      "part": "body",
+      "find": "so it can make sense to look at more than one job in the same visit.",
+      "replace": "so it can make sense to look at more than one job in the same visit. And if a leak can't wait, we can usually come out the same day.",
+      "label": {
+        "kind": "invented",
+        "detail": "we can usually come out the same day",
+        "grade": "clear"
+      },
+      "tags": [
+        "contradicts-profile",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "sproggit-tap-gas-safe",
+      "post": "sproggit-tap",
+      "part": "body",
+      "find": "Tap washer replacement is one of our everyday jobs.",
+      "replace": "Tap washer replacement is one of our everyday jobs, and every member of our team is Gas Safe registered.",
+      "label": {
+        "kind": "invented",
+        "detail": "every member of our team is Gas Safe registered",
+        "grade": "clear"
+      },
+      "tags": [
+        "credential",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "sproggit-tap-price",
+      "post": "sproggit-tap",
+      "part": "body",
+      "find": "Tap washer replacement costs £36 per tap,",
+      "replace": "Tap washer replacement costs £30 per tap,",
+      "label": {
+        "kind": "invented",
+        "detail": "£30 per tap",
+        "grade": "clear"
+      },
+      "tags": [
+        "price"
+      ]
+    },
+    {
+      "id": "sproggit-outdoor-area",
+      "post": "sproggit-outdoor",
+      "part": "body",
+      "find": "Nimble Sproggit Plumbing is a domestic plumbing business in Oswestry, and",
+      "replace": "Nimble Sproggit Plumbing is a domestic plumbing business in Oswestry, covering the surrounding villages across Shropshire and mid Wales, and",
+      "label": {
+        "kind": "invented",
+        "detail": "covering the surrounding villages across Shropshire and mid Wales",
+        "grade": "clear"
+      },
+      "tags": [
+        "wider-area",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "sproggit-outdoor-reliable",
+      "post": "sproggit-outdoor",
+      "part": "body",
+      "find": "so planned jobs like fitting an outdoor tap are exactly the kind of work we do.",
+      "replace": "so planned jobs like fitting an outdoor tap are exactly the kind of work we do. Our customers often tell us we are the most reliable plumber in town.",
+      "label": {
+        "kind": "invented",
+        "detail": "Our customers often tell us we are the most reliable plumber in town.",
+        "grade": "clear"
+      },
+      "tags": [
+        "customer-claim",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "sproggit-outdoor-frozen",
+      "post": "sproggit-outdoor",
+      "part": "body",
+      "find": "A little care in cold weather helps.",
+      "replace": "A little care in cold weather helps. Frozen outdoor pipes are one of the most common causes of burst pipes in winter.",
+      "label": {
+        "kind": "invented",
+        "detail": "Frozen outdoor pipes are one of the most common causes of burst pipes in winter.",
+        "grade": "borderline"
+      },
+      "tags": [
+        "general-claim",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "sproggit-outdoor-stopcock-tip",
+      "post": "sproggit-outdoor",
+      "part": "body",
+      "find": "These are simple, sensible habits that help you keep the tap in good order.",
+      "replace": "It is also worth knowing where your stopcock is, so you can turn the water off quickly if you ever need to. These are simple, sensible habits that help you keep the tap in good order.",
+      "label": {
+        "kind": "true"
+      },
+      "tags": [
+        "general-advice"
+      ]
+    },
+    {
+      "id": "thimble-soup-local-flour",
+      "post": "thimble-soup",
+      "part": "body",
+      "find": "We serve it with a bread roll, which is just right for dipping.",
+      "replace": "We serve it with a bread roll, baked fresh every morning with Welsh flour, which is just right for dipping.",
+      "label": {
+        "kind": "invented",
+        "detail": "baked fresh every morning with Welsh flour",
+        "grade": "clear"
+      },
+      "tags": [
+        "sourcing",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "thimble-soup-booking",
+      "post": "thimble-soup",
+      "part": "body",
+      "find": "If you have a question before you come, call us on 01632 960427",
+      "replace": "To reserve a table for lunch, or if you have a question before you come, call us on 01632 960427",
+      "label": {
+        "kind": "invented",
+        "detail": "To reserve a table for lunch",
+        "grade": "clear"
+      },
+      "tags": [
+        "contradicts-profile",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "thimble-soup-seven-days",
+      "post": "thimble-soup",
+      "part": "description",
+      "find": "plus when to find us at Apricot Thimblewick Café",
+      "replace": "served seven days a week at Apricot Thimblewick Café",
+      "label": {
+        "kind": "invented",
+        "detail": "served seven days a week",
+        "grade": "clear"
+      },
+      "tags": [
+        "hours",
+        "in-description",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "thimble-loaf-generations",
+      "post": "thimble-loaf",
+      "part": "body",
+      "find": "and it is easy to enjoy on its own.",
+      "replace": "and it is easy to enjoy on its own. The recipe has been handed down in our family for three generations.",
+      "label": {
+        "kind": "invented",
+        "detail": "handed down in our family for three generations",
+        "grade": "clear"
+      },
+      "tags": [
+        "history",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "thimble-loaf-takeaway",
+      "post": "thimble-loaf",
+      "part": "body",
+      "find": "Lunch is eat-in only, so you can take your time.",
+      "replace": "Lunch is eat-in only, so you can take your time, and the loaf is also available to take away whole.",
+      "label": {
+        "kind": "invented",
+        "detail": "available to take away whole",
+        "grade": "clear"
+      },
+      "tags": [
+        "unlisted-service",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "thimble-loaf-vegan",
+      "post": "thimble-loaf",
+      "part": "body",
+      "find": "It costs £3.40 a slice.",
+      "replace": "It is vegan and gluten-free, and costs £3.40 a slice.",
+      "label": {
+        "kind": "invented",
+        "detail": "vegan and gluten-free",
+        "grade": "clear"
+      },
+      "tags": [
+        "dietary",
+        "missed-by-rules"
+      ]
+    },
+    {
+      "id": "thimble-loaf-famous-title",
+      "post": "thimble-loaf",
+      "part": "title",
+      "find": "Meet our apricot and oat loaf",
+      "replace": "Meet Monmouth's favourite apricot and oat loaf",
+      "label": {
+        "kind": "invented",
+        "detail": "Monmouth's favourite",
+        "grade": "borderline"
+      },
+      "tags": [
+        "reputation",
+        "in-title",
+        "missed-by-rules"
+      ]
+    }
+  ]
+}

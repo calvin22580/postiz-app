@@ -189,7 +189,7 @@ const Examples: FC<{ lesson: LearnedLesson }> = ({ lesson }) => {
             <li key={i} className="flex flex-col gap-[2px]">
               <span className="text-[14px] leading-[1.5]">{exampleText(e)}</span>
               <span className="text-[13px] text-textItemBlur">
-                {[e.platform && (PLATFORMS[e.platform as keyof typeof PLATFORMS]?.label || e.platform), formatDate(e.createdAt)].filter(Boolean).join(' · ')}
+                {[e.platform && (e.platform === 'blog' ? 'Blog post' : PLATFORMS[e.platform as keyof typeof PLATFORMS]?.label || e.platform), formatDate(e.createdAt)].filter(Boolean).join(' · ')}
               </span>
             </li>
           ))}

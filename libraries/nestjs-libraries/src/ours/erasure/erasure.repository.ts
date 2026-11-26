@@ -57,6 +57,7 @@ export class ErasureRepository {
       | 'oursBrandSignal'
       | 'oursBrandMemory'
       | 'oursBrandMemoryRun'
+      | 'oursBlogPost'
     >
   ) {}
 
@@ -192,6 +193,7 @@ export class ErasureRepository {
     await this._ours.model.oursBrandMemoryRun.deleteMany({ where: org });
     await this._ours.model.oursCaptionDraft.deleteMany({ where: org });
     await this._ours.model.oursCaptionWeek.deleteMany({ where: org });
+    await this._ours.model.oursBlogPost.deleteMany({ where: org });
     await this._ours.model.oursBusinessProfile.deleteMany({ where: org });
     await this._ours.model.oursBrandKit.deleteMany({ where: org });
     await this._ours.model.oursSeasonalSettings.deleteMany({ where: org });

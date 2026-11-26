@@ -19,6 +19,7 @@ import {
   PAID_PLANS,
   PlanDefinition,
   pricingDisplay,
+  shownMetrics,
   TRIAL_PLAN_KEY,
   trialDays,
 } from '@gitroom/nestjs-libraries/ours/plans/plans.config';
@@ -131,6 +132,10 @@ export const biggerPlan = (current: PlanDefinition, key: MeteredKey | 'channels'
 
 const metricLabel = (key: MeteredKey) => METRICS.find((m) => m.key === key)!.label;
 
+// "all 5 weeks of posts written", or "the 1 email to your list"
+const usedAll = (limit: number, key: MeteredKey) =>
+  limit === 1 ? `the 1 ${metricLabel(key).replace(/(\w+)s\b/, '$1')}` : `all ${limit} ${metricLabel(key)}`;
+
 // "your Starter plan", or "your free trial"
 const planPhrase = (plan: PlanDefinition) =>
   plan.key === TRIAL_PLAN_KEY ? 'your free trial' : `your ${plan.name} plan`;
@@ -141,11 +146,11 @@ export const limitMessage = (
   resetsOn: Date
 ) => {
   if (plan.key === TRIAL_PLAN_KEY) {
-    return `You’ve used all ${plan.limits[key]} ${metricLabel(key)} included in your free trial. Choose a plan on Plan and usage to keep going.`;
+    return `You’ve used ${usedAll(plan.limits[key], key)} included in your free trial. Choose a plan on Plan and usage to keep going.`;
   }
   const next = biggerPlan(plan, key);
   return [
-    `You’ve used all ${plan.limits[key]} ${metricLabel(key)} included in ${planPhrase(plan)} this month.`,
+    `You’ve used ${usedAll(plan.limits[key], key)} included in ${planPhrase(plan)} this month.`,
     `It resets on ${formatDay(resetsOn)}.`,
     next ? `${next.name} includes ${next.limits[key]} a month: see Plan and usage.` : '',
   ]
@@ -214,6 +219,15 @@ export class PlanService {
     return { metric, period: period.key };
   }
 
+  // How much of a monthly allowance is used, for a screen that shows it
+  // beside the work (the Email screen's "1 of 2 emails this month").
+  async allowance(orgId: string, metric: MeteredKey, now: Date = new Date()) {
+    const { row, plan } = await this.current(orgId, now);
+    const period = allowancePeriod(row, now);
+    const used = await this._planRepository.getUsage(orgId, period.key);
+    return { used: used[metric] || 0, limit: plan.limits[metric], resetsOn: period.resetsOn };
+  }
+
   // Never throws: the caller is usually already handling a failure.
   async giveBack(orgId: string, ticket: UsageTicket | null | undefined) {
     if (!ticket) {
@@ -266,6 +280,7 @@ export class PlanService {
     ]);
     const mode = billingMode();
     const provider = paymentProviderFor(mode);
+    const metrics = shownMetrics();
     return {
       plan: {
         key: plan.key,
@@ -276,7 +291,7 @@ export class PlanService {
         trialEndsAt: row.trialEndsAt ? dayjs(row.trialEndsAt).tz(captionTimezone()).format('YYYY-MM-DD') : null,
       },
       period: { start: period.startDate, resetsOn: period.resetsOn },
-      usage: METRICS.map((m) => ({
+      usage: metrics.map((m) => ({
         key: m.key,
         title: m.title,
         used: used[m.key] || 0,
@@ -290,11 +305,11 @@ export class PlanService {
         summary: p.summary,
         monthlyPence: p.monthlyPence,
         limits: {
-          ...Object.fromEntries(METRICS.map((m) => [m.key, p.limits[m.key]])),
+          ...Object.fromEntries(metrics.map((m) => [m.key, p.limits[m.key]])),
           channels: p.limits.channels,
         },
       })),
-      metrics: METRICS.map((m) => ({ key: m.key, title: m.title })),
+      metrics: metrics.map((m) => ({ key: m.key, title: m.title })),
       pricing: pricingDisplay(),
       billing: {
         mode,
