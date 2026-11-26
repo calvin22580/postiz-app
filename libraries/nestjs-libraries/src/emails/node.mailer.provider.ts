@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { EmailInterface } from '@gitroom/nestjs-libraries/emails/email.interface';
+import { emailPlainText } from '@gitroom/nestjs-libraries/ours/email/plain.text'; // OURS (2026-11-26)
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -33,7 +34,7 @@ export class NodeMailerProvider implements EmailInterface {
       from: `${emailFromName} <${emailFromAddress}>`, // sender address
       to: to, // list of receivers
       subject: subject, // Subject line
-      text: html, // plain text body
+      text: emailPlainText(html), // OURS (2026-11-26): a real plain-text part, not the raw HTML
       html: html, // html body
       ...(headers && { headers }),
     });
