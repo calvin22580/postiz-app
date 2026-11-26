@@ -8,7 +8,7 @@ Design and reasoning: the "Kanosena content engine and brand memory: design" doc
 
 1. **Our code runs the steps; models do one job each.** The engine is a fixed workflow, not an open-ended agent loop. Anthropic's guidance is to start with the simplest tier that works, and to use autonomous agents only for open-ended work. Our steps are known in advance, and the fact check and approval must sit between them.
 2. **Facts come only from the sourced business profile** (and our checked UK dates). Brand memory, results and owner signals change how we choose and phrase. They never add claims.
-3. **Nothing is published without the owner's approval.** No AI step can reach the scheduler. Approval stays in `CaptionService.approve`.
+3. **Nothing is published without the owner's approval.** No AI step can reach the scheduler. Approval stays in `CaptionService.approve` (and `BlogPostService.approve` for blog posts, which only marks the post approved for the owner to copy).
 4. **Every step follows the same shape:**
    - an adapter interface with an Anthropic version and a labelled demo version (like `CaptionWriter`), so the app and tests run with no key;
    - structured JSON output (`output_config.format`);
@@ -31,6 +31,9 @@ Design and reasoning: the "Kanosena content engine and brand memory: design" doc
 | Strategist | Planned (E3) | Opus 5.5 | Profile, brand brief, UK dates, results, recent themes | Week plan (ideas and facts) | `captions.plan` |
 | Writer | Planned (E3) | Sonnet 5.5 | Week plan, brand brief, platform rules | Draft captions | `captions.write` |
 | Memory keeper | Built, off (E4) | `OURS_AI_MEMORY_MODEL` (Haiku 5.5), one structured call | Owner signals since its last run, current lessons | `ours_brand_memory`, only through `MemoryWorkspace`, which checks every change | `memory-update` |
+| Blog writer | Built, off (B1) | `OURS_AI_MODEL` (Opus 5.5) | Profile facts, the owner's news for the month, titles of recent posts, brand brief (E4, when on) | One draft blog post (title, search description, sections) and the facts it used | `blog-post`, and `blog-rewrite` for a rewrite (current post and owner note) |
+| Blog Checker | Built, off (B1) | `OURS_AI_CHECKER_MODEL` (Sonnet 5.5 until the long-post test set decides) | The post, profile facts, the owner's news, brand memory `avoid` and `phrases` lessons (E4, when on) | Pass, small exact edits, or drop, before the blog hard rules | `blog-check` |
+| Blog hard rules | Built, off (B1) | none (code) | Title, search description and body, facts | Keep or drop: the caption hard rules over the whole post, a profile fact must be used, and length and placeholder checks | none |
 
 ## Entry points
 
@@ -40,6 +43,7 @@ Every way a post can start goes through the same steps above and ends waiting fo
 | --- | --- | --- | --- |
 | Weekly posts screen | Live | Week writer, Checker (when on), hard rules | |
 | Rewrite on the review screen | Live (M5) | Rewriter, Checker (when on), hard rules | |
+| Blog post card on the weekly posts screen | Built, off (B1) | Blog writer, Blog Checker (when on), blog hard rules | Only with `OURS_BLOG_POSTS=true`. One post waits for approval at a time. Approved posts are copied to the website by the owner (HTML or plain text); publishing is B2 |
 | Upstream public API, MCP and CLI | Live, limited | None of ours | `assertDirectPostingAllowed` keeps these to upstream drafts; they never reach our review screen |
 | Claude or ChatGPT connector | Planned (E8) | Checker, hard rules; lands as a post waiting for approval | Our own small tool set: read the profile and this week's posts, add a post or idea. No tool can approve, schedule or publish. Exposing profile data through a connector needs a decision first |
 
@@ -60,6 +64,8 @@ Every way a post can start goes through the same steps above and ends waiting fo
 - Brand memory (E4) runs only with `OURS_BRAND_MEMORY=true`. Before a week is written, the keeper runs if there are new signals (Haiku 5.5, one structured call that gets every current lesson and returns the changes; `OURS_MEMORY_KEEPER=memory-tool` swaps in the memory tool version, which the test set compared with it and with a Managed Agents memory store; the labelled demo keeper runs without an AI key). `MemoryWorkspace` refuses paths outside the folders, lessons without real evidence, business details (the caption hard rules plus fact patterns), switched-off lessons and changes to owner lessons; refused changes are dropped (the memory tool version gets them back as tool errors). Accepted changes are saved only when the run ends. If the run fails, writing goes ahead with the lessons as they were. Rewrites read the brief but never run the keeper. The brief is a preference for wording and choice of post, never a source of claims; the Checker and hard rules still check every claim against the profile.
 - The owner sees and controls the lessons on "What we've learned" (E5, `/learned`, `BrandMemoryController`). Edited, switched-back-on and owner-written lessons become `source: owner` and are in use straight away; switched-off and deleted ones keep their row (`offAt`, and `deletedAt` for deleted) so `MemoryWorkspace` refuses them if the keeper tries again. Owner text goes through `lessonProblems` too.
 - The Checker (E2) runs only with `OURS_CAPTION_CHECKER=true`, after the writer and the rewriter. One call checks a whole week. A fixed caption still goes through the hard rules. If the check call fails, the captions go on to the hard rules unchanged and the failure is logged: the hard rules and the owner's approval still apply.
+- `ours_blog_post` (B1): one blog post each, with its status (`WRITING`, `PENDING_APPROVAL`, `APPROVED`, `REJECTED`, `FAILED`), the owner's news for that post (`news`), `title`, `description` (the search description) and `body` (plain text: `## ` headings, `- ` list items, blank lines between paragraphs; turned into HTML only when copied), the facts it used, rewrites used, and the reject reason. The owner's news becomes facts with the field `news` for that post only; a post still has to use a profile fact. Owner actions on a post are recorded as signals with platform `blog`, like captions. A post counts towards the plan's monthly `blogPosts` (Starter 2, Growth 4, Pro 8, trial 1) when writing starts and is given back if writing fails; rewrites count towards `rewrites`, at most 3 a post. Erased with the organisation.
+- The blog Checker (B1) runs only with `OURS_BLOG_CHECKER=true`. It fixes a post with small exact find-and-replace edits rather than writing it out again; an edit that doesn't match exactly once drops the post. If the check call fails, the post goes on to the blog hard rules unchanged. It stays off until the long-post test set (`ours/eval/blog`) shows it meets the caption Checker's bar.
 - `ours_ai_usage`: one row per AI call. `ours/scripts/ai-cost-summary.mjs` prints cost per step.
 
 ## Adding or changing a step

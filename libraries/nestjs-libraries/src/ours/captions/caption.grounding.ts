@@ -68,7 +68,7 @@ const lower = (s: string) => s.toLowerCase();
 const trimPunctuation = (s: string) => s.replace(/[.,;:!?)\]}'"’]+$/, '');
 
 // Every specific detail in the text that the facts do not support.
-export const unsupportedDetails = (text: string, facts: CaptionFact[]) => {
+export const unsupportedDetails = (text: string, facts: Pick<CaptionFact, 'value'>[]) => {
   const factText = lower(facts.map((f) => f.value).join('\n'));
   const factNumbers = new Set(
     (factText.match(NUMBER) || []).map(digitsOf).filter(Boolean)

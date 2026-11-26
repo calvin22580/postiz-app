@@ -3,7 +3,8 @@
 import useSWR from 'swr';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 
-export type MetricKey = 'captionWeeks' | 'postsScheduled' | 'rewrites' | 'profileBuilds';
+// blogPosts: only sent while blog posts are switched on (B1)
+export type MetricKey = 'captionWeeks' | 'postsScheduled' | 'rewrites' | 'profileBuilds' | 'blogPosts';
 
 export interface PlanCard {
   key: string;
@@ -11,7 +12,7 @@ export interface PlanCard {
   summary: string;
   // per month in pence, before VAT; null for the free trial
   monthlyPence: number | null;
-  limits: Record<MetricKey | 'channels', number>;
+  limits: Partial<Record<MetricKey, number>> & Record<'channels', number>;
 }
 
 export interface PlanOverview {

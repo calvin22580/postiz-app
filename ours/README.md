@@ -246,6 +246,45 @@ Filters show all, waiting, approved or rejected posts. An approved post no
 longer changes here (it is an upstream post by then). Approval is still
 Sandbox-only: see ARCHITECTURE.md "Approval before scheduling".
 
+## Blog posts (B1, off by default)
+
+With `OURS_BLOG_POSTS=true`, the weekly posts screen gets a card for a blog
+post for the owner's website. Code: `libraries/nestjs-libraries/src/ours/blog/`,
+`apps/backend/src/ours/blog.posts.controller.ts`, `apps/frontend/src/ours/blog/`.
+
+1. **Ask**: "Anything new to tell customers this month?" (optional, up to 600
+   characters). The answer is used for that post only, as facts with the
+   field `news`, and is offered again for the next post that month.
+2. **Write**: one post with a title (up to about 70 characters), a search
+   description (110 to 155 characters) and about 500 to 800 words in headed
+   sections, from the profile facts and the owner's news only. General
+   common-sense advice is allowed; laws, regulations, statistics, prices or
+   claims that aren't in the facts are not. Without `ANTHROPIC_API_KEY` a
+   template writer runs and the card says "Demo".
+3. **Check**: the Blog Checker (with `OURS_BLOG_CHECKER=true`), then the
+   caption hard rules over the title, description and body, plus length and
+   bracket-placeholder checks. A post that fails is not shown, and the
+   allowance is given back.
+4. **Approve**: the owner approves, edits, rewrites (up to 3 times a post,
+   counted as rewrites) or rejects with a one-tap reason. Approving only marks
+   the post ready: the card then offers "Copy post" (formatted, for website
+   editors), "Copy as HTML", "Copy as plain text", and the title and search
+   description separately. Nothing is published (WordPress publishing is B2).
+
+One post waits for approval at a time. Posts count towards the plan's
+monthly blog posts (Starter 2, Growth 4, Pro 8, trial 1) when writing starts;
+the plans page lists them only while the feature is on. Costs are logged
+under `blog-post`, `blog-rewrite` and `blog-check`. API: `GET /ours/blog-posts`,
+`POST /ours/blog-posts/write`, `POST /ours/blog-posts/:id/approve`,
+`PUT /ours/blog-posts/:id/words`, `POST /ours/blog-posts/:id/reject`,
+`PUT /ours/blog-posts/:id/reject-reason`, `POST /ours/blog-posts/:id/restore`,
+`POST /ours/blog-posts/:id/rewrite`. Browser test: `ours/e2e/tests/blog.spec.ts`.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `OURS_BLOG_POSTS` | off | `true` turns blog posts on (card, API and plan line). |
+| `OURS_BLOG_CHECKER` | off | `true` runs the Blog Checker. Leave off until the long-post test set (`ours/eval/blog`) passes. |
+
 ## Post graphics
 
 Every weekly post gets a graphic in the business's own colour and logo.

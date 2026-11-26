@@ -38,6 +38,35 @@ The run prints, and writes to `runs/<time>-<set>/summary.md`:
 
 Per-caption rows (verdict, claims, fixed text) are in `runs/<time>-<set>/<model>.results.jsonl`. Paid runs spend from the Anthropic budget: run a `--limit 10` pilot first and check its cost.
 
+## The Blog Checker (B1)
+
+`blog/sets/long/cases.json` is the long-post test set. It holds the three
+fictional persona businesses' profile facts, six blog posts (about 300 to 400
+words each) in which every claim is in the profile, and 20 `plants`: one change
+each to a post (`find` must appear exactly once in its `part`, title,
+description or body). 16 plant a clear mistake, 2 a borderline one (scored
+separately) and 2 add general advice that must be kept. Mistakes cover an
+unlisted service, invented experience, a regulation, new hours, same-day
+call-outs the profile rules out, a credential, a wrong price, a wider area,
+customer praise, sourcing, bookings, takeaway, dietary claims, family history
+and reputation words in the title. `detail` is the planted text a fix has to
+remove.
+
+```
+ours/eval/blog/run.sh --set long --models demo
+ANTHROPIC_API_KEY=… ours/eval/blog/run.sh --set long --models claude-sonnet-5-5 --reps 2
+```
+
+Each post is one Checker call, as in the app. The run prints and writes
+`runs/<time>-long/summary.md`: clear mistakes caught, true posts kept,
+borderline flagged, and **fixes usable** (every edit applied, the fixed post
+passes the hard rules, and the planted text is gone). The hard rules alone
+catch 3 of the 16 clear mistakes (a price, a statistic, "gluten-free") and
+keep every true post. One run on Sonnet 5.5 is 26 calls, roughly $0.40.
+The Checker ships when it catches at least 95% of clear mistakes and keeps
+at least 95% of true posts, the caption bar. Posts written by the app's blog
+writer should be added as more true cases once there are some.
+
 ## The Memory keeper (E4)
 
 `ours/eval/memory/run.sh` runs the Memory keeper over scripted owner histories and scores what it learned. Each business in `sets/personas/history.json` has four weeks of owner actions (E1 signals) with planted habits (removes exclamation marks, rejects salesy posts, says "pop in"), and traps:

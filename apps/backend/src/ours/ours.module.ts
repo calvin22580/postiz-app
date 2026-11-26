@@ -35,6 +35,9 @@ import { BrandSignalRepository } from '@gitroom/nestjs-libraries/ours/memory/bra
 import { BrandMemoryService } from '@gitroom/nestjs-libraries/ours/memory/brand.memory.service';
 import { BrandMemoryRepository } from '@gitroom/nestjs-libraries/ours/memory/brand.memory.repository';
 import { ErasureInterceptor } from '@gitroom/backend/ours/erasure.interceptor';
+import { BlogPostsController } from '@gitroom/backend/ours/blog.posts.controller';
+import { BlogPostService } from '@gitroom/nestjs-libraries/ours/blog/blog.post.service';
+import { BlogPostRepository } from '@gitroom/nestjs-libraries/ours/blog/blog.post.repository';
 
 const authenticatedController = [
   BusinessProfileController,
@@ -44,6 +47,7 @@ const authenticatedController = [
   SeasonalController,
   PlanController,
   PerformanceController,
+  BlogPostsController,
 ];
 
 // No sign-in: callers prove who they are another way (Stripe signs its
@@ -75,6 +79,8 @@ const publicController = [StripeWebhookController];
     BrandSignalRepository,
     BrandMemoryService,
     BrandMemoryRepository,
+    BlogPostService,
+    BlogPostRepository,
     // Milestone 7: our plan's channel limit on upstream's "add a channel"
     // routes (global, so upstream's modules need no change)
     {

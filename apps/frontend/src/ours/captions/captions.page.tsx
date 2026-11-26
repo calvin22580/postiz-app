@@ -24,6 +24,7 @@ import { BrandKitPanel } from '@gitroom/frontend/ours/graphics/brand.kit.panel';
 import { UkDatesPanel } from '@gitroom/frontend/ours/seasonal/uk.dates.panel';
 import { PlanMessage } from '@gitroom/frontend/ours/plans/plan.message';
 import { useBrandMemory } from '@gitroom/frontend/ours/memory/memory.hooks';
+import { BlogPostsPanel } from '@gitroom/frontend/ours/blog/blog.card';
 import {
   CaptionCard,
   PLATFORMS,
@@ -533,6 +534,9 @@ export const CaptionsPage: FC = () => {
           <Notice>{week.errorMessage || 'Something went wrong while writing your posts.'}</Notice>
         </div>
       )}
+
+      {/* B1: a blog post for the website, monthly; shown only when switched on */}
+      <BlogPostsPanel />
 
       {week?.status === 'WRITING' && (
         <div

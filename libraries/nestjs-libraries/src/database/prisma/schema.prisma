@@ -2160,3 +2160,48 @@ model OursBrandMemoryRun {
   @@index([organizationId, createdAt])
   @@map("ours_brand_memory_run")
 }
+
+// Blog posts B1 (26/11/2026): a blog post for the business's own website,
+// written from the business profile (and the owner's answer to "Anything new
+// to tell customers?"), waiting for the owner's approval. In B1 the owner
+// copies an approved post into their site; nothing is published from here.
+// Off unless OURS_BLOG_POSTS=true. Erased with the organisation.
+enum OursBlogPostStatus {
+  WRITING
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  FAILED
+}
+
+model OursBlogPost {
+  id             String             @id @default(uuid())
+  organizationId String
+  status         OursBlogPostStatus @default(WRITING)
+  // the owner's answer to "Anything new to tell customers?", in their own
+  // words (optional); used as facts for this post only
+  news           String?
+  title          String             @default("")
+  // the short summary search engines show under the title
+  description    String             @default("")
+  // the post: paragraphs separated by a blank line, "## " headings and
+  // "- " list items (ours/blog/blog.text.ts turns it into HTML)
+  body           String             @default("")
+  facts          Json               @default("[]")
+  // anthropic | demo
+  writer         String?
+  errorMessage   String?
+  // set when the owner changed the words themselves
+  editedAt       DateTime?
+  rewriteCount   Int                @default(0)
+  approvedAt     DateTime?
+  rejectedAt     DateTime?
+  // the owner's optional reason for rejecting (REJECT_REASONS in ours/memory/brand.signal.ts)
+  rejectReason   String?
+  startedAt      DateTime           @default(now())
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([organizationId, startedAt])
+  @@map("ours_blog_post")
+}
