@@ -49,12 +49,14 @@ const included: Record<MetricKey | 'channels' | 'contacts', (n: number) => strin
   profileBuilds: (n) => `${n} website ${n === 1 ? 'read' : 'reads'} a month to refresh your profile`,
   channels: (n) => `Up to ${n} connected channels`,
   contacts: (n) => `Up to ${n} people on your email list`,
+  emails: (n) => `${n} ${n === 1 ? 'email' : 'emails'} to your list a month`,
 };
 const INCLUDED_ORDER: (MetricKey | 'channels' | 'contacts')[] = [
   'postsScheduled',
   'captionWeeks',
   'channels',
   'contacts',
+  'emails',
   'rewrites',
   'profileBuilds',
 ];
@@ -287,12 +289,12 @@ const PlanOption: FC<{
       </div>
       {card.monthlyPence !== null && <Price pence={card.monthlyPence} pricing={data.pricing} />}
       <ul className="flex flex-col gap-[6px] text-[14px] leading-[1.5]">
-        {INCLUDED_ORDER.map((k) => (
+        {INCLUDED_ORDER.filter((k) => card.limits[k] !== undefined).map((k) => (
           <li key={k} className="flex gap-[8px]">
             <span aria-hidden="true" className="text-textItemBlur">
               ·
             </span>
-            <span>{included[k](card.limits[k])}</span>
+            <span>{included[k](card.limits[k]!)}</span>
           </li>
         ))}
       </ul>

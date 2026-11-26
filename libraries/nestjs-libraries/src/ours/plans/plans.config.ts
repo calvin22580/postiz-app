@@ -6,6 +6,7 @@
 //
 // Allowances reset each month on the customer's billing date: the day their
 // paid plan started (plan.service.ts usagePeriod).
+import { emailSenderName } from '@gitroom/nestjs-libraries/ours/email/senders/email.sender';
 
 // What we count each month. Labels are written to finish the sentence
 // "You've used all 5 …" and to sit under a meter on the plan screen.
@@ -30,12 +31,24 @@ export const METRICS = [
     label: 'website reads',
     title: 'Website reads for your profile',
   },
+  // email campaigns EM3: approved emails to the list (tests don't count)
+  {
+    key: 'emails',
+    label: 'emails to your list',
+    title: 'Emails to your list',
+  },
 ] as const;
 
 export type MeteredKey = (typeof METRICS)[number]['key'];
 
 // metrics that make an AI call, so they also count towards the fair-use cap
 export const AI_METRICS: MeteredKey[] = ['captionWeeks', 'rewrites', 'profileBuilds'];
+
+// Allowances that depend on a feature that may be switched off: emails are
+// only shown once sending is on (OURS_EMAIL_SENDER), so nobody is offered
+// something they can't use yet.
+export const shownMetrics = (env: NodeJS.ProcessEnv = process.env) =>
+  METRICS.filter((m) => m.key !== 'emails' || emailSenderName(env) !== 'off');
 
 export interface PlanLimits extends Record<MeteredKey, number> {
   // connected channels at any one time (not monthly)
@@ -79,6 +92,7 @@ export const PAID_PLANS: PlanDefinition[] = [
       profileBuilds: 3,
       channels: 2,
       platforms: 1,
+      emails: 2,
       contacts: 500,
       aiSpendUsd: 8,
     },
@@ -96,6 +110,7 @@ export const PAID_PLANS: PlanDefinition[] = [
       profileBuilds: 4,
       channels: 4,
       platforms: 2,
+      emails: 4,
       contacts: 2000,
       aiSpendUsd: 15,
     },
@@ -113,6 +128,7 @@ export const PAID_PLANS: PlanDefinition[] = [
       profileBuilds: 10,
       channels: 8,
       platforms: 3,
+      emails: 8,
       contacts: 5000,
       aiSpendUsd: 30,
     },
@@ -134,6 +150,7 @@ export const TRIAL_PLAN: PlanDefinition = {
     profileBuilds: 3,
     channels: 3,
     platforms: 3,
+    emails: 1,
     contacts: 100,
     aiSpendUsd: 3,
   },

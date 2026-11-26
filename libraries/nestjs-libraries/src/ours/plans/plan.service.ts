@@ -19,6 +19,7 @@ import {
   PAID_PLANS,
   PlanDefinition,
   pricingDisplay,
+  shownMetrics,
   TRIAL_PLAN_KEY,
   trialDays,
 } from '@gitroom/nestjs-libraries/ours/plans/plans.config';
@@ -131,6 +132,10 @@ export const biggerPlan = (current: PlanDefinition, key: MeteredKey | 'channels'
 
 const metricLabel = (key: MeteredKey) => METRICS.find((m) => m.key === key)!.label;
 
+// "all 5 weeks of posts written", or "the 1 email to your list"
+const usedAll = (limit: number, key: MeteredKey) =>
+  limit === 1 ? `the 1 ${metricLabel(key).replace(/(\w+)s\b/, '$1')}` : `all ${limit} ${metricLabel(key)}`;
+
 // "your Starter plan", or "your free trial"
 const planPhrase = (plan: PlanDefinition) =>
   plan.key === TRIAL_PLAN_KEY ? 'your free trial' : `your ${plan.name} plan`;
@@ -141,11 +146,11 @@ export const limitMessage = (
   resetsOn: Date
 ) => {
   if (plan.key === TRIAL_PLAN_KEY) {
-    return `You’ve used all ${plan.limits[key]} ${metricLabel(key)} included in your free trial. Choose a plan on Plan and usage to keep going.`;
+    return `You’ve used ${usedAll(plan.limits[key], key)} included in your free trial. Choose a plan on Plan and usage to keep going.`;
   }
   const next = biggerPlan(plan, key);
   return [
-    `You’ve used all ${plan.limits[key]} ${metricLabel(key)} included in ${planPhrase(plan)} this month.`,
+    `You’ve used ${usedAll(plan.limits[key], key)} included in ${planPhrase(plan)} this month.`,
     `It resets on ${formatDay(resetsOn)}.`,
     next ? `${next.name} includes ${next.limits[key]} a month: see Plan and usage.` : '',
   ]
@@ -212,16 +217,30 @@ export class PlanService {
     this.assertUsable(row, status);
     const period = allowancePeriod(row, now);
     if (AI_METRICS.includes(metric)) {
-      const spent = await this._planRepository.aiSpendUsd(orgId, period.spendFrom, now);
-      if (spent >= plan.limits.aiSpendUsd) {
-        this._logger.warn(`Fair-use AI limit reached for org=${orgId}: ${spent} USD`);
-        throw new HttpException(fairUseMessage(plan, period.end), PLAN_LIMIT_STATUS);
-      }
+      await this.assertFairUse(orgId, plan, period, now);
     }
     if (!(await this._planRepository.claim(orgId, period.key, metric, plan.limits[metric]))) {
       throw new HttpException(limitMessage(plan, metric, period.end), PLAN_LIMIT_STATUS);
     }
     return { metric, period: period.key };
+  }
+
+  // AI writing that isn't counted as a unit of its own (an email campaign
+  // draft, EM3, which counts when approved): only checks the plan is usable
+  // and the fair-use cap isn't reached.
+  async assertCanWrite(orgId: string, now: Date = new Date()) {
+    const { row, plan, status } = await this.current(orgId, now);
+    this.assertUsable(row, status);
+    await this.assertFairUse(orgId, plan, allowancePeriod(row, now), now);
+  }
+
+  // How much of a monthly allowance is used, for a screen that shows it
+  // beside the work (the Email screen's "1 of 2 emails this month").
+  async allowance(orgId: string, metric: MeteredKey, now: Date = new Date()) {
+    const { row, plan } = await this.current(orgId, now);
+    const period = allowancePeriod(row, now);
+    const used = await this._planRepository.getUsage(orgId, period.key);
+    return { used: used[metric] || 0, limit: plan.limits[metric], resetsOn: period.resetsOn };
   }
 
   // Never throws: the caller is usually already handling a failure.
@@ -291,6 +310,7 @@ export class PlanService {
     ]);
     const mode = billingMode();
     const provider = paymentProviderFor(mode);
+    const metrics = shownMetrics();
     return {
       plan: {
         key: plan.key,
@@ -301,7 +321,7 @@ export class PlanService {
         trialEndsAt: row.trialEndsAt ? dayjs(row.trialEndsAt).tz(captionTimezone()).format('YYYY-MM-DD') : null,
       },
       period: { start: period.startDate, resetsOn: period.resetsOn },
-      usage: METRICS.map((m) => ({
+      usage: metrics.map((m) => ({
         key: m.key,
         title: m.title,
         used: used[m.key] || 0,
@@ -316,12 +336,12 @@ export class PlanService {
         summary: p.summary,
         monthlyPence: p.monthlyPence,
         limits: {
-          ...Object.fromEntries(METRICS.map((m) => [m.key, p.limits[m.key]])),
+          ...Object.fromEntries(metrics.map((m) => [m.key, p.limits[m.key]])),
           channels: p.limits.channels,
           contacts: p.limits.contacts,
         },
       })),
-      metrics: METRICS.map((m) => ({ key: m.key, title: m.title })),
+      metrics: metrics.map((m) => ({ key: m.key, title: m.title })),
       pricing: pricingDisplay(),
       billing: {
         mode,
@@ -443,6 +463,19 @@ export class PlanService {
       keepsBillingDate(row, providerName, externalId) ? undefined : update.billingAnchor || new Date()
     );
     this._logger.log(`org=${orgId} is on ${plan.key} (${providerName} ${externalId})`);
+  }
+
+  private async assertFairUse(
+    orgId: string,
+    plan: PlanDefinition,
+    period: { spendFrom: Date; end: Date },
+    now: Date
+  ) {
+    const spent = await this._planRepository.aiSpendUsd(orgId, period.spendFrom, now);
+    if (spent >= plan.limits.aiSpendUsd) {
+      this._logger.warn(`Fair-use AI limit reached for org=${orgId}: ${spent} USD`);
+      throw new HttpException(fairUseMessage(plan, period.end), PLAN_LIMIT_STATUS);
+    }
   }
 
   private assertUsable(row: { trialEndsAt: Date | null }, status: PlanStatus) {

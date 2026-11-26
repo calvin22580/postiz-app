@@ -32,4 +32,12 @@ export class AiUsageRepository {
     });
     return { id };
   }
+
+  // calls for one feature since a time (a daily cap counts billed calls,
+  // including ones whose answer wasn't kept)
+  countCalls(orgId: string, feature: string, since: Date) {
+    return this._aiUsage.model.oursAiUsage.count({
+      where: { organizationId: orgId, feature, createdAt: { gte: since } },
+    });
+  }
 }

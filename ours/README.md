@@ -510,7 +510,7 @@ Code: `libraries/nestjs-libraries/src/ours/email/`, `apps/backend/src/ours/email
 |---|---|---|
 | `OURS_EMAIL_TOKEN_SECRET` | `JWT_SECRET` | Signs unsubscribe links. Set it once in production and never change it. |
 
-Browser test: `email-list.spec.ts` (reads the signing secret from the repo's `.env`, or `OURS_EMAIL_TOKEN_SECRET` / `JWT_SECRET`). Its second test needs the stack started with `OURS_EMAIL_SENDER=simulated` and skips itself otherwise.
+Browser test: `email-list.spec.ts` (reads the signing secret from the repo's `.env`, or `OURS_EMAIL_TOKEN_SECRET` / `JWT_SECRET`). Its second and third tests need the stack started with `OURS_EMAIL_SENDER=simulated` and skip themselves otherwise.
 
 ### Sending (email campaigns EM2)
 
@@ -524,6 +524,7 @@ EU Region, which is fine for UK GDPR.
   button confirms), and approved campaigns that are due. Until EM3 adds
   campaigns, the only campaign is the owner's own test ("Send me a test
   email" on the Email screen, 5 an hour), which goes to their sign-in address.
+  Since EM3, list emails the owner approved (below).
 - **Send loop**: `EmailCampaignService`, inside the backend, every minute
   (like the erasure sweep; no Temporal workflow). A campaign is leased for two
   minutes at a time, so two backends never send the same one. Its recipients
@@ -564,6 +565,37 @@ EU Region, which is fine for UK GDPR.
 | `OURS_EMAIL_LIVE_TO` | none | Only for the live SES test (`ses.live.spec.ts`): the verified address it sends one test email to. |
 | `OURS_EMAIL_SEND_PER_SECOND` | 1 | Messages a second (SES's sandbox allows 1). |
 | `OURS_EMAIL_TENANT_PREFIX` | `kanosena` | Start of each business's SES tenant and configuration set name. Don't change it once businesses have sent. |
+
+### List emails (email campaigns EM3)
+
+Shown on the Email screen ("Your emails") only while sending is on
+(`OURS_EMAIL_SENDER` is `simulated` or `ses`); with it off, nothing can be
+written or approved and the Plan screen doesn't show the email allowance.
+
+- **Writing**: "Write this week's email" makes one AI call (Email writer,
+  cost features `email.write` and `email.rewrite`, logged per organisation)
+  from the business profile facts, UK dates on or after the suggested send
+  day, and the subjects of recent emails. Without `ANTHROPIC_API_KEY` a demo
+  writer fills fixed templates from the profile, and the email is labelled as
+  a demo. `groundEmail` (`email.grounding.ts`) runs the same hard rules as
+  posts on the subject, preview line and body: numbers, prices, links, emails,
+  handles and claim words must be in the profile, it must rely on a profile
+  fact, and mail-merge placeholders are dropped. An email that fails is never
+  saved. 5 new emails a day per business, 5 AI rewrites per email, and the
+  fair-use AI cap applies.
+- **Reviewing**: the owner can edit the words (kept, with anything not in the
+  profile pointed out), ask for a new version (with an optional note), reject
+  it, or approve it for a date and time (suggested: next Tuesday 10:00 UK time;
+  at least 10 minutes and at most 60 days ahead). Each action is an owner
+  signal in `ours_brand_signal` with `platform` `email`.
+- **Approval** (`EmailCampaignService.approve`, the only way a list email is
+  scheduled) takes one unit of the plan's monthly `emails` allowance (Starter
+  2, Growth 4, Pro 8, trial 1) and needs at least one subscribed person. The
+  send loop above sends it at that time to everyone subscribed then. "Don't
+  send" on a scheduled email cancels it and gives the allowance back, unless
+  the send loop has already started it. An email that reached nobody because
+  SES paused the business also gives it back. An email that mentions a UK
+  date can't be approved for after that date.
 
 ## Content engine (owner signals and AI cost)
 

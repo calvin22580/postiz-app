@@ -5,7 +5,7 @@
 // signature is the proof; every write after those uses the row's own
 // organisation.
 import { Injectable } from '@nestjs/common';
-import { OursEmailDeliveryStatus, Prisma } from '@prisma/client';
+import { OursEmailCampaignStatus, OursEmailDeliveryStatus, Prisma } from '@prisma/client';
 import { PrismaRepository } from '@gitroom/nestjs-libraries/database/prisma/prisma.service';
 
 const campaignSelect = {
@@ -17,7 +17,13 @@ const campaignSelect = {
   subject: true,
   previewText: true,
   body: true,
+  writer: true,
+  facts: true,
+  rewriteCount: true,
+  editedAt: true,
+  allowancePeriod: true,
   scheduledAt: true,
+  approvedAt: true,
   startedAt: true,
   finishedAt: true,
   sentWith: true,
@@ -28,6 +34,15 @@ const campaignSelect = {
 } satisfies Prisma.OursEmailCampaignSelect;
 
 export type CampaignRow = Prisma.OursEmailCampaignGetPayload<{ select: typeof campaignSelect }>;
+
+export interface CampaignContent {
+  subject: string;
+  previewText: string;
+  body: string;
+}
+
+// what the screen lists after the drafts and scheduled emails
+const FINISHED: OursEmailCampaignStatus[] = ['SENT', 'FAILED', 'REJECTED', 'CANCELLED'];
 
 @Injectable()
 export class EmailCampaignRepository {
@@ -54,6 +69,119 @@ export class EmailCampaignRepository {
       },
       select: campaignSelect,
     });
+  }
+
+  // EM3: an email written for the owner to approve.
+  createDraft(orgId: string, data: CampaignContent & { writer: string; facts: Prisma.InputJsonValue }) {
+    return this._campaign.model.oursEmailCampaign.create({
+      data: { organizationId: orgId, status: 'WAITING', ...data },
+      select: campaignSelect,
+    });
+  }
+
+  // The business's list emails (never tests): waiting, scheduled or being
+  // sent, then the latest finished ones.
+  async listCampaigns(orgId: string, finished: number) {
+    const [open, done] = await Promise.all([
+      this._campaign.model.oursEmailCampaign.findMany({
+        where: { organizationId: orgId, test: false, status: { in: ['WAITING', 'APPROVED', 'SENDING'] } },
+        orderBy: { createdAt: 'asc' },
+        select: campaignSelect,
+      }),
+      this._campaign.model.oursEmailCampaign.findMany({
+        where: { organizationId: orgId, test: false, status: { in: FINISHED } },
+        orderBy: { updatedAt: 'desc' },
+        take: finished,
+        select: campaignSelect,
+      }),
+    ]);
+    return [...open, ...done];
+  }
+
+  // subjects of emails the owner approved lately, so the next one differs
+  async recentSubjects(orgId: string, take: number) {
+    const rows = await this._campaign.model.oursEmailCampaign.findMany({
+      where: { organizationId: orgId, test: false, status: { in: ['APPROVED', 'SENDING', 'SENT'] } },
+      orderBy: { createdAt: 'desc' },
+      take,
+      select: { subject: true },
+    });
+    return rows.map((r) => r.subject);
+  }
+
+  // emails written since, to cap how many AI drafts a day
+  countWrittenSince(orgId: string, since: Date) {
+    return this._campaign.model.oursEmailCampaign.count({
+      where: { organizationId: orgId, test: false, createdAt: { gte: since } },
+    });
+  }
+
+  // The owner's own words, only while it waits for approval.
+  async editDraft(orgId: string, id: string, content: CampaignContent) {
+    const { count } = await this._campaign.model.oursEmailCampaign.updateMany({
+      where: { id, organizationId: orgId, test: false, status: 'WAITING' },
+      data: { ...content, editedAt: new Date() },
+    });
+    return count === 1;
+  }
+
+  // One AI rewrite, up to `max` for this email.
+  async claimRewrite(orgId: string, id: string, max: number) {
+    const { count } = await this._campaign.model.oursEmailCampaign.updateMany({
+      where: { id, organizationId: orgId, test: false, status: 'WAITING', rewriteCount: { lt: max } },
+      data: { rewriteCount: { increment: 1 } },
+    });
+    return count === 1;
+  }
+
+  giveBackRewrite(orgId: string, id: string) {
+    return this._campaign.model.oursEmailCampaign.updateMany({
+      where: { id, organizationId: orgId, rewriteCount: { gt: 0 } },
+      data: { rewriteCount: { decrement: 1 } },
+    });
+  }
+
+  // A new version replaces the words; the owner's earlier edit no longer
+  // applies to them.
+  async saveRewrite(orgId: string, id: string, data: CampaignContent & { facts: Prisma.InputJsonValue }) {
+    const { count } = await this._campaign.model.oursEmailCampaign.updateMany({
+      where: { id, organizationId: orgId, test: false, status: 'WAITING' },
+      data: { ...data, editedAt: null },
+    });
+    return count === 1;
+  }
+
+  async reject(orgId: string, id: string) {
+    const { count } = await this._campaign.model.oursEmailCampaign.updateMany({
+      where: { id, organizationId: orgId, test: false, status: 'WAITING' },
+      data: { status: 'REJECTED' },
+    });
+    return count === 1;
+  }
+
+  // The only way a list email becomes due (EmailCampaignService.approve).
+  async approve(orgId: string, id: string, data: { scheduledAt: Date; userId: string; allowancePeriod: string }) {
+    const { count } = await this._campaign.model.oursEmailCampaign.updateMany({
+      where: { id, organizationId: orgId, test: false, status: 'WAITING' },
+      data: { status: 'APPROVED', approvedAt: new Date(), approvedBy: data.userId, scheduledAt: data.scheduledAt, allowancePeriod: data.allowancePeriod },
+    });
+    return count === 1;
+  }
+
+  // Stops a scheduled email, only while the send loop doesn't hold it, so a
+  // send that has started is never cut off half way.
+  async cancel(orgId: string, id: string, now: Date) {
+    const { count } = await this._campaign.model.oursEmailCampaign.updateMany({
+      where: {
+        id,
+        organizationId: orgId,
+        test: false,
+        status: 'APPROVED',
+        OR: [{ leaseUntil: null }, { leaseUntil: { lt: now } }],
+      },
+      data: { status: 'CANCELLED', scheduledAt: null },
+    });
+    return count === 1;
   }
 
   latestTest(orgId: string) {
@@ -110,6 +238,15 @@ export class EmailCampaignRepository {
     return count === 1;
   }
 
+  // Lets go of a campaign that hasn't started sending (its sender couldn't be
+  // set up), so the owner can still stop it before the next try.
+  releaseLease(orgId: string, id: string, owner: string) {
+    return this._campaign.model.oursEmailCampaign.updateMany({
+      where: { id, organizationId: orgId, leaseOwner: owner, status: 'APPROVED' },
+      data: { leaseUntil: null, leaseOwner: null },
+    });
+  }
+
   getCampaign(orgId: string, id: string) {
     return this._campaign.model.oursEmailCampaign.findFirst({
       where: { id, organizationId: orgId },
@@ -133,6 +270,11 @@ export class EmailCampaignRepository {
       where: { id, organizationId: orgId },
       data: { status: 'SENDING', startedAt: new Date(), sentWith, recipients: total },
     });
+  }
+
+  // how many people a list email would go to now
+  countSubscribed(orgId: string) {
+    return this._contact.model.oursEmailContact.count({ where: { organizationId: orgId, status: 'SUBSCRIBED' } });
   }
 
   // Everyone on the list who may be emailed now.
@@ -179,7 +321,7 @@ export class EmailCampaignRepository {
   // the sender paused this business. Only by the process holding the lease.
   async finishCampaign(orgId: string, id: string, owner: string, paused = false) {
     if (!(await this._campaign.model.oursEmailCampaign.count({ where: { id, organizationId: orgId, leaseOwner: owner } }))) {
-      return;
+      return null;
     }
     // anything left mid-send by a stopped backend may or may not have gone
     await this._delivery.model.oursEmailDelivery.updateMany({
@@ -195,10 +337,11 @@ export class EmailCampaignRepository {
       rows.filter((r) => statuses.includes(r.status)).reduce((n, r) => n + r._count._all, 0);
     const sent = count(['SENT', 'SIMULATED', 'DELIVERED', 'BOUNCED', 'COMPLAINED']);
     const failed = count(['FAILED']);
+    const status: OursEmailCampaignStatus = paused || (sent === 0 && failed > 0) ? 'FAILED' : 'SENT';
     await this._campaign.model.oursEmailCampaign.updateMany({
       where: { id, organizationId: orgId, leaseOwner: owner },
       data: {
-        status: paused || (sent === 0 && failed > 0) ? 'FAILED' : 'SENT',
+        status,
         finishedAt: new Date(),
         leaseUntil: null,
         leaseOwner: null,
@@ -206,6 +349,7 @@ export class EmailCampaignRepository {
         failed,
       },
     });
+    return { status, sent };
   }
 
   getSenderSetup(orgId: string) {

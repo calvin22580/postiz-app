@@ -145,7 +145,9 @@ const makeLoop = (contacts: { id: string; email: string; status: string }[], sen
   const emailService = {
     businessDetails: vi.fn(async () => ({ name: 'Test Cafe', address: '1 High St', email: 'owner@cafe.example' })),
   };
-  const service = new EmailCampaignService(repo as never, emailService as never);
+  // the writing side (EM3) isn't used by the send loop
+  const unused = {} as never;
+  const service = new EmailCampaignService(repo as never, emailService as never, unused, unused, unused, unused, unused);
   const sender: EmailCampaignSender = { name: 'simulated', prepare: vi.fn(async () => null), send: vi.fn(send) };
   service._sender = sender;
   return { service, repo, deliveries, campaign, sender };

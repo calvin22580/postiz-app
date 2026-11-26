@@ -1,8 +1,9 @@
-// OURS: request bodies for the email list endpoints (email campaigns EM1).
+// OURS: request bodies for the email list endpoints (email campaigns EM1, EM3).
 import {
   IsBoolean,
   IsIn,
   IsInt,
+  IsISO8601,
   IsOptional,
   IsString,
   MaxLength,
@@ -91,4 +92,34 @@ export class SignUpDto {
   @IsString()
   @MaxLength(200)
   website?: string;
+}
+
+// EM3: the owner's own words for a list email. Lengths are checked again by
+// the service with friendlier messages.
+export class EditEmailCampaignDto {
+  @IsString()
+  @MaxLength(200)
+  subject: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  previewText?: string;
+
+  @IsString()
+  @MaxLength(6000)
+  body: string;
+}
+
+export class RewriteEmailCampaignDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  note?: string;
+}
+
+export class ApproveEmailCampaignDto {
+  // when to send it, as an ISO date and time
+  @IsISO8601()
+  sendAt: string;
 }

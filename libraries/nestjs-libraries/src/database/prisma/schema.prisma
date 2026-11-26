@@ -2245,6 +2245,17 @@ model OursEmailCampaign {
   previewText    String?
   // plain text paragraphs; the footer is added when it is sent
   body           String
+  // EM3: anthropic | demo, for a written email (null for a test)
+  writer         String?
+  // EM3: the profile facts (and UK dates) the email relies on
+  facts          Json?
+  // EM3: AI rewrites asked for, capped per email
+  rewriteCount   Int                     @default(0)
+  // EM3: the owner changed the words themselves
+  editedAt       DateTime?
+  // EM3: the allowance month approval counted it in, so cancelling gives it
+  // back to the right month
+  allowancePeriod String?
   scheduledAt    DateTime?
   approvedAt     DateTime?
   approvedBy     String?

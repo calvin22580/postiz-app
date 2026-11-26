@@ -1,12 +1,12 @@
 'use client';
 // OURS: "Email" (email campaigns EM1). The business's email list: who's on
 // it, how each person agreed to hear from them, adding people, the sign-up
-// form, a download, and a test email to the owner (EM2). List emails come in EM3.
+// form, a download, a test email to the owner (EM2), and the emails we write
+// for the owner to approve (EM3, shown once sending is switched on).
 import { FC, FormEvent, useState } from 'react';
 import clsx from 'clsx';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { deleteDialog } from '@gitroom/react/helpers/delete.dialog';
-import { newDayjs } from '@gitroom/frontend/components/layout/set.timezone';
 import { readError } from '@gitroom/frontend/ours/profile/business.profile.hooks';
 import {
   ContactFilter,
@@ -18,11 +18,20 @@ import {
   useEmailSending,
   useEmailOverview,
 } from '@gitroom/frontend/ours/email/email.hooks';
+import {
+  Card,
+  formatDate,
+  Heading,
+  inputClass,
+  Message,
+  primaryButton,
+  quietButton,
+  Shell,
+} from '@gitroom/frontend/ours/email/email.ui';
+import { EmailCampaigns } from '@gitroom/frontend/ours/email/email.campaigns';
 
 // the backend's limit for one upload (email.contacts.ts)
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
-
-const formatDate = (date: string) => newDayjs(date).format('DD/MM/YYYY');
 
 const STATUS_LABELS: Record<ContactStatus, string> = {
   SUBSCRIBED: 'Subscribed',
@@ -53,51 +62,6 @@ const FILTERS: { key: ContactFilter; label: string }[] = [
 
 // "bought list, or other": shown so the owner can say so, then refused
 const REFUSED = 'OTHER';
-
-const inputClass =
-  'h-[44px] rounded-[10px] border border-newBorder bg-newBgColor px-[14px] text-[15px] outline-none focus:border-btnPrimary';
-const primaryButton = 'h-[44px] px-[20px] rounded-[10px] bg-btnPrimary text-white text-[15px] font-[500] whitespace-nowrap';
-const quietButton =
-  'h-[36px] px-[14px] rounded-[8px] border border-newBorder text-[14px] whitespace-nowrap hover:bg-newBgColorInner';
-
-const Shell: FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="flex-1 bg-newBgColorInner overflow-auto p-[40px] mobile:p-[16px]">
-    <div className="max-w-[880px] mx-auto flex flex-col gap-[28px]">{children}</div>
-  </div>
-);
-
-const Card: FC<{ children: React.ReactNode; testId?: string }> = ({ children, testId }) => (
-  <section
-    data-testid={testId}
-    className="flex flex-col gap-[16px] rounded-[14px] border border-newBorder bg-newBgColor p-[20px]"
-  >
-    {children}
-  </section>
-);
-
-const Heading: FC<{ title: string; children?: React.ReactNode }> = ({ title, children }) => (
-  <div className="flex flex-col gap-[4px]">
-    <h2 className="text-[17px] font-[600]">{title}</h2>
-    {children && <p className="text-[14px] leading-[1.6] text-textItemBlur">{children}</p>}
-  </div>
-);
-
-const Message: FC<{ tone?: 'plain' | 'attention'; children: React.ReactNode; testId?: string }> = ({
-  tone = 'plain',
-  children,
-  testId,
-}) => (
-  <div
-    data-testid={testId}
-    role={tone === 'attention' ? 'alert' : 'status'}
-    className={clsx(
-      'rounded-[10px] px-[14px] py-[12px] text-[14px] leading-[1.6]',
-      tone === 'attention' ? 'bg-amber-500/10 border border-amber-500/40' : 'bg-newBgColorInner'
-    )}
-  >
-    {children}
-  </div>
-);
 
 const Counts: FC<{ data: EmailOverview }> = ({ data }) => {
   const tiles = [
@@ -775,6 +739,7 @@ const ContactList: FC<{ onChanged: (overview: EmailOverview) => void; total: num
 export const EmailPage: FC = () => {
   const { data, error, mutate } = useEmailOverview();
   const contacts = useEmailContacts('', '', 0);
+  const sending = useEmailSending();
 
   const changed = async (overview: EmailOverview) => {
     await mutate(overview, { revalidate: false });
@@ -787,8 +752,11 @@ export const EmailPage: FC = () => {
         Your email list
       </h1>
       <p className="text-[16px] leading-[1.6] text-textItemBlur">
-        Your customers’ email addresses, and how each person agreed to hear from you. Soon we’ll write an email
-        for them each week, for you to approve like your posts. Nothing goes to your list until you approve it.
+        Your customers’ email addresses, and how each person agreed to hear from you.{' '}
+        {sending.data && sending.data.sender !== 'off'
+          ? 'We write emails for them for you to approve, like your posts.'
+          : 'Soon we’ll write an email for them each week, for you to approve like your posts.'}{' '}
+        Nothing goes to your list until you approve it.
       </p>
     </div>
   );
@@ -823,6 +791,7 @@ export const EmailPage: FC = () => {
     <Shell>
       {header}
       <Counts data={data} />
+      <EmailCampaigns from={data.businessName} />
       <AddPeople data={data} onChanged={changed} />
       <SignUpForm data={data} onChanged={changed} />
       <Sending />

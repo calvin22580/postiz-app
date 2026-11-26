@@ -173,3 +173,12 @@ Upstream's public API, CLI and MCP/agent tools all create posts through `PostsSe
 - One SES tenant and configuration set per organisation, so SES can pause one business without stopping the others, and events come back per business through SNS.
 - SES events arrive at a public route (`/ours/email/public/events`). They're trusted only with a valid SNS signature from a certificate on Amazon's own host and our own topic ARN. Finding a delivery by its SES message id is the one other unscoped query; the signature is the proof.
 - Confirm tokens are HMAC-signed like unsubscribe tokens but with a different purpose prefix, so neither can stand in for the other.
+
+## Email campaigns: AI-written list emails (EM3, 26/11/2026)
+
+- The Email writer is a content-engine step with the same shape as the caption writer: an `EmailWriter` adapter (`libs/ours/email/writers/`) with an Anthropic version and a labelled demo, structured JSON output, its own cost features, and the profile passed as untrusted data. The Anthropic call itself is shared with the caption writer (`structuredWrite` in `anthropic.caption.writer.ts`), so both steps behave the same on errors, refusals and billing.
+- Hard rules for emails (`groundEmail` in `email.grounding.ts`) reuse the caption checks (`unsupportedDetails`, `withoutCitedDates`), so a claim that would be dropped from a post is dropped from an email too.
+- An email is written on request (one call, like a post rewrite), not in the background, because it is one short piece. It lives in `ours_email_campaign` from the start (status `WAITING`), so approval only changes its status and time; the EM2 send loop needed no change.
+- Only `approve()` can make a list email due. It claims the `emails` allowance before the conditional update and gives it back if the update loses a race; cancelling is a conditional update that only succeeds while the send loop holds no lease, and gives the allowance back to the month it was counted in (`allowancePeriod`).
+- Plan: https://claude.ai/artifact/Jz3ibvc6SSuZXqS4ZtHqbH
+

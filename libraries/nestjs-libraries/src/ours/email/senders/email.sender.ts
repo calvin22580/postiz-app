@@ -3,6 +3,13 @@
 // got each email and never sends (tests, demos, and the default until SES
 // is set up). Chosen by OURS_EMAIL_SENDER: off (default), simulated or ses.
 
+export type EmailSenderName = 'off' | 'simulated' | 'ses';
+
+export const emailSenderName = (env: NodeJS.ProcessEnv = process.env): EmailSenderName => {
+  const value = (env.OURS_EMAIL_SENDER || '').trim().toLowerCase();
+  return value === 'ses' || value === 'simulated' ? value : 'off';
+};
+
 export interface OutgoingEmail {
   organizationId: string;
   to: string;
