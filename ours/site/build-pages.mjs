@@ -5,6 +5,7 @@
 //   node ours/site/build-pages.mjs
 //
 // Run it after editing pages/trades.mjs, then commit the changed files.
+// Bump LASTMOD below when a page's content changes (sitemap + dateModified).
 // Details: ours/site/README.md
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -107,16 +108,22 @@ function crumbs(items) {
   return { html: `<nav class="crumbs" aria-label="Breadcrumb"><ol>${html}</ol></nav>`, data };
 }
 
-const closing = (line) => `<section class="closing">
+const closing = (line, how) => `<section class="closing">
     <div class="wrap">
       <h2><span class="hl">Get your first week</span><br><span class="hl w">of posts</span></h2>
       <p>${esc(line)}</p>
       <div class="ctas">
         <a class="btn btn-butter" href="${EARLY_ACCESS}">Request early access</a>
-        <a class="btn btn-ghost" href="/#how">See how it works</a>
+        <a class="btn btn-ghost" href="${how}">See how it works</a>
       </div>
     </div>
   </section>`;
+
+// The made-up business's own type: font, weight, italic, capitals.
+const artType = (a) =>
+  [`font-family:${a.font}`, a.weight && `font-weight:${a.weight}`, a.italic && 'font-style:italic', a.upper && 'text-transform:uppercase']
+    .filter(Boolean)
+    .join(';');
 
 function card(c) {
   const a = c.art;
@@ -126,7 +133,7 @@ function card(c) {
   return `<article class="card">
           <div class="art" role="img" aria-label="Example graphic: ${esc(c.big)}" style="background:${a.bg};color:${a.fg}">
             <span class="kick" style="color:${a.acc}">${esc(c.kick)}</span>
-            <span class="big" style="font-family:${esc(a.font)}">${esc(c.big)}</span>
+            <span class="big" style="${esc(artType(a))}">${esc(c.big)}</span>
           </div>
           <div class="bd"><span class="wh">${esc(c.wh)}</span><p class="cp">${esc(c.cp)}</p><span class="src">${esc(c.src)}</span></div>
           <div class="act" aria-hidden="true">${act}</div>
@@ -171,7 +178,7 @@ function tradePage(t) {
   };
 
   const yearSrc = t.yearSrc
-    ? `<p class="fine">Sources: ${t.yearSrc.map(([l, u]) => `<a href="${u}" rel="noopener">${esc(l)}</a>`).join(', ')}.</p>`
+    ? `<p class="fine">Sources: ${t.yearSrc.map(([l, u]) => `<a href="${u}">${esc(l)}</a>`).join(', ')}.</p>`
     : '';
 
   return `${head({ title: t.title, description: t.description, path })}
@@ -233,7 +240,7 @@ ${header}
           .map(
             (r, i) =>
               `<li>${MARK([-5, 4, -3, 5][i % 4])}<div><h3>${esc(r.h)}</h3><p>${esc(r.p)}</p>${
-                r.src ? `<a class="src" href="${r.src[1]}" rel="noopener">${esc(r.src[0])}</a>` : ''
+                r.src ? `<a class="src" href="${r.src[1]}">${esc(r.src[0])}</a>` : ''
               }</div></li>`,
           )
           .join('\n        ')}
@@ -294,7 +301,7 @@ ${header}
     </div>
   </section>
 
-  ${closing('Tell us your web address and we’ll draft a week of posts for you to review. Nothing is published until you approve it.')}
+  ${closing('Tell us your web address and we’ll draft a week of posts for you to review. Nothing is published until you approve it.', '#how')}
 </main>
 
 ${footer}`;
@@ -360,13 +367,13 @@ ${header}
 
   <section id="not-listed">
     <div class="wrap narrow prose">
-      <h2 class="section-title" style="font-family:var(--k-font-display);font-weight:400;font-size:clamp(26px,3.4vw,36px);line-height:1.3">Don’t see your trade?</h2>
+      <h2>Don’t see your trade?</h2>
       <p>Kanosena writes from your own website, so it isn’t limited to these trades. It is made for UK businesses with 1 to 20 staff that want to post regularly on Facebook, Instagram or LinkedIn without writing the posts themselves.</p>
       <p>Ask for early access and tell us what you do. We’ll tell you honestly whether it’s a good fit.</p>
     </div>
   </section>
 
-  ${closing('Tell us your web address and we’ll draft a week of posts for you to review. Nothing is published until you approve it.')}
+  ${closing('Tell us your web address and we’ll draft a week of posts for you to review. Nothing is published until you approve it.', '/#how')}
 </main>
 
 ${footer}`;

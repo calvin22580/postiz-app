@@ -38,8 +38,10 @@ no build step:
   homepage, which keeps its own inline copy).
 - Rules for the content: example posts are always for made-up businesses and
   say so; nothing is claimed about Kanosena customers or results; every rule
-  or date links to its source, and the "checked on" date (`CHECKED`) is
-  updated when the facts are re-checked.
+  that comes from a law or a regulator links to its source (unlinked rules are
+  general good practice); the "checked on" date (`CHECKED` in trades.mjs) is
+  updated when the facts are re-checked, and `LASTMOD` in build-pages.mjs when
+  a page changes.
 - Trades were picked from UK keyword data (OpenSEO / DataForSEO, 27/11/2026).
   Town pages were left out on purpose: the town searches are for agencies, and
   a page per town with no local content would count as a doorway page.

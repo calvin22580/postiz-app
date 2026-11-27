@@ -5,8 +5,9 @@
 // Rules for this file (FORK_RULES.md, product rules):
 // - Every example post is for a made-up business and is labelled as such.
 // - No invented customers, testimonials, results or numbers about Kanosena.
-// - Every rule or date in "rules" and "year" links to, or comes from, the
-//   source named beside it. Facts checked on 27/11/2026 (CHECKED below).
+// - Every rule that comes from a law or a regulator links to its source
+//   (rules without a link are general good practice). Facts checked on
+//   27/11/2026 (CHECKED below).
 // - British English, DD/MM/YYYY. Text fields are plain text (escaped by the
 //   build); fields ending in Html may contain inline HTML.
 
@@ -114,7 +115,7 @@ export const trades = [
       },
       {
         h: 'Results photos must be honest',
-        p: 'Don’t use filters or edits that make a treatment look more effective than it is. The ASA has ruled against beauty adverts on social media that did this.',
+        p: 'Don’t use filters or edits that make a treatment look more effective than it is. Adverts, including your own posts, must not mislead.',
       },
       {
         h: 'Ask before you post a client',
@@ -192,9 +193,9 @@ export const trades = [
     example: {
       label: 'Example heating engineer',
       cards: [
-        { wh: 'Mon 30/11 · 07:30 · Facebook', ok: 'Goes out Mon 30/11 at 07:30', kick: 'Winter', big: 'Boiler playing up?', cp: 'Cold mornings are when boilers show they need attention. We still have service slots in December, so give us a call to book yours.', src: 'Source: your “Boiler servicing” page', art: { bg: '#0E3B66', fg: '#FFFFFF', acc: '#FF8A00', font: '"Arial Narrow","Roboto Condensed",Arial,sans-serif;font-weight:800;text-transform:uppercase' } },
-        { wh: 'Wed 02/12 · 12:00 · Facebook', kick: 'Quick tip', big: 'Find your stopcock', cp: 'Do you know where your stopcock is? It is often under the kitchen sink. Finding it now saves a panic if a pipe ever bursts.', src: 'Source: your “Emergency plumbing” page', art: { bg: '#FFFFFF', fg: '#0E3B66', acc: '#FF8A00', font: '"Arial Narrow","Roboto Condensed",Arial,sans-serif;font-weight:800;text-transform:uppercase' } },
-        { wh: 'Fri 04/12 · 17:00 · Instagram', kick: 'Christmas', big: 'On call for emergencies', cp: 'We are on call for heating and plumbing emergencies over Christmas. Our holiday hours are on our website.', src: 'Source: your “Opening hours” page', art: { bg: '#FF8A00', fg: '#0E3B66', acc: '#0E3B66', font: '"Arial Narrow","Roboto Condensed",Arial,sans-serif;font-weight:800;text-transform:uppercase' } },
+        { wh: 'Mon 30/11 · 07:30 · Facebook', ok: 'Goes out Mon 30/11 at 07:30', kick: 'Winter', big: 'Boiler playing up?', cp: 'Cold mornings are when boilers show they need attention. We still have service slots in December, so give us a call to book yours.', src: 'Source: your “Boiler servicing” page', art: { bg: '#0E3B66', fg: '#FFFFFF', acc: '#FF8A00', font: '"Arial Narrow","Roboto Condensed",Arial,sans-serif', weight: 800, upper: true } },
+        { wh: 'Wed 02/12 · 12:00 · Facebook', kick: 'Quick tip', big: 'Find your stopcock', cp: 'Do you know where your stopcock is? It is often under the kitchen sink. Finding it now saves a panic if a pipe ever bursts.', src: 'Source: your “Emergency plumbing” page', art: { bg: '#FFFFFF', fg: '#0E3B66', acc: '#FF8A00', font: '"Arial Narrow","Roboto Condensed",Arial,sans-serif', weight: 800, upper: true } },
+        { wh: 'Fri 04/12 · 17:00 · Instagram', kick: 'Christmas', big: 'On call for emergencies', cp: 'We are on call for heating and plumbing emergencies over Christmas. Our holiday hours are on our website.', src: 'Source: your “Opening hours” page', art: { bg: '#FF8A00', fg: '#0E3B66', acc: '#0E3B66', font: '"Arial Narrow","Roboto Condensed",Arial,sans-serif', weight: 800, upper: true } },
       ],
     },
     faq: [
@@ -235,7 +236,7 @@ export const trades = [
     rules: [
       {
         h: 'Property posts need material information',
-        p: 'National Trading Standards says agents must not leave material information out of property listings. “Part A” information (the price or rent, the council tax band or rate, and tenure for sales) is always material. We treat a post about a specific property as a listing, so it should carry these too.',
+        p: 'National Trading Standards says agents must not leave material information out of property listings. “Part A” information (the price or rent, the council tax band or rate, and tenure for sales) is always material. Treat a post about a specific property as a listing, and include these there too.',
         src: ['Material information guidance (National Trading Standards)', 'https://www.nationaltradingstandards.uk/news/full-material-information-guidance-published/'],
       },
       {
@@ -255,9 +256,9 @@ export const trades = [
     example: {
       label: 'Example estate agency',
       cards: [
-        { wh: 'Mon 30/11 · 08:30 · Facebook', ok: 'Goes out Mon 30/11 at 08:30', kick: 'Just listed', big: '3-bed semi near the station', cp: 'Just listed: a three-bedroom semi-detached house close to the station. £325,000, council tax band C, freehold. Full details and viewings on our website.', src: 'Source: the listing on your website', art: { bg: '#1C2B4A', fg: '#F7F5F0', acc: '#C9A45C', font: 'Georgia,"Times New Roman",serif;font-style:italic' } },
-        { wh: 'Wed 02/12 · 12:00 · LinkedIn', kick: 'For landlords', big: 'Renting rules are changing', cp: 'Renting rules in England are changing. We have written a plain-English guide for landlords on our website, and we are happy to talk it through.', src: 'Source: your “Landlord news” page', art: { bg: '#F7F5F0', fg: '#1C2B4A', acc: '#9C7B3C', font: 'Georgia,"Times New Roman",serif;font-style:italic' } },
-        { wh: 'Fri 04/12 · 17:30 · Instagram', kick: 'Thinking of moving?', big: 'Book a free valuation', cp: 'Thinking about a move in the new year? Book a free valuation and we will tell you what your home could sell for.', src: 'Source: your “Valuations” page', art: { bg: '#C9A45C', fg: '#1C2B4A', acc: '#1C2B4A', font: 'Georgia,"Times New Roman",serif;font-style:italic' } },
+        { wh: 'Mon 30/11 · 08:30 · Facebook', ok: 'Goes out Mon 30/11 at 08:30', kick: 'Just listed', big: '3-bed semi near the station', cp: 'Just listed: a three-bedroom semi-detached house close to the station. £325,000, council tax band C, freehold. Full details and viewings on our website.', src: 'Source: the listing on your website', art: { bg: '#1C2B4A', fg: '#F7F5F0', acc: '#C9A45C', font: 'Georgia,"Times New Roman",serif', italic: true } },
+        { wh: 'Wed 02/12 · 12:00 · LinkedIn', kick: 'For landlords', big: 'Renting rules are changing', cp: 'Renting rules in England are changing. We have written a plain-English guide for landlords on our website, and we are happy to talk it through.', src: 'Source: your “Landlord news” page', art: { bg: '#F7F5F0', fg: '#1C2B4A', acc: '#9C7B3C', font: 'Georgia,"Times New Roman",serif', italic: true } },
+        { wh: 'Fri 04/12 · 17:30 · Instagram', kick: 'Thinking of moving?', big: 'Book a free valuation', cp: 'Thinking about a move in the new year? Book a free valuation and we will tell you what your home could sell for.', src: 'Source: your “Valuations” page', art: { bg: '#C9A45C', fg: '#1C2B4A', acc: '#1C2B4A', font: 'Georgia,"Times New Roman",serif', italic: true } },
       ],
     },
     faq: [
@@ -323,9 +324,9 @@ export const trades = [
     example: {
       label: 'Example accountancy firm',
       cards: [
-        { wh: 'Mon 30/11 · 08:00 · LinkedIn', ok: 'Goes out Mon 30/11 at 08:00', kick: 'Self Assessment', big: 'Two months to 31 January', cp: 'The online Self Assessment deadline is 31/01/2027. If you would like us to do your return, send us your records before Christmas and we will take it from there.', src: 'Source: your “Self Assessment” page', art: { bg: '#0F3D3A', fg: '#FFFFFF', acc: '#7FD1AE', font: '"Helvetica Neue",Arial,sans-serif;font-weight:700' } },
-        { wh: 'Wed 02/12 · 12:00 · Facebook', kick: 'Making Tax Digital', big: 'Over £30,000? April 2027', cp: 'Sole trader or landlord with qualifying income over £30,000 in the 2025 to 2026 tax year? Making Tax Digital for Income Tax applies to you from April 2027. We can help you get set up.', src: 'Source: your “Making Tax Digital” page', art: { bg: '#FFFFFF', fg: '#0F3D3A', acc: '#2A8C69', font: '"Helvetica Neue",Arial,sans-serif;font-weight:700' } },
-        { wh: 'Fri 04/12 · 16:00 · Instagram', kick: 'Quick tip', big: 'Snap every receipt', cp: 'Take a photo of each business receipt as you go. It makes your tax return much quicker to put together.', src: 'Source: your “Bookkeeping” page', art: { bg: '#7FD1AE', fg: '#0F3D3A', acc: '#0F3D3A', font: '"Helvetica Neue",Arial,sans-serif;font-weight:700' } },
+        { wh: 'Mon 30/11 · 08:00 · LinkedIn', ok: 'Goes out Mon 30/11 at 08:00', kick: 'Self Assessment', big: 'Two months to 31 January', cp: 'The online Self Assessment deadline is 31/01/2027. If you would like us to do your return, send us your records before Christmas and we will take it from there.', src: 'Source: your “Self Assessment” page', art: { bg: '#0F3D3A', fg: '#FFFFFF', acc: '#7FD1AE', font: '"Helvetica Neue",Arial,sans-serif', weight: 700 } },
+        { wh: 'Wed 02/12 · 12:00 · Facebook', kick: 'Making Tax Digital', big: 'Over £30,000? April 2027', cp: 'Sole trader or landlord with qualifying income over £30,000 in the 2025 to 2026 tax year? Making Tax Digital for Income Tax applies to you from April 2027. We can help you get set up.', src: 'Source: your “Making Tax Digital” page', art: { bg: '#FFFFFF', fg: '#0F3D3A', acc: '#2A8C69', font: '"Helvetica Neue",Arial,sans-serif', weight: 700 } },
+        { wh: 'Fri 04/12 · 16:00 · Instagram', kick: 'Quick tip', big: 'Snap every receipt', cp: 'Take a photo of each business receipt as you go. It makes your tax return much quicker to put together.', src: 'Source: your “Bookkeeping” page', art: { bg: '#7FD1AE', fg: '#0F3D3A', acc: '#0F3D3A', font: '"Helvetica Neue",Arial,sans-serif', weight: 700 } },
       ],
     },
     faq: [
@@ -388,9 +389,9 @@ export const trades = [
     example: {
       label: 'Example dental practice',
       cards: [
-        { wh: 'Mon 30/11 · 08:00 · Facebook', ok: 'Goes out Mon 30/11 at 08:00', kick: 'New patients', big: 'Now taking new patients', cp: 'We are taking on new private patients for check-ups and hygiene appointments. Find out more and book on our website.', src: 'Source: your “New patients” page', art: { bg: '#E9F4F7', fg: '#0B4F6C', acc: '#20A4C4', font: '"Trebuchet MS","Segoe UI",sans-serif;font-weight:700' } },
-        { wh: 'Wed 02/12 · 12:30 · Instagram', kick: 'Healthy teeth', big: 'Two minutes, twice a day', cp: 'Brushing for two minutes, twice a day, with a fluoride toothpaste is one of the simplest things you can do for your teeth.', src: 'Source: your “Looking after your teeth” page', art: { bg: '#0B4F6C', fg: '#FFFFFF', acc: '#7FD8EA', font: '"Trebuchet MS","Segoe UI",sans-serif;font-weight:700' } },
-        { wh: 'Fri 04/12 · 17:00 · Facebook', kick: 'Christmas', big: 'Our holiday opening hours', cp: 'Our Christmas and New Year opening hours are on our website, along with who to call if you need urgent care while we are closed.', src: 'Source: your “Opening hours” page', art: { bg: '#20A4C4', fg: '#FFFFFF', acc: '#0B4F6C', font: '"Trebuchet MS","Segoe UI",sans-serif;font-weight:700' } },
+        { wh: 'Mon 30/11 · 08:00 · Facebook', ok: 'Goes out Mon 30/11 at 08:00', kick: 'New patients', big: 'Now taking new patients', cp: 'We are taking on new private patients for check-ups and hygiene appointments. Find out more and book on our website.', src: 'Source: your “New patients” page', art: { bg: '#E9F4F7', fg: '#0B4F6C', acc: '#20A4C4', font: '"Trebuchet MS","Segoe UI",sans-serif', weight: 700 } },
+        { wh: 'Wed 02/12 · 12:30 · Instagram', kick: 'Healthy teeth', big: 'Two minutes, twice a day', cp: 'Brushing for two minutes, twice a day, with a fluoride toothpaste is one of the simplest things you can do for your teeth.', src: 'Source: your “Looking after your teeth” page', art: { bg: '#0B4F6C', fg: '#FFFFFF', acc: '#7FD8EA', font: '"Trebuchet MS","Segoe UI",sans-serif', weight: 700 } },
+        { wh: 'Fri 04/12 · 17:00 · Facebook', kick: 'Christmas', big: 'Our holiday opening hours', cp: 'Our Christmas and New Year opening hours are on our website, along with who to call if you need urgent care while we are closed.', src: 'Source: your “Opening hours” page', art: { bg: '#20A4C4', fg: '#FFFFFF', acc: '#0B4F6C', font: '"Trebuchet MS","Segoe UI",sans-serif', weight: 700 } },
       ],
     },
     faq: [
