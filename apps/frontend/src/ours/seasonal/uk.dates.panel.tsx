@@ -92,7 +92,7 @@ export const UkDatesPanel: FC = () => {
 
   if (error) {
     return (
-      <div className="rounded-[14px] border border-newBorder bg-newBgColor p-[20px] text-[14px]">
+      <div className="rounded-[18px] border border-newBorder bg-newBgColor p-[20px] text-[14px]">
         We couldn’t load UK dates.{' '}
         <button type="button" className="underline" onClick={() => mutate()}>
           Try again
@@ -101,7 +101,7 @@ export const UkDatesPanel: FC = () => {
     );
   }
   if (!data) {
-    return <div className="h-[132px] rounded-[14px] bg-newBgLineColor animate-pulse" />;
+    return <div className="h-[132px] rounded-[18px] bg-newBgLineColor animate-pulse" />;
   }
 
   const save = async (kind: string, path: string, body: object) => {
@@ -128,7 +128,7 @@ export const UkDatesPanel: FC = () => {
 
   return (
     <section
-      className="flex flex-col gap-[16px] rounded-[14px] border border-newBorder bg-newBgColor p-[20px]"
+      className="flex flex-col gap-[16px] rounded-[18px] border border-newBorder bg-newBgColor p-[20px]"
       data-testid="uk-dates"
     >
       <div className="flex flex-col gap-[4px]">

@@ -8,6 +8,7 @@ import { TemporalService } from 'nestjs-temporal-core';
 import { timer } from '@gitroom/helpers/utils/timer';
 import { randomUUID } from 'crypto';
 import { rebrandText } from '@gitroom/nestjs-libraries/ours/brand/brand'; // OURS (2026-11-15)
+import { oursEmailLayout } from '@gitroom/nestjs-libraries/ours/email/email.layout'; // OURS (2026-11-20)
 
 @Injectable()
 export class EmailService {
@@ -84,7 +85,8 @@ export class EmailService {
       ? { 'List-Unsubscribe': `<${settingsUrl}>` }
       : undefined;
 
-    const modifiedHtml = `
+    // OURS (2026-11-20): Story Mode email frame (ours/email/email.layout.ts); upstream's frame below if it returns null
+    const modifiedHtml = oursEmailLayout({ subject, html, settingsUrl }) ?? `
     <div style="
         background: linear-gradient(to bottom right, #e6f2ff, #f0e6ff);
         display: flex;

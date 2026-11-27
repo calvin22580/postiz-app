@@ -73,7 +73,7 @@ const PrimaryButton: FC<{
     onClick={onClick}
     disabled={disabled}
     className={clsx(
-      'h-[44px] px-[20px] rounded-[10px] bg-btnPrimary text-white text-[15px] font-[500] whitespace-nowrap',
+      'h-[44px] px-[20px] rounded-full bg-btnPrimary text-white text-[15px] font-[500] whitespace-nowrap',
       disabled && 'opacity-60'
     )}
   >
@@ -85,8 +85,8 @@ const LoadingState = () => (
   <div className="flex flex-col gap-[16px]" aria-busy="true">
     <div className="h-[28px] w-[280px] rounded-[6px] bg-newBgLineColor animate-pulse" />
     <div className="h-[16px] w-[440px] max-w-full rounded-[6px] bg-newBgLineColor animate-pulse" />
-    <div className="h-[180px] rounded-[14px] bg-newBgLineColor animate-pulse" />
-    <div className="h-[180px] rounded-[14px] bg-newBgLineColor animate-pulse" />
+    <div className="h-[180px] rounded-[18px] bg-newBgLineColor animate-pulse" />
+    <div className="h-[180px] rounded-[18px] bg-newBgLineColor animate-pulse" />
   </div>
 );
 
@@ -239,6 +239,34 @@ const ApproveAll: FC<{
   );
 };
 
+// Story Mode week progress: one segment per post, filled as each is approved.
+// Rejected posts drop out of the count.
+const WeekProgress: FC<{ week: CaptionWeek }> = ({ week }) => {
+  const kept = week.captions.filter((c) => c.status !== 'REJECTED');
+  const approved = kept.filter((c) => c.status === 'APPROVED').length;
+  if (!kept.length) return null;
+  return (
+    <div className="flex flex-col gap-[8px]" data-testid="captions-progress">
+      <div className="flex gap-[4px]" aria-hidden="true">
+        {kept.map((c) => (
+          <span
+            key={c.id}
+            className={clsx(
+              'h-[6px] flex-1 rounded-full transition-colors duration-300',
+              c.status === 'APPROVED' ? 'bg-btnPrimary' : 'bg-newBgLineColor'
+            )}
+          />
+        ))}
+      </div>
+      <span className="text-[14px] font-[600]">
+        {approved === kept.length
+          ? `All ${kept.length} posts approved. That’s your week.`
+          : `${approved} of ${kept.length} approved`}
+      </span>
+    </div>
+  );
+};
+
 const ReviewBar: FC<{
   week: CaptionWeek;
   filter: Filter;
@@ -255,9 +283,10 @@ const ReviewBar: FC<{
   );
   return (
     <div
-      className="flex flex-col gap-[14px] rounded-[14px] border border-newBorder bg-newBgColor p-[16px]"
+      className="flex flex-col gap-[14px] rounded-[18px] border border-newBorder bg-newBgColor p-[16px]"
       data-testid="captions-review-bar"
     >
+      <WeekProgress week={week} />
       <div role="tablist" aria-label="Show posts" className="flex flex-wrap gap-[8px]">
         {FILTERS.map((f) => (
           <button
@@ -431,8 +460,8 @@ export const CaptionsPage: FC = () => {
   if (error || profile.error || !data) {
     return (
       <Shell>
-        <h1 className="text-[26px] font-[600]">Your posts</h1>
-        <div className="flex flex-col gap-[12px] rounded-[14px] border border-newBorder p-[24px]">
+        <h1 className="k-display text-[28px] leading-[1.15]">Your posts</h1>
+        <div className="flex flex-col gap-[12px] rounded-[18px] border border-newBorder p-[24px]">
           <div className="text-[15px]">We couldn’t load your posts just now.</div>
           <button
             type="button"
@@ -440,7 +469,7 @@ export const CaptionsPage: FC = () => {
               mutate();
               profile.mutate();
             }}
-            className="self-start h-[38px] px-[18px] rounded-[8px] bg-btnPrimary text-white text-[14px]"
+            className="self-start h-[38px] px-[18px] rounded-full bg-btnPrimary text-white text-[14px]"
           >
             Try again
           </button>
@@ -455,7 +484,7 @@ export const CaptionsPage: FC = () => {
     return (
       <Shell>
         <div className="flex flex-col gap-[10px]">
-          <h1 className="text-[26px] font-[600]">Your posts</h1>
+          <h1 className="k-display text-[28px] leading-[1.15]">Your posts</h1>
           <p className="text-[16px] leading-[1.6] text-textItemBlur">
             We write a week of posts for Facebook, Instagram and LinkedIn from
             your business profile, so they only say things that are true about
@@ -464,7 +493,7 @@ export const CaptionsPage: FC = () => {
         </div>
         <Link
           href="/business-profile"
-          className="self-start h-[44px] px-[20px] rounded-[10px] bg-btnPrimary text-white text-[15px] font-[500] flex items-center"
+          className="self-start h-[44px] px-[20px] rounded-full bg-btnPrimary text-white text-[15px] font-[500] flex items-center"
           data-testid="captions-profile-link"
         >
           Set up your business profile
@@ -485,7 +514,7 @@ export const CaptionsPage: FC = () => {
     <Shell>
       <div className="flex items-start justify-between gap-[16px] mobile:flex-col">
         <div className="flex flex-col gap-[8px]">
-          <h1 className="text-[26px] font-[600]" data-testid="captions-heading">
+          <h1 className="k-display text-[28px] leading-[1.15]" data-testid="captions-heading">
             {heading}
           </h1>
           {!week && (
@@ -526,7 +555,7 @@ export const CaptionsPage: FC = () => {
 
       {week?.status === 'WRITING' && (
         <div
-          className="flex items-center gap-[14px] rounded-[14px] border border-newBorder p-[28px]"
+          className="flex items-center gap-[14px] rounded-[18px] border border-newBorder p-[28px]"
           data-testid="captions-writing"
           aria-live="polite"
         >

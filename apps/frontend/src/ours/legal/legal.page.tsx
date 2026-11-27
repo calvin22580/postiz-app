@@ -122,7 +122,7 @@ export const LegalPage: FC<{
       <main className="mx-auto max-w-[760px] px-[16px] py-[24px]">
         <article className="flex flex-col gap-[28px] rounded-[16px] bg-newBgColorInner p-[40px] text-[15px] leading-[1.7] mobile:p-[20px]">
           <div className="flex flex-col gap-[8px]">
-            <h1 className="text-[30px] font-[700] leading-[1.2]">{title}</h1>
+            <h1 className="k-display text-[30px] leading-[1.2]">{title}</h1>
             {!plain && (
               <p className="text-[14px] text-textItemBlur">
                 Effective from:{' '}

@@ -58,7 +58,7 @@ export const SandboxPostView: FC<{ id: string }> = ({ id }) => {
   return (
     <div className="flex-1 bg-newBgColorInner p-[32px] mobile:p-[16px]">
       <div className="max-w-[640px] mx-auto flex flex-col gap-[20px]">
-        <h1 className="text-[22px] font-[600]">Sandbox post</h1>
+        <h1 className="k-display text-[24px]">Sandbox post</h1>
         <SandboxNotice />
         {status === 'loading' && (
           <div className="text-textItemBlur">Loading the recorded post…</div>
