@@ -8,14 +8,14 @@ Design and reasoning: the "Kanosena content engine and brand memory: design" doc
 
 1. **Our code runs the steps; models do one job each.** The engine is a fixed workflow, not an open-ended agent loop. Anthropic's guidance is to start with the simplest tier that works, and to use autonomous agents only for open-ended work. Our steps are known in advance, and the fact check and approval must sit between them.
 2. **Facts come only from the sourced business profile** (and our checked UK dates). Brand memory, results and owner signals change how we choose and phrase. They never add claims.
-3. **Nothing is published without the owner's approval.** No AI step can reach the scheduler. Approval stays in `CaptionService.approve`.
+3. **Nothing is published without the owner's approval.** No AI step can reach the scheduler or the email send loop. Approval stays in `CaptionService.approve` and, for list emails, `EmailCampaignService.approve`.
 4. **Every step follows the same shape:**
    - an adapter interface with an Anthropic version and a labelled demo version (like `CaptionWriter`), so the app and tests run with no key;
    - structured JSON output (`output_config.format`);
    - its own cost feature name, logged through `AiUsageService.logCall` against the organisation;
    - untrusted input (website text, owner notes) passed as data, never as instructions.
 5. **The cheapest model that passes the test set.** Model choice is per step, set in one place, and only changed after a test-set comparison.
-6. **Hard rules run last.** `groundCaptions` (numbers, links, handles, claim words) checks every caption after any AI check, whatever the AI said.
+6. **Hard rules run last.** `groundCaptions` (numbers, links, handles, claim words) checks every caption after any AI check, whatever the AI said; `groundEmail` does the same for list emails.
 7. **Memory is shown to the owner.** Anything the engine learns can be seen, edited, switched off and erased.
 
 ## Steps
@@ -25,7 +25,8 @@ Design and reasoning: the "Kanosena content engine and brand memory: design" doc
 | Profile reader | Live (M2) | `OURS_AI_MODEL` (Opus 5.5) | Website pages | Business profile, every claim with a source | `business_profile` |
 | Week writer | Live (M3) | `OURS_AI_MODEL` (Opus 5.5) | Profile facts, UK dates, results preferences | Draft captions | `captions` |
 | Rewriter | Live (M5) | `OURS_AI_MODEL` (Opus 5.5) | Profile facts, current caption, owner note | One draft caption | `caption-rewrite` |
-| Hard rules | Live (M3) | none (code) | Caption, facts | Keep or drop | none |
+| Hard rules | Live (M3) | none (code) | Caption or email, facts | Keep or drop | none |
+| Email writer | Built, off until email sending is on (EM3) | `OURS_AI_MODEL` (Opus 5.5) | Profile facts, UK dates, recent subjects, current email and owner note (rewrite) | One draft list email (subject, preview line, body) | `email.write`, `email.rewrite` |
 | Owner signals | Live (E1) | none (code) | Owner actions | `ours_brand_signal` | none |
 | Checker | Planned (E2) | Sonnet 5.5 | Caption, facts, brand "avoid" list | Pass, fix or drop per caption | `captions.check` |
 | Strategist | Planned (E3) | Opus 5.5 | Profile, brand brief, UK dates, results, recent themes | Week plan (ideas and facts) | `captions.plan` |
@@ -36,6 +37,7 @@ Design and reasoning: the "Kanosena content engine and brand memory: design" doc
 
 - `ours_business_profile`: the only source of facts.
 - `ours_caption_week` / `ours_caption_draft`: the week and its drafts. `rejectReason` holds the owner's latest reason.
+- `ours_email_campaign` (EM3): list emails, from `WAITING` (written) to `APPROVED` (scheduled) and on to sent, with the facts each relies on.
 - `ours_brand_signal` (E1): an append-only log of owner actions, written by code, never by AI. Kinds:
   - `approved`: the scheduled text, and whether the owner had changed it (`edited`);
   - `edited`: the text before and after the owner's own change;
@@ -43,6 +45,7 @@ Design and reasoning: the "Kanosena content engine and brand memory: design" doc
   - `reject-reason`: the one-tap reason (`topic`, `tone`, `untrue`, `salesy`, `other`);
   - `restored`: a rejected post brought back;
   - `rewrite`: the text before, the new version (empty if none could be kept), and the owner's note.
+  Signals about list emails (EM3) have `platform` `email`, the email's id in `draftId` and its subject in `theme`; `before`/`after` hold the body (an edit holds subject, preview line and body).
   Recording a signal never blocks the owner's action: a failure is logged only. Signals are erased with the organisation.
 - `ours_brand_memory` (planned, E4): lessons about voice and preferences, each citing the signals behind it.
 - `ours_ai_usage`: one row per AI call. `ours/scripts/ai-cost-summary.mjs` prints cost per step.

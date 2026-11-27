@@ -19,6 +19,7 @@ import {
   PAID_PLANS,
   PlanDefinition,
   pricingDisplay,
+  shownMetrics,
   TRIAL_PLAN_KEY,
   trialDays,
 } from '@gitroom/nestjs-libraries/ours/plans/plans.config';
@@ -126,10 +127,14 @@ export const planStatus = (
 };
 
 // The next plan up that allows more of something, for the "move to …" hint.
-export const biggerPlan = (current: PlanDefinition, key: MeteredKey | 'channels') =>
+export const biggerPlan = (current: PlanDefinition, key: MeteredKey | 'channels' | 'contacts') =>
   PAID_PLANS.find((p) => p.limits[key] > current.limits[key]);
 
 const metricLabel = (key: MeteredKey) => METRICS.find((m) => m.key === key)!.label;
+
+// "all 5 weeks of posts written", or "the 1 email to your list"
+const usedAll = (limit: number, key: MeteredKey) =>
+  limit === 1 ? `the 1 ${metricLabel(key).replace(/(\w+)s\b/, '$1')}` : `all ${limit} ${metricLabel(key)}`;
 
 // "your Starter plan", or "your free trial"
 const planPhrase = (plan: PlanDefinition) =>
@@ -141,11 +146,11 @@ export const limitMessage = (
   resetsOn: Date
 ) => {
   if (plan.key === TRIAL_PLAN_KEY) {
-    return `You’ve used all ${plan.limits[key]} ${metricLabel(key)} included in your free trial. Choose a plan on Plan and usage to keep going.`;
+    return `You’ve used ${usedAll(plan.limits[key], key)} included in your free trial. Choose a plan on Plan and usage to keep going.`;
   }
   const next = biggerPlan(plan, key);
   return [
-    `You’ve used all ${plan.limits[key]} ${metricLabel(key)} included in ${planPhrase(plan)} this month.`,
+    `You’ve used ${usedAll(plan.limits[key], key)} included in ${planPhrase(plan)} this month.`,
     `It resets on ${formatDay(resetsOn)}.`,
     next ? `${next.name} includes ${next.limits[key]} a month: see Plan and usage.` : '',
   ]
@@ -165,6 +170,16 @@ export const channelLimitMessage = (plan: PlanDefinition, used: number) => {
     : 'Remove one to connect another.';
   const intro = planPhrase(plan);
   return `${intro[0].toUpperCase()}${intro.slice(1)} includes ${plan.limits.channels} connected channels, and you’re using ${used}. ${ask}`;
+};
+
+// Email campaigns EM1: the list is full (or an upload didn't fit).
+export const contactLimitMessage = (plan: PlanDefinition, used: number) => {
+  const next = biggerPlan(plan, 'contacts');
+  const intro = planPhrase(plan);
+  return [
+    `${intro[0].toUpperCase()}${intro.slice(1)} includes ${plan.limits.contacts} people on your email list, and you have ${used}.`,
+    next ? `${next.name} includes ${next.limits.contacts}: see Plan and usage.` : 'Remove someone to add another.',
+  ].join(' ');
 };
 
 @Injectable()
@@ -202,16 +217,30 @@ export class PlanService {
     this.assertUsable(row, status);
     const period = allowancePeriod(row, now);
     if (AI_METRICS.includes(metric)) {
-      const spent = await this._planRepository.aiSpendUsd(orgId, period.spendFrom, now);
-      if (spent >= plan.limits.aiSpendUsd) {
-        this._logger.warn(`Fair-use AI limit reached for org=${orgId}: ${spent} USD`);
-        throw new HttpException(fairUseMessage(plan, period.end), PLAN_LIMIT_STATUS);
-      }
+      await this.assertFairUse(orgId, plan, period, now);
     }
     if (!(await this._planRepository.claim(orgId, period.key, metric, plan.limits[metric]))) {
       throw new HttpException(limitMessage(plan, metric, period.end), PLAN_LIMIT_STATUS);
     }
     return { metric, period: period.key };
+  }
+
+  // AI writing that isn't counted as a unit of its own (an email campaign
+  // draft, EM3, which counts when approved): only checks the plan is usable
+  // and the fair-use cap isn't reached.
+  async assertCanWrite(orgId: string, now: Date = new Date()) {
+    const { row, plan, status } = await this.current(orgId, now);
+    this.assertUsable(row, status);
+    await this.assertFairUse(orgId, plan, allowancePeriod(row, now), now);
+  }
+
+  // How much of a monthly allowance is used, for a screen that shows it
+  // beside the work (the Email screen's "1 of 2 emails this month").
+  async allowance(orgId: string, metric: MeteredKey, now: Date = new Date()) {
+    const { row, plan } = await this.current(orgId, now);
+    const period = allowancePeriod(row, now);
+    const used = await this._planRepository.getUsage(orgId, period.key);
+    return { used: used[metric] || 0, limit: plan.limits[metric], resetsOn: period.resetsOn };
   }
 
   // Never throws: the caller is usually already handling a failure.
@@ -255,17 +284,33 @@ export class PlanService {
     }
   }
 
+  // How many more people the email list can take (email campaigns EM1).
+  // Counts subscribed and waiting people, as the channel limit counts
+  // channels. Throws when the plan has ended, like other new work.
+  async contactRoom(orgId: string) {
+    const { row, plan, status } = await this.current(orgId);
+    this.assertUsable(row, status);
+    const used = await this._planRepository.contactsUsed(orgId);
+    return {
+      room: Math.max(0, plan.limits.contacts - used),
+      limit: plan.limits.contacts,
+      message: contactLimitMessage(plan, used),
+    };
+  }
+
   async overview(orgId: string, canManage: boolean) {
     const now = new Date();
     const { row, plan, status } = await this.current(orgId, now);
     const period = allowancePeriod(row, now);
-    const [used, channels, spent] = await Promise.all([
+    const [used, channels, spent, contacts] = await Promise.all([
       this._planRepository.getUsage(orgId, period.key),
       this.channelsUsed(orgId),
       this._planRepository.aiSpendUsd(orgId, period.spendFrom, now),
+      this._planRepository.contactsUsed(orgId),
     ]);
     const mode = billingMode();
     const provider = paymentProviderFor(mode);
+    const metrics = shownMetrics();
     return {
       plan: {
         key: plan.key,
@@ -276,13 +321,14 @@ export class PlanService {
         trialEndsAt: row.trialEndsAt ? dayjs(row.trialEndsAt).tz(captionTimezone()).format('YYYY-MM-DD') : null,
       },
       period: { start: period.startDate, resetsOn: period.resetsOn },
-      usage: METRICS.map((m) => ({
+      usage: metrics.map((m) => ({
         key: m.key,
         title: m.title,
         used: used[m.key] || 0,
         limit: plan.limits[m.key],
       })),
       channels: { used: channels, limit: plan.limits.channels },
+      contacts: { used: contacts, limit: plan.limits.contacts },
       fairUseReached: spent >= plan.limits.aiSpendUsd,
       plans: PAID_PLANS.map((p) => ({
         key: p.key,
@@ -290,11 +336,12 @@ export class PlanService {
         summary: p.summary,
         monthlyPence: p.monthlyPence,
         limits: {
-          ...Object.fromEntries(METRICS.map((m) => [m.key, p.limits[m.key]])),
+          ...Object.fromEntries(metrics.map((m) => [m.key, p.limits[m.key]])),
           channels: p.limits.channels,
+          contacts: p.limits.contacts,
         },
       })),
-      metrics: METRICS.map((m) => ({ key: m.key, title: m.title })),
+      metrics: metrics.map((m) => ({ key: m.key, title: m.title })),
       pricing: pricingDisplay(),
       billing: {
         mode,
@@ -416,6 +463,19 @@ export class PlanService {
       keepsBillingDate(row, providerName, externalId) ? undefined : update.billingAnchor || new Date()
     );
     this._logger.log(`org=${orgId} is on ${plan.key} (${providerName} ${externalId})`);
+  }
+
+  private async assertFairUse(
+    orgId: string,
+    plan: PlanDefinition,
+    period: { spendFrom: Date; end: Date },
+    now: Date
+  ) {
+    const spent = await this._planRepository.aiSpendUsd(orgId, period.spendFrom, now);
+    if (spent >= plan.limits.aiSpendUsd) {
+      this._logger.warn(`Fair-use AI limit reached for org=${orgId}: ${spent} USD`);
+      throw new HttpException(fairUseMessage(plan, period.end), PLAN_LIMIT_STATUS);
+    }
   }
 
   private assertUsable(row: { trialEndsAt: Date | null }, status: PlanStatus) {

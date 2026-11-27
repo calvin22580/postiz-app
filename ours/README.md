@@ -448,7 +448,8 @@ channel as deleted. Ours then erases the data, so the data deletion page is true
 
 - **Account deleted** (Settings > Global Settings > Delete Account): our
   business profile, captions, weeks, brand kit, UK date choices, post
-  results and owner signals are deleted; upstream's post text, comments, signatures, sets,
+  results, owner signals and the email list (contacts, uploads, blocked
+  addresses, sign-up form) are deleted; upstream's post text, comments, signatures, sets,
   webhooks, auto-post feeds, plugs, error logs and notifications are deleted or
   emptied; uploaded files and approved graphics are removed from storage; stored
   third-party keys and app tokens are hashed or cleared; the organisation is
@@ -470,6 +471,131 @@ channel as deleted. Ours then erases the data, so the data deletion page is true
 
 The browser test `prelaunch.spec.ts` checks the database directly, at
 `E2E_DATABASE_URL` (default: the local dev database).
+
+## Email list (email campaigns EM1)
+
+Screen: `/email` ("Email" in the menu). Public pages: `/subscribe.html?f=<form id>`
+and `/unsubscribe.html?t=<token>` (in the `(legal)` route group, so no sign-in).
+Code: `libraries/nestjs-libraries/src/ours/email/`, `apps/backend/src/ours/email*.controller.ts`,
+`apps/frontend/src/ours/email/`. Sending is below (EM2).
+
+- **Adding people**: upload a CSV (a column headed "Email"; "Name" or
+  "First name" + "Last name" used if there; commas, semicolons or tabs; up to
+  5 MB and 20,000 rows), paste addresses, or add one. Every upload first asks
+  how these people gave their address: *they signed up* (consent) or *they
+  bought or asked for a quote and could opt out* (PECR soft opt-in). The
+  owner ticks a statement naming their business, stored word for word with
+  the upload in `ours_email_import`. *Bought a list, or something else* is
+  refused.
+- **Blocked addresses**: unsubscribing (or, from EM2, a bounce or complaint)
+  adds a hash of the address to `ours_email_suppression`, which outlives
+  removing the contact. A blocked address can never be uploaded or added again.
+- **Sign-up form**: the owner turns it on and shares the link. Sign-ups wait
+  as "waiting to confirm" until they press the button in their confirmation
+  email (double opt-in, EM2). A hidden field catches bots. The answer never says whether an address
+  was already on the list.
+- **Unsubscribe link**: `base64url(contactId).HMAC-SHA256`, signed with
+  `OURS_EMAIL_TOKEN_SECRET` (falls back to `JWT_SECRET`). Never expires.
+  Opening the page changes nothing; its button (or a mail app's RFC 8058
+  one-click POST) unsubscribes. Changing the secret breaks links in emails
+  already sent.
+- **Limit**: people subscribed or waiting count towards the plan's `contacts`
+  (Starter 500, Growth 2,000, Pro 5,000, trial 100). An upload past the limit
+  adds as many as fit and says why.
+- **Download**: the owner's whole list as CSV (cells starting `= + - @` are
+  neutralised for spreadsheets).
+- Public routes are capped per visitor IP (20 sign-ups and 120 page loads an hour).
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `OURS_EMAIL_TOKEN_SECRET` | `JWT_SECRET` | Signs unsubscribe links. Set it once in production and never change it. |
+
+Browser test: `email-list.spec.ts` (reads the signing secret from the repo's `.env`, or `OURS_EMAIL_TOKEN_SECRET` / `JWT_SECRET`). Its second and third tests need the stack started with `OURS_EMAIL_SENDER=simulated` and skip themselves otherwise.
+
+### Sending (email campaigns EM2)
+
+Off unless `OURS_EMAIL_SENDER` is set. `simulated` records every email in our
+own tables and never sends; the Email screen says so. `ses` sends through
+Amazon SES v2 in Stockholm (eu-north-1): our AWS account is limited to that
+EU Region, which is fine for UK GDPR.
+
+- **What goes out**: confirmation emails for form sign-ups (within 7 days of
+  signing up; the link opens `/confirm-email.html?t=<token>`, and only its
+  button confirms), and approved campaigns that are due. Until EM3 adds
+  campaigns, the only campaign is the owner's own test ("Send me a test
+  email" on the Email screen, 5 an hour), which goes to their sign-in address.
+  Since EM3, list emails the owner approved (below).
+- **Send loop**: `EmailCampaignService`, inside the backend, every minute
+  (like the erasure sweep; no Temporal workflow). A campaign is leased for two
+  minutes at a time, so two backends never send the same one. Its recipients
+  become one `ours_email_delivery` row each, made once; each row is marked
+  `SENDING` before its message goes, so nobody gets an email twice, and anyone
+  who unsubscribed since is `SKIPPED`. A refused address is `FAILED`; a busy
+  sender (SES throttling) puts the row back for the next minute; anything that
+  may have gone (a timeout, a dropped connection) is `FAILED` and never sent
+  again. SES pausing the account or the business, or a campaign still retrying
+  after 24 hours, fails the campaign.
+- **Every list email** has the business's name as sender
+  (`<business>@OURS_EMAIL_FROM_DOMAIN`), replies going to the business's email
+  from its profile, why the person is getting it, the business's address, an
+  unsubscribe link, and `List-Unsubscribe` + `List-Unsubscribe-Post` headers
+  (RFC 8058) pointing at `POST /ours/email/public/unsubscribe`.
+- **Per business at SES**: the first send makes a tenant and a configuration
+  set named `kanosena-<organisation id>` (saved in `ours_email_sender`), with
+  the configuration set publishing bounces, complaints, deliveries and rejects
+  to the SNS topic.
+- **Events**: SNS posts to `POST /ours/email/public/events`. Only messages
+  from `OURS_EMAIL_SNS_TOPIC_ARN` with a valid Amazon signature are used (the
+  subscription is confirmed automatically). A permanent bounce or a complaint
+  blocks the address for that business for good. The route never throws: a
+  bad message gets 403, and our own failure 500, so SNS sends it again.
+- **Removing a contact** also deletes their delivery rows, so their address
+  doesn't stay behind in past sends. Deleting an account erases our tables;
+  the business's SES tenant and configuration set stay at AWS (they hold no
+  personal data) until removed by hand.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `OURS_EMAIL_SENDER` | off | `simulated` or `ses`. |
+| `OURS_EMAIL_FROM_DOMAIN` | `news.kanosena.com` | Domain verified in SES; every sending address is on it. |
+| `OURS_EMAIL_SES_REGION` | `eu-north-1` | SES region. |
+| `OURS_EMAIL_AWS_ACCESS_KEY_ID`, `OURS_EMAIL_AWS_SECRET_ACCESS_KEY` | none | IAM keys for sending and tenant set-up. Kept apart from upstream's `SES_*` email provider. |
+| `OURS_EMAIL_SES_IDENTITY_ARN` | none | ARN of the verified domain identity, associated with each business's tenant. |
+| `OURS_EMAIL_SNS_TOPIC_ARN` | none | Topic for SES events. Events from any other topic are ignored. |
+| `OURS_EMAIL_LIVE_TO` | none | Only for the live SES test (`ses.live.spec.ts`): the verified address it sends one test email to. |
+| `OURS_EMAIL_SEND_PER_SECOND` | 1 | Messages a second (SES's sandbox allows 1). |
+| `OURS_EMAIL_TENANT_PREFIX` | `kanosena` | Start of each business's SES tenant and configuration set name. Don't change it once businesses have sent. |
+
+### List emails (email campaigns EM3)
+
+Shown on the Email screen ("Your emails") only while sending is on
+(`OURS_EMAIL_SENDER` is `simulated` or `ses`); with it off, nothing can be
+written or approved and the Plan screen doesn't show the email allowance.
+
+- **Writing**: "Write this week's email" makes one AI call (Email writer,
+  cost features `email.write` and `email.rewrite`, logged per organisation)
+  from the business profile facts, UK dates on or after the suggested send
+  day, and the subjects of recent emails. Without `ANTHROPIC_API_KEY` a demo
+  writer fills fixed templates from the profile, and the email is labelled as
+  a demo. `groundEmail` (`email.grounding.ts`) runs the same hard rules as
+  posts on the subject, preview line and body: numbers, prices, links, emails,
+  handles and claim words must be in the profile, it must rely on a profile
+  fact, and mail-merge placeholders are dropped. An email that fails is never
+  saved. 5 new emails a day per business, 5 AI rewrites per email, and the
+  fair-use AI cap applies.
+- **Reviewing**: the owner can edit the words (kept, with anything not in the
+  profile pointed out), ask for a new version (with an optional note), reject
+  it, or approve it for a date and time (suggested: next Tuesday 10:00 UK time;
+  at least 10 minutes and at most 60 days ahead). Each action is an owner
+  signal in `ours_brand_signal` with `platform` `email`.
+- **Approval** (`EmailCampaignService.approve`, the only way a list email is
+  scheduled) takes one unit of the plan's monthly `emails` allowance (Starter
+  2, Growth 4, Pro 8, trial 1) and needs at least one subscribed person. The
+  send loop above sends it at that time to everyone subscribed then. "Don't
+  send" on a scheduled email cancels it and gives the allowance back, unless
+  the send loop has already started it. An email that reached nobody because
+  SES paused the business also gives it back. An email that mentions a UK
+  date can't be approved for after that date.
 
 ## Content engine (owner signals and AI cost)
 

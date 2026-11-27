@@ -42,17 +42,21 @@ const Price: FC<{ pence: number; pricing: PlanOverview['pricing'] }> = ({ pence,
 );
 
 // what each limit means on a plan card
-const included: Record<MetricKey | 'channels', (n: number) => string> = {
+const included: Record<MetricKey | 'channels' | 'contacts', (n: number) => string> = {
   postsScheduled: (n) => `Up to ${n} scheduled posts a month`,
   captionWeeks: (n) => (n >= 5 ? 'A new week of posts every week' : `${n} weeks of posts a month`),
   rewrites: (n) => `${n} new versions of a post a month`,
   profileBuilds: (n) => `${n} website ${n === 1 ? 'read' : 'reads'} a month to refresh your profile`,
   channels: (n) => `Up to ${n} connected channels`,
+  contacts: (n) => `Up to ${n} people on your email list`,
+  emails: (n) => `${n} ${n === 1 ? 'email' : 'emails'} to your list a month`,
 };
-const INCLUDED_ORDER: (MetricKey | 'channels')[] = [
+const INCLUDED_ORDER: (MetricKey | 'channels' | 'contacts')[] = [
   'postsScheduled',
   'captionWeeks',
   'channels',
+  'contacts',
+  'emails',
   'rewrites',
   'profileBuilds',
 ];
@@ -246,6 +250,13 @@ const Usage: FC<{ data: PlanOverview }> = ({ data }) => (
         note="Channels you have connected now. Removing one frees a place."
         testId="plan-meter-channels"
       />
+      <Meter
+        title="People on your email list"
+        used={data.contacts.used}
+        limit={data.contacts.limit}
+        note="Subscribed, or waiting to confirm. Removing someone frees a place."
+        testId="plan-meter-contacts"
+      />
     </ul>
     {data.fairUseReached && (
       <Notice tone="attention" testId="plan-fair-use">
@@ -278,12 +289,12 @@ const PlanOption: FC<{
       </div>
       {card.monthlyPence !== null && <Price pence={card.monthlyPence} pricing={data.pricing} />}
       <ul className="flex flex-col gap-[6px] text-[14px] leading-[1.5]">
-        {INCLUDED_ORDER.map((k) => (
+        {INCLUDED_ORDER.filter((k) => card.limits[k] !== undefined).map((k) => (
           <li key={k} className="flex gap-[8px]">
             <span aria-hidden="true" className="text-textItemBlur">
               ·
             </span>
-            <span>{included[k](card.limits[k])}</span>
+            <span>{included[k](card.limits[k]!)}</span>
           </li>
         ))}
       </ul>

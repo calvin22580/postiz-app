@@ -60,7 +60,7 @@ export const PrimarySmallButton: FC<{
   </button>
 );
 
-const describeDetails = (details: string[]) => {
+export const describeDetails = (details: string[]) => {
   const named = details.map((d) => (d === 'price or percentage' ? 'a price or percentage' : `“${d}”`));
   return named.length > 1 ? `${named.slice(0, -1).join(', ')} and ${named[named.length - 1]}` : named[0];
 };

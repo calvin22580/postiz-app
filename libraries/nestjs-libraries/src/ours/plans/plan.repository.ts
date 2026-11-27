@@ -3,6 +3,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaRepository } from '@gitroom/nestjs-libraries/database/prisma/prisma.service';
+import { ACTIVE_STATUSES } from '@gitroom/nestjs-libraries/ours/email/email.contacts';
 
 const isUniqueClash = (e: unknown) =>
   e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002';
@@ -20,8 +21,16 @@ export class PlanRepository {
   constructor(
     private _plan: PrismaRepository<'oursPlanSubscription'>,
     private _usage: PrismaRepository<'oursUsageCounter'>,
-    private _aiUsage: PrismaRepository<'oursAiUsage'>
+    private _aiUsage: PrismaRepository<'oursAiUsage'>,
+    private _emailContact: PrismaRepository<'oursEmailContact'>
   ) {}
+
+  // people on the email list the plan counts (email campaigns EM1)
+  contactsUsed(orgId: string) {
+    return this._emailContact.model.oursEmailContact.count({
+      where: { organizationId: orgId, status: { in: ACTIVE_STATUSES } },
+    });
+  }
 
   getPlan(orgId: string) {
     return this._plan.model.oursPlanSubscription.findUnique({

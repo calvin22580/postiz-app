@@ -2103,3 +2103,210 @@ model OursBrandSignal {
   @@index([organizationId, createdAt])
   @@map("ours_brand_signal")
 }
+
+// Email campaigns EM1 (25/11/2026): the business's own email list and the
+// consent behind each address. Nothing is sent from these tables yet (EM2).
+// Holds third parties' personal data, so every row is erased with the
+// organisation.
+enum OursEmailContactStatus {
+  SUBSCRIBED
+  // signed up on the business's form, not yet confirmed by email
+  PENDING_CONFIRMATION
+  UNSUBSCRIBED
+  BOUNCED
+  COMPLAINED
+}
+
+// how the person agreed to hear from the business (ICO PECR guidance)
+enum OursEmailContactBasis {
+  CONSENT
+  SOFT_OPT_IN
+}
+
+enum OursEmailContactSource {
+  IMPORT
+  FORM
+  MANUAL
+}
+
+model OursEmailContact {
+  id              String                 @id @default(uuid())
+  organizationId  String
+  // trimmed and lower-cased, so the same address can't be on a list twice
+  email           String
+  name            String?
+  status          OursEmailContactStatus @default(SUBSCRIBED)
+  basis           OursEmailContactBasis
+  source          OursEmailContactSource
+  // the upload this contact came from (source IMPORT)
+  importId        String?
+  // when they agreed (for an upload: when the owner told us they had; for
+  // the form: when they confirmed by email)
+  consentAt       DateTime               @default(now())
+  // a form sign-up's confirmation email went out (EM2)
+  confirmationSentAt DateTime?
+  statusChangedAt DateTime               @default(now())
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  @@unique([organizationId, email])
+  @@index([organizationId, status])
+  @@map("ours_email_contact")
+}
+
+// One row per upload or paste: what the owner told us about where the
+// addresses came from, and what happened to them.
+model OursEmailImport {
+  id             String                @id @default(uuid())
+  organizationId String
+  userId         String
+  // the file's name, or null for pasted addresses
+  fileName       String?
+  basis          OursEmailContactBasis
+  // the statement the owner ticked, word for word
+  statement      String
+  added          Int                   @default(0)
+  alreadyOnList  Int                   @default(0)
+  invalid        Int                   @default(0)
+  blocked        Int                   @default(0)
+  overLimit      Int                   @default(0)
+  createdAt      DateTime              @default(now())
+
+  @@index([organizationId, createdAt])
+  @@map("ours_email_import")
+}
+
+// Addresses that must never be emailed again by this business (unsubscribed,
+// bounced, complained). Kept as a SHA-256 of the lower-cased address, so the
+// block outlives a deleted contact without keeping the address itself.
+model OursEmailSuppression {
+  id             String   @id @default(uuid())
+  organizationId String
+  emailHash      String
+  // unsubscribed | bounced | complained
+  reason         String
+  createdAt      DateTime @default(now())
+
+  @@unique([organizationId, emailHash])
+  @@map("ours_email_suppression")
+}
+
+// The business's sign-up form. publicId goes in the form's link.
+model OursEmailForm {
+  id             String   @id @default(uuid())
+  organizationId String   @unique
+  publicId       String   @unique
+  enabled        Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("ours_email_form")
+}
+
+// Email campaigns EM2 (25/11/2026): sending. One campaign is one email to the
+// list (or, for a test, to the owner alone). A delivery row per recipient
+// makes a restarted send carry on without emailing anyone twice.
+enum OursEmailCampaignStatus {
+  // written, waiting for the owner (EM3)
+  WAITING
+  // approved and scheduled: the send loop picks it up at scheduledAt
+  APPROVED
+  SENDING
+  SENT
+  REJECTED
+  CANCELLED
+  FAILED
+}
+
+enum OursEmailDeliveryStatus {
+  QUEUED
+  // handed to the sender; if the backend stopped here we don't know whether
+  // it went, so it is never sent again
+  SENDING
+  SENT
+  // recorded by the simulated sender, never sent
+  SIMULATED
+  DELIVERED
+  BOUNCED
+  COMPLAINED
+  // unsubscribed or blocked after the send was planned
+  SKIPPED
+  FAILED
+}
+
+model OursEmailCampaign {
+  id             String                  @id @default(uuid())
+  organizationId String
+  status         OursEmailCampaignStatus @default(WAITING)
+  // a test goes only to the signed-in owner's own address
+  test           Boolean                 @default(false)
+  testTo         String?
+  subject        String
+  previewText    String?
+  // plain text paragraphs; the footer is added when it is sent
+  body           String
+  // EM3: anthropic | demo, for a written email (null for a test)
+  writer         String?
+  // EM3: the profile facts (and UK dates) the email relies on
+  facts          Json?
+  // EM3: AI rewrites asked for, capped per email
+  rewriteCount   Int                     @default(0)
+  // EM3: the owner changed the words themselves
+  editedAt       DateTime?
+  // EM3: the allowance month approval counted it in, so cancelling gives it
+  // back to the right month
+  allowancePeriod String?
+  scheduledAt    DateTime?
+  approvedAt     DateTime?
+  approvedBy     String?
+  // the send loop's lease, so two backends never send the same campaign;
+  // leaseOwner is the backend process holding it
+  leaseUntil     DateTime?
+  leaseOwner     String?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  // simulated | ses: which sender sent it
+  sentWith       String?
+  recipients     Int                     @default(0)
+  sent           Int                     @default(0)
+  failed         Int                     @default(0)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@index([status, scheduledAt])
+  @@index([organizationId, createdAt])
+  @@map("ours_email_campaign")
+}
+
+model OursEmailDelivery {
+  id             String                  @id @default(uuid())
+  organizationId String
+  campaignId     String
+  // null for a test sent to the owner
+  contactId      String?
+  email          String
+  status         OursEmailDeliveryStatus @default(QUEUED)
+  messageId      String?
+  error          String?
+  sentAt         DateTime?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@unique([campaignId, email])
+  @@index([campaignId, status])
+  @@index([messageId])
+  @@map("ours_email_delivery")
+}
+
+// The business's set-up at the sender (SES tenant and configuration set),
+// made by our code the first time it sends.
+model OursEmailSender {
+  id               String   @id @default(uuid())
+  organizationId   String   @unique
+  tenantName       String
+  configurationSet String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("ours_email_sender")
+}

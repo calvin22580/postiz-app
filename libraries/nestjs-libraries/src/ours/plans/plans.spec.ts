@@ -236,6 +236,7 @@ const makeService = (opts: { plan?: Record<string, unknown> | null; spent?: numb
       if (used > 0) counters.set(`${period}:${metric}`, used - 1);
     }),
     aiSpendUsd: vi.fn(async () => opts.spent || 0),
+    contactsUsed: vi.fn(async () => 0),
   };
   const integrations = {
     getIntegrationsList: vi.fn(async () => opts.channels || []),

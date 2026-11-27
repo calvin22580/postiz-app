@@ -34,4 +34,8 @@ export class AiUsageService {
       return null;
     }
   }
+
+  countCalls(orgId: string, feature: string, since: Date) {
+    return this._aiUsageRepository.countCalls(orgId, feature, since);
+  }
 }

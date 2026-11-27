@@ -396,6 +396,9 @@ importers:
       crypto-hash:
         specifier: ^3.0.0
         version: 3.1.0
+      csv-parse:
+        specifier: ^6.2.1
+        version: 6.2.1
       dayjs:
         specifier: 1.11.19
         version: 1.11.19
@@ -10444,6 +10447,9 @@ packages:
 
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
+
+  csv-parse@6.2.1:
+    resolution: {integrity: sha512-LRLMV+UCyfMokp8Wb411duBf1gaBKJfOfBWU9eHMJ+b+cJYZsNu3AFmjJf3+yPGd59Exz1TsMjaSFyxnYB9+IQ==}
 
   currency-codes@1.5.1:
     resolution: {integrity: sha512-hqy8vtlIYKzO6pe2TE0V4/riZALIc7nhtE9cvxk5FDRCvfGplgzUvpTmZlMsyO+NeK5U41j+sQXJOo8l8v9kdg==}
@@ -30230,6 +30236,8 @@ snapshots:
   csstype@3.0.9: {}
 
   csstype@3.2.3: {}
+
+  csv-parse@6.2.1: {}
 
   currency-codes@1.5.1:
     dependencies:
