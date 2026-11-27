@@ -32,6 +32,9 @@ import { ErasureRepository } from '@gitroom/nestjs-libraries/ours/erasure/erasur
 import { BrandSignalService } from '@gitroom/nestjs-libraries/ours/memory/brand.signal.service';
 import { BrandSignalRepository } from '@gitroom/nestjs-libraries/ours/memory/brand.signal.repository';
 import { ErasureInterceptor } from '@gitroom/backend/ours/erasure.interceptor';
+import { SearchController } from '@gitroom/backend/ours/search.controller';
+import { SearchService } from '@gitroom/nestjs-libraries/ours/search/search.service';
+import { SearchRepository } from '@gitroom/nestjs-libraries/ours/search/search.repository';
 
 const authenticatedController = [
   BusinessProfileController,
@@ -40,6 +43,7 @@ const authenticatedController = [
   SeasonalController,
   PlanController,
   PerformanceController,
+  SearchController,
 ];
 
 // No sign-in: callers prove who they are another way (Stripe signs its
@@ -69,6 +73,8 @@ const publicController = [StripeWebhookController];
     ErasureRepository,
     BrandSignalService,
     BrandSignalRepository,
+    SearchService,
+    SearchRepository,
     // Milestone 7: our plan's channel limit on upstream's "add a channel"
     // routes (global, so upstream's modules need no change)
     {

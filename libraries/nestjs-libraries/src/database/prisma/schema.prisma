@@ -2103,3 +2103,44 @@ model OursBrandSignal {
   @@index([organizationId, createdAt])
   @@map("ours_brand_signal")
 }
+
+// "How people find you" D1 (26/11/2026): the Google searches that matter to a
+// business. We suggest them from the business profile; the owner chooses
+// which ones we watch. Demand figures come from DataForSEO, or from the
+// Simulated provider (simulated = true, always labelled in the app).
+enum OursTrackedSearchStatus {
+  // offered to the owner, not chosen yet
+  SUGGESTED
+  // chosen by the owner: we watch this search
+  TRACKED
+  // turned down by the owner: never suggested again
+  DISMISSED
+}
+
+model OursTrackedSearch {
+  id              String                  @id @default(uuid())
+  organizationId  String
+  // lower case, single spaces
+  keyword         String
+  status          OursTrackedSearchStatus
+  // "suggested" (by us) or "owner" (typed in by the owner)
+  origin          String
+  // "local" (names the business's town, or "near me") or "topic"
+  kind            String
+  // average monthly Google searches in the market; null = too few to measure
+  // or not checked yet
+  searchVolume    Int?
+  volumeCheckedAt DateTime?
+  // DataForSEO location code the figure covers (2826 = United Kingdom)
+  locationCode    Int?
+  // reserved for the Team plan (a branch of the business); unused for now
+  location        String?
+  simulated       Boolean                 @default(false)
+  trackedAt       DateTime?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  @@unique([organizationId, keyword])
+  @@index([organizationId, status])
+  @@map("ours_tracked_search")
+}

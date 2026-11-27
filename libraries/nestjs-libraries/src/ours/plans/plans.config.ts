@@ -42,6 +42,9 @@ export interface PlanLimits extends Record<MeteredKey, number> {
   channels: number;
   // platforms a week of posts is written for (Facebook, Instagram, LinkedIn)
   platforms: number;
+  // Google searches we watch for the business at any one time ("How people
+  // find you", D1), not monthly
+  trackedSearches: number;
   // fair-use safety net: AI cost in USD per month (ours_ai_usage.costUsd).
   // Never shown to the owner as an amount.
   aiSpendUsd: number;
@@ -76,6 +79,7 @@ export const PAID_PLANS: PlanDefinition[] = [
       profileBuilds: 3,
       channels: 2,
       platforms: 1,
+      trackedSearches: 10,
       aiSpendUsd: 8,
     },
   },
@@ -92,6 +96,7 @@ export const PAID_PLANS: PlanDefinition[] = [
       profileBuilds: 4,
       channels: 4,
       platforms: 2,
+      trackedSearches: 25,
       aiSpendUsd: 15,
     },
   },
@@ -108,6 +113,7 @@ export const PAID_PLANS: PlanDefinition[] = [
       profileBuilds: 10,
       channels: 8,
       platforms: 3,
+      trackedSearches: 50,
       aiSpendUsd: 30,
     },
   },
@@ -128,6 +134,7 @@ export const TRIAL_PLAN: PlanDefinition = {
     profileBuilds: 3,
     channels: 3,
     platforms: 3,
+    trackedSearches: 10,
     aiSpendUsd: 3,
   },
 };

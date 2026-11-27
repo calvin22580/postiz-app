@@ -126,7 +126,7 @@ export const planStatus = (
 };
 
 // The next plan up that allows more of something, for the "move to …" hint.
-export const biggerPlan = (current: PlanDefinition, key: MeteredKey | 'channels') =>
+export const biggerPlan = (current: PlanDefinition, key: MeteredKey | 'channels' | 'trackedSearches') =>
   PAID_PLANS.find((p) => p.limits[key] > current.limits[key]);
 
 const metricLabel = (key: MeteredKey) => METRICS.find((m) => m.key === key)!.label;
@@ -165,6 +165,15 @@ export const channelLimitMessage = (plan: PlanDefinition, used: number) => {
     : 'Remove one to connect another.';
   const intro = planPhrase(plan);
   return `${intro[0].toUpperCase()}${intro.slice(1)} includes ${plan.limits.channels} connected channels, and you’re using ${used}. ${ask}`;
+};
+
+export const trackedSearchLimitMessage = (plan: PlanDefinition) => {
+  const next = biggerPlan(plan, 'trackedSearches');
+  const ask = next
+    ? `Remove one to add another, or move to ${next.name} (${next.limits.trackedSearches} searches) on Plan and usage.`
+    : 'Remove one to add another.';
+  const intro = planPhrase(plan);
+  return `${intro[0].toUpperCase()}${intro.slice(1)} watches up to ${plan.limits.trackedSearches} searches. ${ask}`;
 };
 
 @Injectable()
@@ -252,6 +261,33 @@ export class PlanService {
     const used = await this.channelsUsed(orgId);
     if (used >= plan.limits.channels) {
       throw stop(channelLimitMessage(plan, used));
+    }
+  }
+
+  // How many searches the plan watches ("How people find you", D1). Only
+  // reads, so a lapsed plan still sees its list.
+  async trackedSearchLimit(orgId: string) {
+    const { plan } = await this.current(orgId);
+    return { limit: plan.limits.trackedSearches, plan: plan.name, message: trackedSearchLimitMessage(plan) };
+  }
+
+  // Before watching more searches: the plan must be usable.
+  async assertCanTrackSearches(orgId: string) {
+    const { row, plan, status } = await this.current(orgId);
+    this.assertUsable(row, status);
+    return { limit: plan.limits.trackedSearches, plan: plan.name, message: trackedSearchLimitMessage(plan) };
+  }
+
+  // Before a paid search-data call: the plan must be usable and this month's
+  // fair-use spend (AI and data calls together) not reached.
+  async assertCanSpendOnSearchData(orgId: string, now: Date = new Date()) {
+    const { row, plan, status } = await this.current(orgId, now);
+    this.assertUsable(row, status);
+    const period = allowancePeriod(row, now);
+    const spent = await this._planRepository.aiSpendUsd(orgId, period.spendFrom, now);
+    if (spent >= plan.limits.aiSpendUsd) {
+      this._logger.warn(`Fair-use limit reached for search data, org=${orgId}: ${spent} USD`);
+      throw new HttpException(fairUseMessage(plan, period.end), PLAN_LIMIT_STATUS);
     }
   }
 

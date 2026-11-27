@@ -441,6 +441,50 @@ Screen: `/results` ("What worked" in the menu). Code:
 
 API: `GET /ours/performance`.
 
+## How people find you: searches that matter (D1)
+
+Plan: the "Kanosena 'How people find you': plan" doc (26/11/2026), milestones
+D1 to D6. D1 is this part: the Google searches we watch for each business.
+
+Shown at the top of `/results` ("What worked"), only while
+`OURS_SEARCH_REPORT=true`. Code: `libraries/nestjs-libraries/src/ours/search/`,
+`apps/backend/src/ours/search.controller.ts`, `apps/frontend/src/ours/search/`.
+Table: `ours_tracked_search`.
+
+- From the business profile's services and town we suggest searches: local
+  ones first ("dog grooming harrogate", "dog grooming near me"), then wider
+  topics people search for, each with its average monthly Google searches.
+  Brand searches and anything already answered are left out.
+- The owner ticks which ones we watch (local ones start ticked), turns down
+  the rest, or types in their own. Nothing is watched until they choose.
+- The plan sets how many searches are watched at once (`trackedSearches` in
+  `plans.config.ts`: trial 10, Starter 10, Growth 25, Pro 50).
+- Search data is untrusted input. It only decides what we watch (and, in D3,
+  what we write about). It never becomes a claim about the business.
+- D1 only builds the list. Checking where the business appears for each
+  search is D2.
+
+**Where the figures come from.** With `OURS_DATAFORSEO_LOGIN` and
+`OURS_DATAFORSEO_PASSWORD` set, from DataForSEO Labs (`keyword_overview` for
+the local searches, `keyword_ideas` for topics; about $0.03 a set of
+suggestions). Without them, a **Simulated** provider makes up repeatable
+figures for free, and the screen labels them as made up. Every paid call is
+logged in `ours_ai_usage` (feature `search.ideas`, provider `dataforseo`, the
+provider's own charge), so it shows in `ai-cost-summary.mjs` and counts towards
+the plan's fair-use cap. Paid suggestions can be asked for at most once a day
+per business.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `OURS_SEARCH_REPORT` | off | `true` shows the section and turns on its API. |
+| `OURS_DATAFORSEO_LOGIN` / `OURS_DATAFORSEO_PASSWORD` | empty | DataForSEO API login (Basic auth). Backend only. Empty = Simulated figures. |
+| `OURS_SEARCH_LOCATION_CODE` | `2826` | DataForSEO country code for demand figures (2826 = United Kingdom; Labs only takes countries). |
+| `OURS_SEARCH_LANGUAGE_CODE` | `en` | Language for demand figures. |
+| `OURS_SEARCH_MARKET_LABEL` | `the UK` | Finishes "searches a month in …" on screen. |
+
+API: `GET /ours/search`, `POST /ours/search/suggest`, `POST /ours/search/track`
+(`{ ids }`), `POST /ours/search/add` (`{ keyword }`), `DELETE /ours/search/:id`.
+
 ## Deleting data (pre-launch)
 
 Upstream only marks a deleted account's organisation and a disconnected

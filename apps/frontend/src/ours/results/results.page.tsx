@@ -12,6 +12,7 @@ import {
   ResultGroup,
   usePostResults,
 } from '@gitroom/frontend/ours/results/results.hooks';
+import { SearchSection } from '@gitroom/frontend/ours/search/search.section';
 
 const PLATFORM_LABELS: Record<string, string> = {
   facebook: 'Facebook',
@@ -304,6 +305,8 @@ export const ResultsPage: FC = () => {
           How your approved posts did, and what we’ll lean towards next.
         </p>
       </div>
+      {/* "How people find you" (D1): hidden unless OURS_SEARCH_REPORT is on */}
+      <SearchSection />
       {error ? (
         <Notice testId="results-error">
           We couldn’t load your results.{' '}

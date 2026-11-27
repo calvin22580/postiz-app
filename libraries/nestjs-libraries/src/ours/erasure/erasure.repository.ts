@@ -55,6 +55,7 @@ export class ErasureRepository {
       | 'oursSeasonalSettings'
       | 'oursPostPerformance'
       | 'oursBrandSignal'
+      | 'oursTrackedSearch'
     >
   ) {}
 
@@ -191,6 +192,7 @@ export class ErasureRepository {
     await this._ours.model.oursBusinessProfile.deleteMany({ where: org });
     await this._ours.model.oursBrandKit.deleteMany({ where: org });
     await this._ours.model.oursSeasonalSettings.deleteMany({ where: org });
+    await this._ours.model.oursTrackedSearch.deleteMany({ where: org });
 
     // upstream rows nothing points at
     await this._upstream.model.errors.deleteMany({ where: org });
