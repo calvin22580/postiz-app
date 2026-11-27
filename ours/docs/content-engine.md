@@ -23,14 +23,25 @@ Design and reasoning: the "Kanosena content engine and brand memory: design" doc
 | Step | Status | Model | Reads | Writes | Cost feature |
 | --- | --- | --- | --- | --- | --- |
 | Profile reader | Live (M2) | `OURS_AI_MODEL` (Opus 5.5) | Website pages | Business profile, every claim with a source | `business_profile` |
-| Week writer | Live (M3) | `OURS_AI_MODEL` (Opus 5.5) | Profile facts, UK dates, results preferences | Draft captions | `captions` |
-| Rewriter | Live (M5) | `OURS_AI_MODEL` (Opus 5.5) | Profile facts, current caption, owner note | One draft caption | `caption-rewrite` |
+| Week writer | Live (M3) | `OURS_AI_MODEL` (Opus 5.5) | Profile facts, UK dates, results preferences, brand brief (E4, when on) | Draft captions | `captions` |
+| Rewriter | Live (M5) | `OURS_AI_MODEL` (Opus 5.5) | Profile facts, current caption, owner note, brand brief (E4, when on; the note wins) | One draft caption | `caption-rewrite` |
 | Hard rules | Live (M3) | none (code) | Caption, facts | Keep or drop | none |
 | Owner signals | Live (E1) | none (code) | Owner actions | `ours_brand_signal` | none |
-| Checker | Planned (E2) | Sonnet 5.5 | Caption, facts, brand "avoid" list | Pass, fix or drop per caption | `captions.check` |
+| Checker | Built, off (E2) | `OURS_AI_CHECKER_MODEL` (Sonnet 5.5 until the test set decides) | Captions, profile facts, brand memory `avoid` and `phrases` lessons (E4, when on) | Pass, fix or drop per caption, before the hard rules | `caption-check` |
 | Strategist | Planned (E3) | Opus 5.5 | Profile, brand brief, UK dates, results, recent themes | Week plan (ideas and facts) | `captions.plan` |
 | Writer | Planned (E3) | Sonnet 5.5 | Week plan, brand brief, platform rules | Draft captions | `captions.write` |
-| Memory keeper | Planned (E4) | Haiku 5.5, Anthropic memory tool | New owner signals, current memory | `ours_brand_memory`, through our checked tool handler | `memory.update` |
+| Memory keeper | Built, off (E4) | `OURS_AI_MEMORY_MODEL` (Haiku 5.5), one structured call | Owner signals since its last run, current lessons | `ours_brand_memory`, only through `MemoryWorkspace`, which checks every change | `memory-update` |
+
+## Entry points
+
+Every way a post can start goes through the same steps above and ends waiting for the owner's approval in the app.
+
+| Entry point | Status | Goes through | Notes |
+| --- | --- | --- | --- |
+| Weekly posts screen | Live | Week writer, Checker (when on), hard rules | |
+| Rewrite on the review screen | Live (M5) | Rewriter, Checker (when on), hard rules | |
+| Upstream public API, MCP and CLI | Live, limited | None of ours | `assertDirectPostingAllowed` keeps these to upstream drafts; they never reach our review screen |
+| Claude or ChatGPT connector | Planned (E8) | Checker, hard rules; lands as a post waiting for approval | Our own small tool set: read the profile and this week's posts, add a post or idea. No tool can approve, schedule or publish. Exposing profile data through a connector needs a decision first |
 
 ## Data
 
@@ -44,7 +55,11 @@ Design and reasoning: the "Kanosena content engine and brand memory: design" doc
   - `restored`: a rejected post brought back;
   - `rewrite`: the text before, the new version (empty if none could be kept), and the owner's note.
   Recording a signal never blocks the owner's action: a failure is logged only. Signals are erased with the organisation.
-- `ours_brand_memory` (planned, E4): lessons about voice and preferences, each citing the signals behind it.
+- `ours_brand_memory` (E4): lessons about how the owner likes posts written and chosen, one row per memory-tool file (`/memories/{voice,phrases,likes,topics,avoid}/<name>.md`). Each cites the signals behind it (`evidence`, `against`: first 8 characters of signal ids). Our code sets the status: evidence minus against of 2 or more is `active` (used in the brief), 1 `tentative`, 0 or less `retired`. At most 30 lessons of 200 characters. `source` owner means the owner wrote or edited it, and the keeper can't change it; `offAt` means the owner switched it off, and it can't come back. Erased with the organisation.
+- `ours_brand_memory_run` (E4): one row per keeper run: the newest signal covered (the next run starts after it), what changed, what was refused and why.
+- Brand memory (E4) runs only with `OURS_BRAND_MEMORY=true`. Before a week is written, the keeper runs if there are new signals (Haiku 5.5, one structured call that gets every current lesson and returns the changes; `OURS_MEMORY_KEEPER=memory-tool` swaps in the memory tool version, which the test set compared with it and with a Managed Agents memory store; the labelled demo keeper runs without an AI key). `MemoryWorkspace` refuses paths outside the folders, lessons without real evidence, business details (the caption hard rules plus fact patterns), switched-off lessons and changes to owner lessons; refused changes are dropped (the memory tool version gets them back as tool errors). Accepted changes are saved only when the run ends. If the run fails, writing goes ahead with the lessons as they were. Rewrites read the brief but never run the keeper. The brief is a preference for wording and choice of post, never a source of claims; the Checker and hard rules still check every claim against the profile.
+- The owner sees and controls the lessons on "What we've learned" (E5, `/learned`, `BrandMemoryController`). Edited, switched-back-on and owner-written lessons become `source: owner` and are in use straight away; switched-off and deleted ones keep their row (`offAt`, and `deletedAt` for deleted) so `MemoryWorkspace` refuses them if the keeper tries again. Owner text goes through `lessonProblems` too.
+- The Checker (E2) runs only with `OURS_CAPTION_CHECKER=true`, after the writer and the rewriter. One call checks a whole week. A fixed caption still goes through the hard rules. If the check call fails, the captions go on to the hard rules unchanged and the failure is logged: the hard rules and the owner's approval still apply.
 - `ours_ai_usage`: one row per AI call. `ours/scripts/ai-cost-summary.mjs` prints cost per step.
 
 ## Adding or changing a step

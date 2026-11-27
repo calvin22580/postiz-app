@@ -31,8 +31,6 @@ const CLAIM_WORDS = [
   'free',
   'discount',
   'discounts',
-  'offer',
-  'offers',
   'sale',
   'deal',
   'deals',
@@ -59,6 +57,11 @@ const CLAIM_WORDS = [
   '5-star',
   'five-star',
 ];
+
+// "Offer" is a claim only as a noun ("a special offer", "on offer", "offer
+// ends Friday"). As a verb it is how businesses describe what they do ("we
+// offer puncture repairs"), so that use is allowed.
+const OFFER_CLAIM = /\b(?:an|this|our|special|limited|exclusive|introductory|seasonal|christmas|weekly|monthly|latest|great|amazing|winter|spring|summer|autumn)\s+offers?\b|\boffers?\s+(?:on|ends?|code|available)(?![-\w])|\bon offer\b/;
 
 const digitsOf = (s: string) => s.replace(/\D/g, '');
 const lower = (s: string) => s.toLowerCase();
@@ -101,6 +104,7 @@ export const unsupportedDetails = (text: string, facts: CaptionFact[]) => {
     const re = new RegExp(`(^|[^a-z])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z]|$)`);
     if (re.test(words) && !re.test(factText)) problems.push(w);
   }
+  if (OFFER_CLAIM.test(words) && !OFFER_CLAIM.test(factText)) problems.push('offer');
   return problems;
 };
 

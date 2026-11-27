@@ -18,6 +18,7 @@ import { RenderPreviewDateClient } from '@gitroom/frontend/components/preview/re
 import { CreationMethodBadge } from '@gitroom/frontend/components/launches/creation.method.badge';
 // OURS (2026-11-20): wordmark import (aliased to our brand component)
 import { LogoTextComponent } from '@gitroom/frontend/components/ui/logo-text.component';
+import { SandboxPreviewMarker } from '@gitroom/frontend/ours/sandbox/sandbox.markers'; // OURS (2026-11-21): Sandbox label on the preview
 
 dayjs.extend(utc);
 export const metadata: Metadata = {
@@ -82,6 +83,8 @@ export default async function Auth(
           </div>
         </div>
 
+        {/* OURS (2026-11-21): Sandbox label on the preview and its shared view */}
+        <SandboxPreviewMarker identifier={post[0].integration?.providerIdentifier} />
         <div className="flex flex-col lg:flex-row gap-[8px]">
           <div className="flex-1 flex flex-col gap-[8px]">
             {post.map((p: any, index: number) => (

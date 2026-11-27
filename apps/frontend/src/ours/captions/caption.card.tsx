@@ -77,7 +77,7 @@ export const CaptionCard: FC<{
 }> = ({ caption, week, channelId, channelName, brandVersion, onChanged }) => {
   const fetch = useFetch();
   const [chosenMode, setMode] = useState<Mode>('view');
-  const [busy, setBusy] = useState<null | 'approve' | 'save' | 'rewrite' | 'reject' | 'restore' | 'reason'>(null);
+  const [busy, setBusy] = useState<null | 'approve' | 'save' | 'rewrite' | 'reject' | 'restore' | 'reason' | 'previous'>(null);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState(caption.text);
   const [note, setNote] = useState('');
@@ -146,6 +146,14 @@ export const CaptionCard: FC<{
       setNote('');
     }
   };
+
+  const keepPrevious = () =>
+    act(
+      'previous',
+      'keep-previous',
+      { method: 'POST' },
+      'We couldn’t go back to the earlier version. Please try again.'
+    );
 
   const header = (
     <div className="flex items-center justify-between gap-[12px] flex-wrap">
@@ -306,6 +314,24 @@ export const CaptionCard: FC<{
                 </span>
               ))}
             </p>
+          )}
+          {caption.previousText && mode === 'view' && !approved && (
+            <div
+              data-testid="caption-previous"
+              className="flex flex-col gap-[8px] rounded-[10px] border border-newBorder p-[12px]"
+            >
+              <span className="text-[13px] text-textItemBlur">
+                This is a new version. Approve it as usual, or go back to the earlier one:
+              </span>
+              <p className="whitespace-pre-wrap text-[14px] leading-[1.5] text-textItemBlur" data-testid="caption-previous-text">
+                {caption.previousText}
+              </p>
+              <div>
+                <SecondaryButton testId="caption-keep-previous" onClick={keepPrevious} disabled={!!busy}>
+                  {busy === 'previous' ? 'Going back…' : 'Keep the earlier version'}
+                </SecondaryButton>
+              </div>
+            </div>
           )}
           {caption.notInProfile.length > 0 && mode === 'view' && !approved && (
             <div

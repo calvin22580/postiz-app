@@ -482,8 +482,8 @@ updates it in the same pull request.
 edited (before and after), rejected, the reason for rejecting, brought back,
 and rewrite (before, after and the owner's note). Code writes these, never
 AI. Recording a signal never blocks the owner's action: a failure is only
-logged. Nothing reads them yet; later milestones will learn each brand's
-style from them, and will show the owner what was learned.
+logged. Brand memory (E4, below) learns each brand's
+style from them; the owner will see what was learned (E5).
 
 **What each AI step costs.** Every AI call is already logged in
 `ours_ai_usage`. To see the cost per step (totals only, no customer content):
@@ -492,3 +492,20 @@ style from them, and will show the owner what was learned.
 DATABASE_URL="postgresql://…" node ours/scripts/ai-cost-summary.mjs
 node ours/scripts/ai-cost-summary.mjs --days 30 --org <organisationId>
 ```
+
+**The Checker (E2, off by default).** With `OURS_CAPTION_CHECKER=true`, one more AI call reads each written caption against the profile, claim by claim, and passes it, fixes it once, or drops it, before the usual checks. It also checks AI rewrites, never the owner's own edits. Without an API key a demo Checker passes everything. It stays off until the test set shows it helps.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `OURS_CAPTION_CHECKER` | off | `true` turns the Checker on. |
+| `OURS_AI_CHECKER_MODEL` | `claude-sonnet-5-5` | The Checker's model. Change it only after a test-set comparison. |
+
+**Brand memory (E4, off by default).** With `OURS_BRAND_MEMORY=true`, a Memory keeper turns the owner's actions on posts into short lessons about how they like posts written (no exclamation marks, no hard selling, say "pop in"). It runs before each week is written, only when there are new actions, in one structured call on Haiku (it matched or beat Anthropic's memory tool and a Managed Agents memory store on our test set, at half the cost). Our code checks every lesson before storing it and refuses facts about the business, lessons without real owner actions behind them, and lessons the owner switched off. Lessons backed by two agreeing actions go to the week writer, rewrites and the Checker as a short brief: a preference, never a source of claims. Without an API key a demo keeper learns two lessons by rule. It ships to live only together with the screen that shows owners what was learned (E5).
+
+**What we've learned (E5).** `/learned` shows the owner every lesson, grouped in their own terms (how posts sound, words they use, what they leave out), with the owner actions that taught it ("You changed … to …"). They can change a lesson, switch it off or back on, delete it, or write one themselves. Their changes are final: the keeper can't edit an owner's lesson, and switched-off or deleted lessons stay hidden so they can't be learned again. A lesson the owner writes gets the same checks as the keeper's, so prices, hours, dates and credentials are turned away towards the business profile. Your posts links to the screen once memory is on; there's no menu entry until memory goes live. API: `GET /ours/brand-memory`, `POST /ours/brand-memory/lessons`, `PUT /ours/brand-memory/lessons/:id`, `PUT …/:id/off`, `PUT …/:id/on`, `DELETE …/:id`. Browser test: `ours/e2e/tests/memory.spec.ts`.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `OURS_BRAND_MEMORY` | off | `true` turns brand memory on. |
+| `OURS_AI_MEMORY_MODEL` | `claude-haiku-5-5` | The Memory keeper's model. Change it only after a test-set comparison. |
+| `OURS_MEMORY_KEEPER` | single call | `memory-tool` uses the memory tool keeper instead (for test comparisons). |

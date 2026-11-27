@@ -33,6 +33,7 @@ import {
   factsFromProfile,
   hasEnoughToWrite,
   isSeasonalFact,
+  longDate,
   nextWeekStart,
   POSTING_DAYS,
   scheduledFor,
@@ -48,9 +49,18 @@ import {
   CaptionWriter,
   CaptionWriterError,
   CaptionWriterWithUsageError,
+  RawCaptionPlan,
 } from '@gitroom/nestjs-libraries/ours/captions/writers/caption.writer';
 import { AnthropicCaptionWriter } from '@gitroom/nestjs-libraries/ours/captions/writers/anthropic.caption.writer';
 import { DemoCaptionWriter } from '@gitroom/nestjs-libraries/ours/captions/writers/demo.caption.writer';
+import {
+  applyChecks,
+  CaptionChecker,
+  CaptionCheckerError,
+  captionsToCheck,
+} from '@gitroom/nestjs-libraries/ours/captions/checkers/caption.checker';
+import { AnthropicCaptionChecker } from '@gitroom/nestjs-libraries/ours/captions/checkers/anthropic.caption.checker';
+import { DemoCaptionChecker } from '@gitroom/nestjs-libraries/ours/captions/checkers/demo.caption.checker';
 import {
   isSandboxEnabled,
   SANDBOX_IDENTIFIER,
@@ -70,12 +80,15 @@ import { PerformanceService } from '@gitroom/nestjs-libraries/ours/performance/p
 import { WriterPreferences } from '@gitroom/nestjs-libraries/ours/performance/performance.insights';
 import { BrandSignalService } from '@gitroom/nestjs-libraries/ours/memory/brand.signal.service';
 import { RejectReason } from '@gitroom/nestjs-libraries/ours/memory/brand.signal';
+import { BrandMemoryService } from '@gitroom/nestjs-libraries/ours/memory/brand.memory.service';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 export const CAPTIONS_FEATURE = 'captions';
 export const CAPTION_REWRITE_FEATURE = 'caption-rewrite';
+// Content engine E2: the Checker's calls, for a week and for a rewrite
+export const CAPTION_CHECK_FEATURE = 'caption-check';
 // Each AI rewrite is a billed call, so a caption can be rewritten a few times
 // only; after that the owner can still edit it themselves.
 export const MAX_REWRITES = 5;
@@ -90,6 +103,15 @@ export const createCaptionWriter = (): CaptionWriter =>
   captionWriterName() === 'anthropic'
     ? new AnthropicCaptionWriter()
     : new DemoCaptionWriter();
+
+// Content engine E2: the Checker runs only when switched on, and stays off
+// until the test set shows it helps (ours/docs/content-engine.md).
+export const createCaptionChecker = (): CaptionChecker | null =>
+  process.env.OURS_CAPTION_CHECKER !== 'true'
+    ? null
+    : captionWriterName() === 'anthropic'
+    ? new AnthropicCaptionChecker()
+    : new DemoCaptionChecker();
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -121,6 +143,13 @@ const signalTarget = (d: Pick<StoredCaptionDraft, 'id' | 'weekId' | 'platform' |
 });
 
 // The posting days of a week as dates, for the writer (YYYY-MM-DD).
+// "Monday 23 November 2026, 18:30": a caption's posting day and its
+// platform's time, for the Checker
+const postingTime = (day: string, platform: string) => {
+  const time = CAPTION_PLATFORMS.find((p) => p.key === platform)?.time;
+  return time ? `${day}, ${time}` : day;
+};
+
 const postingDates = (weekStart: string) =>
   POSTING_DAYS.map((_, i) => dayjs(weekStart).add(i, 'day').format('YYYY-MM-DD'));
 
@@ -138,7 +167,8 @@ export class CaptionService {
     private _seasonalService: SeasonalService,
     private _planService: PlanService,
     private _performanceService: PerformanceService,
-    private _brandSignalService: BrandSignalService
+    private _brandSignalService: BrandSignalService,
+    private _brandMemoryService: BrandMemoryService
   ) {}
 
   async getWeek(orgId: string) {
@@ -234,9 +264,14 @@ export class CaptionService {
     ticket?: UsageTicket,
     preferences?: WriterPreferences | null,
     // the platforms the plan includes; all of them when not given
-    platforms?: CaptionPlatform[]
+    platforms?: CaptionPlatform[],
+    checker: CaptionChecker | null = createCaptionChecker()
   ) {
     try {
+      // Content engine E4: learn from the owner's latest actions first, then
+      // write with what brand memory holds (both do nothing when memory is off)
+      await this._brandMemoryService.learn(orgId);
+      const brief = await this._brandMemoryService.brief(orgId);
       let output;
       try {
         output = await writer.write({
@@ -246,6 +281,7 @@ export class CaptionService {
           dates: postingDates(week.weekStart),
           ...(preferences ? { preferences } : {}),
           ...(platforms ? { platforms } : {}),
+          ...(brief ? { brief } : {}),
         });
       } catch (e) {
         if (e instanceof CaptionWriterWithUsageError) {
@@ -254,9 +290,13 @@ export class CaptionService {
         throw e;
       }
       await this.logUsages(orgId, output.usages);
+      const dates = postingDates(week.weekStart);
+      const raw = await this.check(orgId, output.raw, facts, checker, (day, platform) =>
+        dates[day] ? postingTime(longDate(dates[day]), platform) : undefined
+      );
 
       const { captions, dropped, reasons } = groundCaptions(
-        output.raw,
+        raw,
         facts,
         POSTING_DAYS.length,
         platforms
@@ -535,7 +575,8 @@ export class CaptionService {
     orgId: string,
     draftId: string,
     note?: string,
-    writer: CaptionWriter = createCaptionWriter()
+    writer: CaptionWriter = createCaptionWriter(),
+    checker: CaptionChecker | null = createCaptionChecker()
   ) {
     const draft = await this.waitingDraft(orgId, draftId);
     const { profile } = await this._businessProfileService.getProfile(orgId);
@@ -560,6 +601,8 @@ export class CaptionService {
       );
     }
 
+    // Content engine E4: the brand brief as it stands (no learning while the owner waits)
+    const brief = await this._brandMemoryService.brief(orgId);
     let output;
     try {
       output = await writer.rewrite({
@@ -572,6 +615,7 @@ export class CaptionService {
         current: draft.text,
         note,
         attempt: draft.rewriteCount,
+        ...(brief ? { brief } : {}),
       });
     } catch (e) {
       if (e instanceof CaptionWriterWithUsageError) {
@@ -589,8 +633,11 @@ export class CaptionService {
       throw new HttpException('Something went wrong while writing a new version. Please try again.', 400);
     }
     await this.logUsages(orgId, output.usages, CAPTION_REWRITE_FEATURE);
+    const raw = await this.check(orgId, output.raw, facts, checker, () =>
+      postingTime(local.format('dddd D MMMM YYYY'), draft.platform)
+    );
 
-    const { captions, reasons } = groundCaptions(output.raw, facts, 1);
+    const { captions, reasons } = groundCaptions(raw, facts, 1);
     const fresh = captions.find((c) => c.platform === draft.platform);
     // Content engine E1: the owner asked for a change, whether or not a new
     // version was kept (after is empty when it wasn't)
@@ -616,11 +663,40 @@ export class CaptionService {
     const saved = await this._captionRepository.saveRewrite(orgId, draftId, {
       text: fresh.text,
       facts: fresh.facts.map(storedFact),
+      previous:
+        draft.previousText
+          ? { text: draft.previousText, facts: (draft.previousFacts ?? []) as Prisma.InputJsonValue, editedAt: draft.previousEditedAt }
+          : { text: draft.text, facts: draft.facts as Prisma.InputJsonValue, editedAt: draft.editedAt },
     });
     await signal(saved ? fresh.text : null);
     if (!saved) {
       throw new HttpException('This post was approved or rejected while we were writing, so it was left as it is.', 409);
     }
+    return this.getWeek(orgId);
+  }
+
+  // After AI rewrites, the owner can go back to the version before them
+  // (found in the persona test: a rewrite replaced a post the owner preferred)
+  async keepPrevious(orgId: string, draftId: string) {
+    const draft = await this.waitingDraft(orgId, draftId);
+    if (!draft.previousText) {
+      throw new HttpException('There’s no earlier version of this post to go back to.', 400);
+    }
+    const kept = await this._captionRepository.keepPrevious(orgId, draftId, {
+      text: draft.previousText,
+      facts: (draft.previousFacts ?? []) as Prisma.InputJsonValue,
+      editedAt: draft.previousEditedAt,
+    });
+    if (!kept) {
+      throw new HttpException('This post can only be changed while it is waiting for your approval.', 400);
+    }
+    await this._brandSignalService.record(orgId, {
+      kind: 'kept-previous',
+      ...signalTarget(draft),
+      before: draft.text,
+      after: draft.previousText,
+      edited: !!draft.previousEditedAt,
+    });
     return this.getWeek(orgId);
   }
 
@@ -699,6 +775,38 @@ export class CaptionService {
     }
   }
 
+  // Content engine E2: the Checker passes, fixes or drops each caption before
+  // the hard rules. If the check itself fails, the captions go on to the hard
+  // rules unchanged: those still run, and the owner still approves each post.
+  private async check(
+    orgId: string,
+    raw: RawCaptionPlan,
+    facts: CaptionFact[],
+    checker: CaptionChecker | null,
+    postsAt?: (day: number, platform: string) => string | undefined
+  ): Promise<RawCaptionPlan> {
+    if (!checker) {
+      return raw;
+    }
+    try {
+      // Content engine E4: what the owner has shown they don't want
+      const brief = await this._brandMemoryService.brief(orgId, ['avoid', 'phrases']);
+      const output = await checker.check({ facts, captions: captionsToCheck(raw, postsAt), ...(brief ? { brief } : {}) });
+      await this.logUsages(orgId, output.usages, CAPTION_CHECK_FEATURE);
+      const checked = applyChecks(raw, output.results);
+      this._logger.log(
+        `Caption check for org=${orgId} (${checker.name}): fixed ${checked.fixed}, dropped ${checked.dropped}`
+      );
+      return checked.raw;
+    } catch (e) {
+      if (e instanceof CaptionCheckerError) {
+        await this.logUsages(orgId, e.usages, CAPTION_CHECK_FEATURE);
+      }
+      this._logger.error(`Caption check skipped for org=${orgId}: ${(e as Error)?.message}`);
+      return raw;
+    }
+  }
+
   private async logUsages(
     orgId: string,
     usages: Parameters<AiUsageService['logCall']>[2][],
@@ -751,6 +859,8 @@ export class CaptionService {
         rejectedAt: d.rejectedAt,
         rejectReason: d.rejectReason,
         rewritesLeft: Math.max(0, MAX_REWRITES - d.rewriteCount),
+        // the version before the AI rewrites, while the owner can go back to it
+        previousText: d.status === OursCaptionStatus.PENDING_APPROVAL ? d.previousText : null,
         maxLength: CAPTION_PLATFORMS.find((p) => p.key === d.platform)?.maxLength || 0,
         // details in the owner's own words that the profile doesn't have:
         // shown as a reminder to check, never removed

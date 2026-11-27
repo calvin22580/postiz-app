@@ -1,0 +1,79 @@
+{
+ "about": "Writer test for the hard set: each fictional business's profile, the lessons a good keeper ends with (used unless --from gives a keeper run's results), and checks on the written captions. The profiles use the words the owner swaps out (bicycle, pet, pamper) and list prices, as real websites do, so the brief has something to change.",
+ "businesses": {
+  "hollowfen": {
+   "tone": "friendly, practical and down to earth",
+   "facts": [
+    { "id": "businessName.0", "field": "businessName", "value": "Hollowfen Bike Repairs" },
+    { "id": "whatTheyDo.0", "field": "whatTheyDo", "value": "Bicycle repairs and servicing for commuters, families and local businesses" },
+    { "id": "services.0", "field": "services", "value": "Puncture repair while you wait" },
+    { "id": "services.1", "field": "services", "value": "Full bicycle service: brakes, gears, tyres and lights" },
+    { "id": "services.2", "field": "services", "value": "Wheel truing" },
+    { "id": "services.3", "field": "services", "value": "Fleet servicing for company bicycles" },
+    { "id": "services.4", "field": "services", "value": "Cycle to work scheme bikes checked and set up" },
+    { "id": "audience.0", "field": "audience", "value": "Commuters, families and local businesses with bicycle fleets" },
+    { "id": "highlights.0", "field": "highlights", "value": "A record of every fleet bicycle we service" }
+   ],
+   "lessons": [
+    { "path": "/memories/avoid/hashtags.md", "lesson": "Use hashtags on Instagram only; leave them out on Facebook and LinkedIn." },
+    { "path": "/memories/phrases/bike.md", "lesson": "Say \"bike\", not \"bicycle\"." },
+    { "path": "/memories/voice/short.md", "lesson": "Keep posts short: one or two sentences." },
+    { "path": "/memories/avoid/ride-safe.md", "lesson": "Don't end posts with \"Ride safe!\"." }
+   ],
+   "checks": [
+    { "id": "bike-not-bicycle", "describe": "No \"bicycle\"", "mustNot": "\\bbicycles?\\b" },
+    { "id": "no-hashtags-fb-li", "describe": "No hashtags on Facebook or LinkedIn", "platforms": ["facebook", "linkedin"], "mustNot": "#[\\p{L}\\d]" },
+    { "id": "short", "describe": "25 words or fewer (hashtags not counted)", "maxWords": 25 },
+    { "id": "no-ride-safe", "describe": "No \"Ride safe\"", "mustNot": "ride safe" },
+    { "id": "instagram-hashtags-kept", "describe": "Guard: Instagram still has hashtags", "platforms": ["instagram"], "must": "#[\\p{L}\\d]", "guard": true }
+   ]
+  },
+  "marrowby": {
+   "tone": "warm, homely and welcoming",
+   "facts": [
+    { "id": "businessName.0", "field": "businessName", "value": "Marrowby Tea Room" },
+    { "id": "whatTheyDo.0", "field": "whatTheyDo", "value": "A small tea room serving loose-leaf tea, home baking and light lunches" },
+    { "id": "services.0", "field": "services", "value": "Afternoon tea for two, £24" },
+    { "id": "services.1", "field": "services", "value": "Soup and a sandwich, £6.50" },
+    { "id": "services.2", "field": "services", "value": "Cake of the week" },
+    { "id": "services.3", "field": "services", "value": "Back room for small meetings, £15 an hour" },
+    { "id": "highlights.0", "field": "highlights", "value": "Everything baked on site each morning" },
+    { "id": "highlights.1", "field": "highlights", "value": "Milk from a farm four miles away" },
+    { "id": "audience.0", "field": "audience", "value": "Locals, friends meeting up and people working nearby" }
+   ],
+   "lessons": [
+    { "path": "/memories/phrases/pop-in.md", "lesson": "Say \"pop in\", not \"visit us\"." },
+    { "path": "/memories/avoid/prices.md", "lesson": "Leave prices out of posts." },
+    { "path": "/memories/voice/linkedin-first-person.md", "lesson": "On LinkedIn, write as the owner, in the first person (\"I\"), not \"we\"." }
+   ],
+   "checks": [
+    { "id": "no-visit-us", "describe": "No \"visit us\"", "mustNot": "visit us" },
+    { "id": "no-prices", "describe": "No prices", "mustNot": "£" },
+    { "id": "linkedin-first-person", "describe": "LinkedIn written as \"I\"", "platforms": ["linkedin"], "must": "\\bI(?:'m|'ve|’m|’ve)?\\b" }
+   ]
+  },
+  "pennyroyal": {
+   "tone": "gentle, caring and cheerful",
+   "facts": [
+    { "id": "businessName.0", "field": "businessName", "value": "Pennyroyal Dog Grooming" },
+    { "id": "whatTheyDo.0", "field": "whatTheyDo", "value": "Calm, careful grooming for dogs of every size" },
+    { "id": "services.0", "field": "services", "value": "Full groom" },
+    { "id": "services.1", "field": "services", "value": "Puppy introduction groom" },
+    { "id": "services.2", "field": "services", "value": "Nail trims" },
+    { "id": "services.3", "field": "services", "value": "De-shedding for double-coated breeds" },
+    { "id": "highlights.0", "field": "highlights", "value": "Every pet is pampered with a treat after their groom" },
+    { "id": "audience.0", "field": "audience", "value": "Local pet owners" }
+   ],
+   "lessons": [
+    { "path": "/memories/phrases/dog.md", "lesson": "Say \"dog\", not \"pet\"." },
+    { "path": "/memories/avoid/linkedin-emoji.md", "lesson": "No emoji in LinkedIn posts; emoji are fine on Instagram." },
+    { "path": "/memories/phrases/groom.md", "lesson": "Call it grooming, never pampering." }
+   ],
+   "checks": [
+    { "id": "dog-not-pet", "describe": "No \"pet\"", "mustNot": "\\bpets?\\b" },
+    { "id": "no-emoji-linkedin", "describe": "No emoji on LinkedIn", "platforms": ["linkedin"], "mustNot": "\\p{Extended_Pictographic}" },
+    { "id": "groom-not-pamper", "describe": "No \"pamper\"", "mustNot": "pamper" }
+   ]
+  }
+ }
+}

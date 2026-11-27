@@ -1,7 +1,8 @@
 // OURS: the label every sandbox surface carries.
 import { FC } from 'react';
 
-export const SandboxNotice: FC<{ compact?: boolean }> = ({ compact }) => (
+// compact: a small badge, with optional short text after the label
+export const SandboxNotice: FC<{ compact?: boolean; text?: string }> = ({ compact, text }) => (
   <div
     role="note"
     className={
@@ -11,6 +12,7 @@ export const SandboxNotice: FC<{ compact?: boolean }> = ({ compact }) => (
     }
   >
     <span className="font-[700] uppercase tracking-[0.04em]">Sandbox</span>
+    {compact && text && <span className="font-[500]">{text}</span>}
     {!compact && (
       <span>
         Test channel only. This post is recorded here and is never sent to any

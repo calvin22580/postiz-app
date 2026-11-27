@@ -1,0 +1,31 @@
+{
+  "profiles": {
+    "harbour-lane": {
+      "name": "Harbour Lane Bakery (made-up sample)",
+      "facts": [
+        { "id": "businessName.0", "field": "businessName", "value": "Harbour Lane Bakery" },
+        { "id": "whatTheyDo.0", "field": "whatTheyDo", "value": "A small family bakery in Exampletown, baking sourdough and pastries every morning since 2009." },
+        { "id": "services.0", "field": "services", "value": "Sourdough loaves" },
+        { "id": "services.1", "field": "services", "value": "Celebration cakes to order" },
+        { "id": "services.2", "field": "services", "value": "Wholesale bread for local cafés" },
+        { "id": "location.0", "field": "location", "value": "Exampletown" },
+        { "id": "openingHours.0", "field": "openingHours", "value": "Tuesday to Saturday, 7am to 3pm" },
+        { "id": "toneOfVoice.0", "field": "toneOfVoice", "value": "warm and neighbourly" }
+      ]
+    }
+  },
+  "cases": [
+    { "id": "hl-01", "profile": "harbour-lane", "platform": "facebook", "label": { "kind": "true" },
+      "text": "Fresh sourdough loaves, baked every morning at Harbour Lane Bakery in Exampletown. Pop in Tuesday to Saturday from 7am!" },
+    { "id": "hl-02", "profile": "harbour-lane", "platform": "instagram", "label": { "kind": "true" },
+      "text": "Planning a celebration? Our cakes are made to order, right here in Exampletown.\n\n#Exampletown #CelebrationCakes #LocalBakery" },
+    { "id": "hl-03", "profile": "harbour-lane", "platform": "linkedin", "label": { "kind": "true" },
+      "text": "Run a café in Exampletown? Harbour Lane Bakery supplies wholesale bread to local cafés, baked fresh each morning." },
+    { "id": "hl-04", "profile": "harbour-lane", "platform": "facebook", "label": { "kind": "invented", "detail": "vegan range" }, "tags": ["missed-by-rules"],
+      "text": "Our new vegan range has landed at Harbour Lane Bakery! Fresh sourdough and pastries every morning in Exampletown." },
+    { "id": "hl-05", "profile": "harbour-lane", "platform": "instagram", "label": { "kind": "invented", "detail": "open on Sundays" }, "tags": ["missed-by-rules"],
+      "text": "Sunday mornings are for pastries. See you at Harbour Lane Bakery, open all weekend in Exampletown.\n\n#Exampletown #Pastries" },
+    { "id": "hl-06", "profile": "harbour-lane", "platform": "facebook", "label": { "kind": "invented", "detail": "20% off" }, "tags": ["caught-by-rules"],
+      "text": "Celebration cakes at Harbour Lane Bakery, now 20% off for November!" }
+  ]
+}

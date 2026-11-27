@@ -13,6 +13,7 @@ import { CaptionService } from '@gitroom/nestjs-libraries/ours/captions/caption.
 import { CaptionRepository } from '@gitroom/nestjs-libraries/ours/captions/caption.repository';
 import { WebsiteCrawler } from '@gitroom/nestjs-libraries/ours/crawler/website.crawler';
 import { BrandKitController } from '@gitroom/backend/ours/brand.kit.controller';
+import { BrandMemoryController } from '@gitroom/backend/ours/brand.memory.controller';
 import { GraphicService } from '@gitroom/nestjs-libraries/ours/graphics/graphic.service';
 import { BrandKitRepository } from '@gitroom/nestjs-libraries/ours/graphics/brand.kit.repository';
 import { SeasonalController } from '@gitroom/backend/ours/seasonal.controller';
@@ -31,12 +32,15 @@ import { ErasureService } from '@gitroom/nestjs-libraries/ours/erasure/erasure.s
 import { ErasureRepository } from '@gitroom/nestjs-libraries/ours/erasure/erasure.repository';
 import { BrandSignalService } from '@gitroom/nestjs-libraries/ours/memory/brand.signal.service';
 import { BrandSignalRepository } from '@gitroom/nestjs-libraries/ours/memory/brand.signal.repository';
+import { BrandMemoryService } from '@gitroom/nestjs-libraries/ours/memory/brand.memory.service';
+import { BrandMemoryRepository } from '@gitroom/nestjs-libraries/ours/memory/brand.memory.repository';
 import { ErasureInterceptor } from '@gitroom/backend/ours/erasure.interceptor';
 
 const authenticatedController = [
   BusinessProfileController,
   CaptionsController,
   BrandKitController,
+  BrandMemoryController,
   SeasonalController,
   PlanController,
   PerformanceController,
@@ -69,6 +73,8 @@ const publicController = [StripeWebhookController];
     ErasureRepository,
     BrandSignalService,
     BrandSignalRepository,
+    BrandMemoryService,
+    BrandMemoryRepository,
     // Milestone 7: our plan's channel limit on upstream's "add a channel"
     // routes (global, so upstream's modules need no change)
     {

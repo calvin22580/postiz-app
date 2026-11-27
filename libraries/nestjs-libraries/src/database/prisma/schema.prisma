@@ -1959,6 +1959,11 @@ model OursCaptionDraft {
   // REJECT_REASONS in ours/memory/brand.signal.ts); cleared on bring back
   rejectReason   String?
   rewriteCount   Int               @default(0)
+  // The version before the AI rewrites (text, facts and editedAt), so the
+  // owner can go back to it; cleared when they do, or edit the text
+  previousText     String?
+  previousFacts    Json?
+  previousEditedAt DateTime?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
@@ -2102,4 +2107,56 @@ model OursBrandSignal {
 
   @@index([organizationId, createdAt])
   @@map("ours_brand_signal")
+}
+
+// Content engine E4 (22/11/2026): brand memory. Short lessons about how an
+// owner likes posts written and chosen, each citing the owner signals behind
+// it. Style and preferences only, never facts about the business: those come
+// only from the sourced profile. The Memory keeper writes them through the
+// Anthropic memory tool, and our handler checks every save
+// (ours/docs/content-engine.md). Erased with the organisation.
+model OursBrandMemory {
+  id             String    @id @default(uuid())
+  organizationId String
+  // the note's path for the memory tool, e.g. /memories/voice/no-exclamation-marks.md
+  path           String
+  // one plain sentence, at most 200 characters
+  lesson         String
+  // first 8 characters of the signal ids behind it, and of those against it
+  evidence       String[]
+  against        String[]
+  // tentative | active | retired: worked out by our code from the evidence
+  status         String
+  // keeper | owner (the owner wrote or edited it; the keeper can't change it)
+  source         String    @default("keeper")
+  // switched off or deleted by the owner: kept hidden so it can't come back
+  offAt          DateTime?
+  // E5: deleted by the owner (offAt is set too): no longer listed as switched off
+  deletedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([organizationId, path])
+  @@index([organizationId, status])
+  @@map("ours_brand_memory")
+}
+
+// One row per Memory keeper run: which signals it covered, what it changed,
+// what our handler refused and why.
+model OursBrandMemoryRun {
+  id             String   @id @default(uuid())
+  organizationId String
+  // the newest signal the run covered: the next run starts after it
+  lastSignalAt   DateTime
+  signalCount    Int
+  // ok | failed
+  status         String
+  keeper         String
+  changes        Json     @default("[]")
+  refusals       Json     @default("[]")
+  errorMessage   String?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@map("ours_brand_memory_run")
 }

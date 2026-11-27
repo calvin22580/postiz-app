@@ -28,6 +28,17 @@ import {
 } from '@gitroom/nestjs-libraries/ours/captions/writers/anthropic.caption.writer';
 import { CaptionWriterError, CaptionWriterWithUsageError } from '@gitroom/nestjs-libraries/ours/captions/writers/caption.writer';
 import {
+  applyChecks,
+  CaptionCheckerError,
+  captionsToCheck,
+} from '@gitroom/nestjs-libraries/ours/captions/checkers/caption.checker';
+import {
+  AnthropicCaptionChecker,
+  buildCheckMessage,
+  checkSchema,
+} from '@gitroom/nestjs-libraries/ours/captions/checkers/anthropic.caption.checker';
+import { DemoCaptionChecker } from '@gitroom/nestjs-libraries/ours/captions/checkers/demo.caption.checker';
+import {
   CaptionService,
   captionToHtml,
   MAX_REWRITES,
@@ -98,6 +109,9 @@ describe('unsupportedDetails', () => {
       ['Free delivery in Exampletown', 'free'],
       ['The best bread in Exampletown', 'best'],
       ['Rated five-star by our customers', 'five-star'],
+      ['A special offer on sourdough this week', 'offer'],
+      ['Our weekend offer ends Sunday', 'offer'],
+      ['Sourdough is on offer this week', 'offer'],
     ];
     for (const [text, problem] of cases) {
       expect(unsupportedDetails(text, FACTS), text).toContain(problem);
@@ -111,6 +125,9 @@ describe('unsupportedDetails', () => {
       'Open Tuesday to Saturday, 7am to 3pm.',
       'Fresh sourdough loaves from Harbour Lane Bakery. #Exampletown #Sourdough',
       'A day off for the team on Monday, see you Tuesday.',
+      // "offer" as a verb describes what the business does
+      'We offer fresh sourdough every morning.',
+      'Harbour Lane Bakery offers sourdough and on-site seating.',
     ];
     for (const text of ok) {
       expect(unsupportedDetails(text, FACTS), text).toEqual([]);
@@ -324,6 +341,15 @@ describe('AnthropicCaptionWriter.rewrite (fake client)', () => {
       buildRewriteMessage({ facts: FACTS, tone: 'warm', day: 'Monday', platform: 'facebook', theme: 'Hello', current: 'Hi', note: '  ', attempt: 0 })
     ).not.toContain('owner_note');
   });
+
+  // persona test: a post going out after closing promised food "coming right
+  // up", and "keep it short" came back longer
+  it('tells the AI when each caption goes out and to respect a request for a shorter version', () => {
+    expect(CAPTION_SYSTEM_PROMPT).toContain('Never suggest that something is ready, waiting or available right now');
+    const user = buildRewriteMessage({ facts: FACTS, tone: 'warm', day: 'Monday', platform: 'instagram', theme: 'Hello', current: 'Hi', note: 'Keep it short', attempt: 0 });
+    expect(user).toContain('going out at 18:30');
+    expect(user).toContain('must have fewer words than the current one');
+  });
 });
 
 const makeService = () => {
@@ -344,6 +370,7 @@ const makeService = () => {
     setRejectReason: vi.fn(async () => true),
     claimRewrite: vi.fn(async () => true),
     saveRewrite: vi.fn(async () => true),
+    keepPrevious: vi.fn(async () => true),
     giveBackRewrite: vi.fn(async () => ({ count: 1 })),
   };
   const profiles = {
@@ -385,8 +412,10 @@ const makeService = () => {
   const performance = { writerPreferences: vi.fn(async (): Promise<any> => null) };
   // Content engine E1: owner signals are recorded, never block an action
   const signals = { record: vi.fn(async () => ({ id: 'sig-1' })) };
-  const service = new CaptionService(repo as never, profiles as never, usage as never, integrations as never, posts as never, graphics as never, seasonal as never, plans as never, performance as never, signals as never);
-  return { service, repo, usage, posts, graphics, profiles, seasonal, plans, performance, signals };
+  // Content engine E4: brand memory is off unless a test says otherwise
+  const memory = { learn: vi.fn(async (): Promise<any> => null), brief: vi.fn(async (): Promise<string> => '') };
+  const service = new CaptionService(repo as never, profiles as never, usage as never, integrations as never, posts as never, graphics as never, seasonal as never, plans as never, performance as never, signals as never, memory as never);
+  return { service, repo, usage, posts, graphics, profiles, seasonal, plans, performance, signals, memory };
 };
 
 describe('CaptionService.runWriting', () => {
@@ -422,6 +451,29 @@ describe('CaptionService.runWriting', () => {
     expect(body.drafts[0]).toMatchObject({ platform: 'facebook', theme: 'Hello' });
     expect(body.drafts[0].scheduledFor.toISOString()).toBe('2026-11-16T12:30:00.000Z');
     expect(body.drafts[0].facts.map((f: any) => f.value)).toEqual(['Harbour Lane Bakery', 'Exampletown']);
+  });
+
+  it('learns from owner actions first, then writes and checks with the brand brief (E4)', async () => {
+    const { service, memory } = makeService();
+    const order: string[] = [];
+    memory.learn.mockImplementation(async () => {
+      order.push('learn');
+      return null;
+    });
+    memory.brief.mockImplementation(async (_org: string, only?: string[]) => (only ? '- No hard selling.' : 'How posts should sound:\n- No exclamation marks.'));
+    const write = vi.fn(async () => {
+      order.push('write');
+      return {
+        raw: { posts: [{ day: 0, theme: 'Hello', captions: [{ platform: 'facebook', text: 'Hello from Harbour Lane Bakery', factIds: ['businessName.0'] }] }] },
+        usages: [],
+      };
+    });
+    const check = vi.fn(async () => ({ results: [], usages: [] }));
+    await service.runWriting('org-1', week, FACTS, 'warm', { name: 'anthropic', write } as never, undefined, null, undefined, { name: 'anthropic', check } as never);
+    expect(order).toEqual(['learn', 'write']);
+    expect(write).toHaveBeenCalledWith(expect.objectContaining({ brief: 'How posts should sound:\n- No exclamation marks.' }));
+    expect(memory.brief).toHaveBeenCalledWith('org-1', ['avoid', 'phrases']);
+    expect(check).toHaveBeenCalledWith(expect.objectContaining({ brief: '- No hard selling.' }));
   });
 
   it('fails the week with a readable message when nothing survives the checks', async () => {
@@ -761,7 +813,30 @@ describe('CaptionService review', () => {
         { id: 'businessName.0', field: 'businessName', value: 'Harbour Lane Bakery' },
         { id: 'services.0', field: 'services', value: 'Sourdough loaves' },
       ],
+      // the version before it, so the owner can go back
+      previous: { text: draft().text, facts: draft().facts, editedAt: null },
     });
+  });
+
+  it('keeps the version from before the first rewrite, so two rewrites can still go back to the original', async () => {
+    const { service, repo } = makeService();
+    const original = { text: 'The original, edited by the owner.', facts: [], editedAt: new Date('2030-01-01T00:00:00Z') };
+    repo.getDraft.mockResolvedValue(draft({ rewriteCount: 1, previousText: original.text, previousFacts: original.facts, previousEditedAt: original.editedAt }));
+    await service.rewrite('org-1', 'd1', undefined, rewriter('Sourdough loaves, baked by Harbour Lane Bakery. Pop in and say hello.'));
+    expect(repo.saveRewrite).toHaveBeenCalledWith('org-1', 'd1', expect.objectContaining({ previous: original }));
+  });
+
+  it('goes back to the earlier version after a rewrite, and records it', async () => {
+    const { service, repo, signals } = makeService();
+    repo.getDraft.mockResolvedValue(draft({ text: 'The rewrite.', previousText: 'The earlier one.', previousFacts: [{ id: 'services.0' }], previousEditedAt: null }));
+    await service.keepPrevious('org-1', 'd1');
+    expect(repo.keepPrevious).toHaveBeenCalledWith('org-1', 'd1', { text: 'The earlier one.', facts: [{ id: 'services.0' }], editedAt: null });
+    expect(signals.record).toHaveBeenCalledWith('org-1', expect.objectContaining({ kind: 'kept-previous', before: 'The rewrite.', after: 'The earlier one.' }));
+
+    repo.getDraft.mockResolvedValue(draft({ previousText: null }));
+    await expect(service.keepPrevious('org-1', 'd1')).rejects.toThrow('no earlier version');
+    repo.getDraft.mockResolvedValue(draft({ status: 'APPROVED', previousText: 'x' }));
+    await expect(service.keepPrevious('org-1', 'd1')).rejects.toThrow('already approved');
   });
 
   it('keeps the current version when the new one invents a detail, but still logs the cost', async () => {
@@ -1000,8 +1075,8 @@ describe('platforms in a week (Milestone 7)', () => {
 
   it('tells the AI which platforms to write for', () => {
     const message = buildCaptionMessage({ facts: FACTS, tone: 'warm', days: [...POSTING_DAYS], platforms: ['instagram'] });
-    expect(message).toContain('Platforms: Instagram\n');
-    expect(buildCaptionMessage({ facts: FACTS, tone: 'warm', days: [...POSTING_DAYS] })).toContain('Platforms: Facebook, Instagram, LinkedIn\n');
+    expect(message).toContain('Platforms (posting time): Instagram (18:30)\n');
+    expect(buildCaptionMessage({ facts: FACTS, tone: 'warm', days: [...POSTING_DAYS] })).toContain('Platforms (posting time): Facebook (12:30), Instagram (18:30), LinkedIn (08:30)\n');
   });
 
   it('writes a one-platform plan’s week on its connected platform only', async () => {
@@ -1266,5 +1341,174 @@ describe('UK dates in captions', () => {
     const { service, seasonal } = makeService();
     seasonal.factsForWeek.mockRejectedValue(new Error('db down'));
     await expect((service as any).seasonalFacts('org-1', '2026-11-23')).resolves.toEqual([]);
+  });
+});
+
+describe('the Checker (content engine E2)', () => {
+  const week = { id: 'w1', weekStart: '2026-11-16', timezone: 'Europe/London' };
+  const draft = () => ({
+    id: 'd1',
+    weekId: 'w1',
+    status: 'PENDING_APPROVAL',
+    platform: 'facebook',
+    scheduledFor: new Date('2030-01-08T12:30:00Z'),
+    theme: 'Spotlight: Sourdough loaves',
+    text: 'In the spotlight this week at Harbour Lane Bakery: Sourdough loaves. Get in touch to find out more.',
+    facts: [{ id: 'services.0', field: 'services', value: 'Sourdough loaves' }],
+    rewriteCount: 0,
+    editedAt: null,
+  });
+  const CHECK_USAGE = { provider: 'anthropic', model: 'claude-sonnet-5-5', inputTokens: 700, outputTokens: 90, cacheReadTokens: 0, cacheWriteTokens: 0 };
+  const plan = () => ({
+    posts: [
+      {
+        day: 0,
+        theme: 'Hello',
+        captions: [
+          { platform: 'facebook', text: 'Hello from Harbour Lane Bakery in Exampletown!', factIds: ['businessName.0', 'location.0'] },
+          { platform: 'instagram', text: 'Harbour Lane Bakery, family-run in Exampletown since 1985.', factIds: ['businessName.0', 'location.0'] },
+          { platform: 'linkedin', text: 'Harbour Lane Bakery now delivers vegan cakes across the county.', factIds: ['businessName.0'] },
+        ],
+      },
+    ],
+  });
+  const writer = () => ({ name: 'anthropic' as const, write: async () => ({ raw: plan(), usages: [] }), rewrite: vi.fn() });
+  const checker = (results: any[], usages: any[] = [CHECK_USAGE]) => ({
+    name: 'anthropic' as const,
+    check: vi.fn(async () => ({ results, usages })),
+  });
+
+  it('lists every caption with a key, and applies pass, fix and drop', () => {
+    const list = captionsToCheck(plan());
+    expect(list.map((c) => c.key)).toEqual(['0:facebook', '0:instagram', '0:linkedin']);
+    const { raw, fixed, dropped } = applyChecks(plan(), [
+      { key: '0:facebook', verdict: 'pass', claims: [] },
+      { key: '0:instagram', verdict: 'fix', claims: [], text: ' Harbour Lane Bakery, a family bakery in Exampletown. ' },
+      { key: '0:linkedin', verdict: 'drop', claims: [] },
+    ]);
+    expect([fixed, dropped]).toEqual([1, 1]);
+    expect(raw.posts![0].captions!.map((c) => c.text)).toEqual([
+      'Hello from Harbour Lane Bakery in Exampletown!',
+      'Harbour Lane Bakery, a family bakery in Exampletown.',
+    ]);
+  });
+
+  it('drops a fix that came back without text, and leaves captions it said nothing about', () => {
+    const { raw, dropped } = applyChecks(plan(), [{ key: '0:instagram', verdict: 'fix', claims: [], text: '  ' }]);
+    expect(dropped).toBe(1);
+    expect(raw.posts![0].captions!.map((c) => c.platform)).toEqual(['facebook', 'linkedin']);
+  });
+
+  it('is off unless switched on, so weeks are written exactly as before', async () => {
+    const { service, repo, usage } = makeService();
+    await service.runWriting('org-1', week, FACTS, 'warm', writer());
+    const [, , body] = repo.finishWeek.mock.calls[0] as unknown as [string, string, any];
+    // the hard rules alone: the invented year is dropped, the invented delivery is not
+    expect(body.drafts.map((d: any) => d.platform)).toEqual(['facebook', 'linkedin']);
+    expect(usage.logCall).not.toHaveBeenCalledWith('org-1', 'caption-check', expect.anything());
+  });
+
+  it('fixes and drops before the hard rules, and logs its cost under its own name', async () => {
+    const { service, repo, usage } = makeService();
+    const check = checker([
+      { key: '0:facebook', verdict: 'pass', claims: [{ claim: 'in Exampletown', factId: 'location.0' }] },
+      { key: '0:instagram', verdict: 'fix', claims: [{ claim: 'since 1985', factId: null }], text: 'Harbour Lane Bakery, a family bakery in Exampletown.' },
+      { key: '0:linkedin', verdict: 'drop', claims: [{ claim: 'delivers vegan cakes', factId: null }] },
+    ]);
+    await service.runWriting('org-1', week, FACTS, 'warm', writer(), undefined, null, undefined, check);
+    // each caption carries its posting day and time, for "tomorrow" or "open now"
+    expect(check.check).toHaveBeenCalledWith({
+      facts: FACTS,
+      captions: captionsToCheck(plan()).map((c) => ({
+        ...c,
+        postsAt: `Monday 16 November 2026, ${{ facebook: '12:30', instagram: '18:30', linkedin: '08:30' }[c.platform]}`,
+      })),
+    });
+    const [, , body] = repo.finishWeek.mock.calls[0] as unknown as [string, string, any];
+    expect(body.drafts.map((d: any) => [d.platform, d.text])).toEqual([
+      ['facebook', 'Hello from Harbour Lane Bakery in Exampletown!'],
+      ['instagram', 'Harbour Lane Bakery, a family bakery in Exampletown.'],
+    ]);
+    expect(usage.logCall).toHaveBeenCalledWith('org-1', 'caption-check', CHECK_USAGE);
+  });
+
+  it('still runs the hard rules on a fix', async () => {
+    const { service, repo } = makeService();
+    const check = checker([{ key: '0:facebook', verdict: 'fix', claims: [], text: 'Harbour Lane Bakery: 20% off this week!' }]);
+    await service.runWriting('org-1', week, FACTS, 'warm', writer(), undefined, null, undefined, check);
+    const [, , body] = repo.finishWeek.mock.calls[0] as unknown as [string, string, any];
+    expect(body.drafts.map((d: any) => d.platform)).toEqual(['linkedin']);
+  });
+
+  it('goes on with the hard rules alone when the check fails, logging what was billed', async () => {
+    const { service, repo, usage } = makeService();
+    const failing = {
+      name: 'anthropic' as const,
+      check: vi.fn(async () => {
+        throw new CaptionCheckerError('The caption check stopped early (refusal).', [CHECK_USAGE]);
+      }),
+    };
+    await service.runWriting('org-1', week, FACTS, 'warm', writer(), undefined, null, undefined, failing);
+    const [, , body] = repo.finishWeek.mock.calls[0] as unknown as [string, string, any];
+    expect(body.drafts.map((d: any) => d.platform)).toEqual(['facebook', 'linkedin']);
+    expect(usage.logCall).toHaveBeenCalledWith('org-1', 'caption-check', CHECK_USAGE);
+  });
+
+  it('checks a rewrite too, and keeps the current version when it is dropped', async () => {
+    const { service, repo, usage } = makeService();
+    repo.getDraft.mockResolvedValue(draft());
+    const rewriter = {
+      name: 'anthropic' as const,
+      write: vi.fn(),
+      rewrite: vi.fn(async () => ({
+        raw: { posts: [{ day: 0, theme: 'Spotlight', captions: [{ platform: 'facebook', text: 'Harbour Lane Bakery, voted Exampletown’s favourite.', factIds: ['businessName.0', 'location.0'] }] }] },
+        usages: [],
+      })),
+    };
+    const check = checker([{ key: '0:facebook', verdict: 'drop', claims: [{ claim: 'voted favourite', factId: null }] }]);
+    await expect(service.rewrite('org-1', 'd1', undefined, rewriter, check)).rejects.toThrow('kept the current one');
+    expect(repo.saveRewrite).not.toHaveBeenCalled();
+    expect(usage.logCall).toHaveBeenCalledWith('org-1', 'caption-check', CHECK_USAGE);
+  });
+
+  it('the demo Checker passes everything and costs nothing', async () => {
+    const out = await new DemoCaptionChecker().check({ facts: FACTS, captions: captionsToCheck(plan()) });
+    expect(out.usages).toEqual([]);
+    expect(out.results.every((r) => r.verdict === 'pass')).toBe(true);
+  });
+
+  it('sends the profile and captions as untrusted data with a strict schema (fake client)', async () => {
+    const results = [{ key: '0:facebook', claims: [], verdict: 'pass', text: '' }, { key: 'made-up', claims: [], verdict: 'pass', text: '' }];
+    const { client, stream } = fakeClient(fakeMessage(JSON.stringify({ results })));
+    const input = { facts: FACTS, captions: captionsToCheck(plan()).slice(0, 1) };
+    const out = await new AnthropicCaptionChecker(client, 'claude-sonnet-5-5').check(input);
+    // a result for a caption it wasn't given is ignored
+    expect(out.results.map((r) => r.key)).toEqual(['0:facebook']);
+    expect(out.usages[0]).toMatchObject({ inputTokens: 1200, outputTokens: 900 });
+    const [params] = stream.mock.calls[0] as unknown as [any];
+    expect(params.model).toBe('claude-sonnet-5-5');
+    expect(params.fallbacks).toBe('default');
+    expect(params.output_config).toEqual({ effort: 'low', format: { type: 'json_schema', schema: checkSchema } });
+    expect(params.messages[0].content).toBe(buildCheckMessage(input));
+    expect(buildCheckMessage(input)).toContain('<untrusted_business_profile>');
+    expect(buildCheckMessage(input)).toContain('<untrusted_captions>');
+  });
+
+  it('tells the Checker when a caption goes out, without letting the text break out', () => {
+    const message = buildCheckMessage({ facts: FACTS, captions: [{ key: '0:instagram', platform: 'instagram', text: 'Hi', postsAt: 'Tuesday 24 November 2026, 18:30"><x' }] });
+    expect(message).toContain('posts="Tuesday 24 November 2026, 18:30x"');
+    expect(buildCheckMessage({ facts: FACTS, captions: [{ key: 'a', platform: 'facebook', text: 'Hi' }] })).not.toContain('posts=');
+  });
+
+  it('sends no fallback for Haiku, and reports a refusal with its cost', async () => {
+    const { client, stream } = fakeClient(fakeMessage('', 'refusal'));
+    const err = await new AnthropicCaptionChecker(client, 'claude-haiku-5-5')
+      .check({ facts: FACTS, captions: captionsToCheck(plan()) })
+      .catch((e) => e);
+    expect(err).toBeInstanceOf(CaptionCheckerError);
+    expect(err.usages).toHaveLength(1);
+    const [params] = stream.mock.calls[0] as unknown as [any];
+    expect(params.fallbacks).toBeUndefined();
+    expect(params.betas).toBeUndefined();
   });
 });

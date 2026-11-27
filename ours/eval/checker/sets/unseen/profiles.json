@@ -1,0 +1,217 @@
+{
+  "profiles": {
+    "ninepenny-glass-rounds": {
+      "name": "Ninepenny Glass Rounds (fictional persona)",
+      "tone": "cheerful, chatty and down-to-earth",
+      "facts": [
+        {
+          "id": "businessName.0",
+          "field": "businessName",
+          "value": "Ninepenny Glass Rounds"
+        },
+        {
+          "id": "whatTheyDo.0",
+          "field": "whatTheyDo",
+          "value": "A mobile window cleaning round that comes to homes and shops using a water-fed pole system."
+        },
+        {
+          "id": "services.0",
+          "field": "services",
+          "value": "Window cleaning for houses, every 4 or 8 weeks"
+        },
+        {
+          "id": "services.1",
+          "field": "services",
+          "value": "Conservatory roof cleaning"
+        },
+        {
+          "id": "services.2",
+          "field": "services",
+          "value": "Gutter clearing from ground level"
+        },
+        {
+          "id": "location.0",
+          "field": "location",
+          "value": "Based in Shrewsbury, Shropshire"
+        },
+        {
+          "id": "serviceArea.0",
+          "field": "serviceArea",
+          "value": "Shrewsbury postcodes SY1, SY2 and SY3 only"
+        },
+        {
+          "id": "serviceArea.1",
+          "field": "serviceArea",
+          "value": "We do not cover Telford or anywhere outside those three postcodes"
+        },
+        {
+          "id": "highlights.0",
+          "field": "highlights",
+          "value": "We do not clean windows above second-floor level"
+        },
+        {
+          "id": "openingHours.0",
+          "field": "openingHours",
+          "value": "Rounds run Monday to Friday, 8am to 4pm; no weekend work"
+        },
+        {
+          "id": "phone.0",
+          "field": "phone",
+          "value": "01632 960418"
+        },
+        {
+          "id": "email.0",
+          "field": "email",
+          "value": "rounds@example.test"
+        }
+      ]
+    },
+    "the-crooked-marrow": {
+      "name": "The Crooked Marrow (fictional persona)",
+      "tone": "warm, homely and seasonal",
+      "facts": [
+        {
+          "id": "businessName.0",
+          "field": "businessName",
+          "value": "The Crooked Marrow"
+        },
+        {
+          "id": "whatTheyDo.0",
+          "field": "whatTheyDo",
+          "value": "An independent greengrocer selling seasonal fruit and vegetables from Northumberland growers."
+        },
+        {
+          "id": "services.0",
+          "field": "services",
+          "value": "Seasonal veg boxes, small £14 or large £22, collected from the shop"
+        },
+        {
+          "id": "services.1",
+          "field": "services",
+          "value": "Northumberland apples by the bag in autumn"
+        },
+        {
+          "id": "services.2",
+          "field": "services",
+          "value": "Christmas trees, December only"
+        },
+        {
+          "id": "location.0",
+          "field": "location",
+          "value": "Hexham, Northumberland"
+        },
+        {
+          "id": "address.0",
+          "field": "address",
+          "value": "14 Priestpopple, Hexham, Northumberland"
+        },
+        {
+          "id": "openingHours.0",
+          "field": "openingHours",
+          "value": "Tuesday to Saturday 8.30am to 5pm, Sunday 10am to 2pm, closed Mondays"
+        },
+        {
+          "id": "highlights.0",
+          "field": "highlights",
+          "value": "We do not offer home delivery"
+        },
+        {
+          "id": "audience.0",
+          "field": "audience",
+          "value": "Households in and around Hexham"
+        },
+        {
+          "id": "phone.0",
+          "field": "phone",
+          "value": "01632 960275"
+        },
+        {
+          "id": "email.0",
+          "field": "email",
+          "value": "shop@example.test"
+        },
+        {
+          "id": "socialLinks.0",
+          "field": "socialLinks",
+          "value": "https://social.example/crookedmarrow"
+        }
+      ]
+    },
+    "tarnwell-sports-massage": {
+      "name": "Tarnwell Sports Massage (fictional persona)",
+      "tone": "formal, precise and professional",
+      "facts": [
+        {
+          "id": "businessName.0",
+          "field": "businessName",
+          "value": "Tarnwell Sports Massage"
+        },
+        {
+          "id": "whatTheyDo.0",
+          "field": "whatTheyDo",
+          "value": "A sports massage therapy practice run by Imogen Varley, treating clients at a clinic room in Harrogate."
+        },
+        {
+          "id": "highlights.0",
+          "field": "highlights",
+          "value": "Practice owner and sole therapist: Imogen Varley"
+        },
+        {
+          "id": "highlights.1",
+          "field": "highlights",
+          "value": "Imogen holds a Level 5 Diploma in Sports Massage Therapy"
+        },
+        {
+          "id": "highlights.2",
+          "field": "highlights",
+          "value": "Established in 2019"
+        },
+        {
+          "id": "services.0",
+          "field": "services",
+          "value": "30-minute sports massage, £38"
+        },
+        {
+          "id": "services.1",
+          "field": "services",
+          "value": "60-minute sports massage, £60"
+        },
+        {
+          "id": "services.2",
+          "field": "services",
+          "value": "Pre-event massage for runners, by appointment"
+        },
+        {
+          "id": "highlights.3",
+          "field": "highlights",
+          "value": "The practice does not offer physiotherapy, diagnosis or home visits"
+        },
+        {
+          "id": "location.0",
+          "field": "location",
+          "value": "Harrogate, North Yorkshire"
+        },
+        {
+          "id": "openingHours.0",
+          "field": "openingHours",
+          "value": "Appointments Monday, Wednesday and Thursday 9am to 7pm, and Saturday 9am to 1pm"
+        },
+        {
+          "id": "audience.0",
+          "field": "audience",
+          "value": "Runners, cyclists and recreational athletes"
+        },
+        {
+          "id": "phone.0",
+          "field": "phone",
+          "value": "01632 960733"
+        },
+        {
+          "id": "email.0",
+          "field": "email",
+          "value": "appointments@example.test"
+        }
+      ]
+    }
+  }
+}
