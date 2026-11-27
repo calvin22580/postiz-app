@@ -24,6 +24,26 @@ The app itself stays at `https://app.kanosena.com` (`ours/deploy/cloudflare`).
   `/auth/login`, and the footer links the app's public pages (about, privacy,
   terms, data deletion), the support address and the source code.
 
+## Guide pages ("Social media for your trade")
+
+`public/social-media-for/` holds a hub page and one guide per trade
+(restaurants and cafés, salons, tradespeople, estate agents, accountants,
+dental practices). They are generated, then committed, so deploying still needs
+no build step:
+
+- Words live in `pages/trades.mjs`. Edit there, then run
+  `node ours/site/build-pages.mjs` from the repo root and commit the output.
+- The build also writes `public/sitemap.xml`. `public/robots.txt` points at it.
+- Shared styles for these pages are in `public/site.css` (same tokens as the
+  homepage, which keeps its own inline copy).
+- Rules for the content: example posts are always for made-up businesses and
+  say so; nothing is claimed about Kanosena customers or results; every rule
+  or date links to its source, and the "checked on" date (`CHECKED`) is
+  updated when the facts are re-checked.
+- Trades were picked from UK keyword data (OpenSEO / DataForSEO, 27/11/2026).
+  Town pages were left out on purpose: the town searches are for agencies, and
+  a page per town with no local content would count as a doorway page.
+
 ## Look at it locally
 
 ```sh
