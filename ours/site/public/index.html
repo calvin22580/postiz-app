@@ -17,6 +17,12 @@
 <meta property="og:description" content="Social media posts for UK small businesses, written from your own website and published only when you approve them.">
 <meta property="og:url" content="https://kanosena.com/">
 <meta name="theme-color" content="#6B3BFF">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"Organization","@id":"https://kanosena.com/#organization","name":"Kanosena","legalName":"Steady Lamp Ltd","url":"https://kanosena.com/","logo":"https://kanosena.com/favicon.svg","email":"support@kanosena.com","address":{"@type":"PostalAddress","streetAddress":"128 City Road","addressLocality":"London","postalCode":"EC1V 2NX","addressCountry":"GB"}},
+ {"@type":"WebSite","@id":"https://kanosena.com/#website","url":"https://kanosena.com/","name":"Kanosena","inLanguage":"en-GB","publisher":{"@id":"https://kanosena.com/#organization"}}
+]}
+</script>
 <link rel="preload" href="/fonts/DelaGothicOne-Regular-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/InstrumentSans-Variable-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
@@ -68,6 +74,8 @@ nav a:hover{text-decoration:underline;text-underline-offset:4px}
 nav .btn-butter{color:var(--k-ink)}
 nav .btn-butter:hover{text-decoration:none}
 @media (max-width:760px){nav .hide-sm{display:none}nav{gap:14px}}
+.show-xs{display:none}
+@media (max-width:440px){.hide-xs{display:none}.show-xs{display:inline}}
 @media (max-width:400px){.brand{font-size:18px;gap:8px}.brand svg{width:30px;height:30px}nav{gap:10px}nav .btn-butter{padding-left:14px;padding-right:14px}}
 
 /* hero */
@@ -140,6 +148,9 @@ section{padding:88px 0}
 .promises h3{font-family:var(--k-font-display);font-weight:400;font-size:19px;line-height:1.3;margin-bottom:6px}
 .promises p{color:var(--k-muted);font-size:15.5px}
 .platforms{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.platforms a{background:#fff;border:2px solid var(--k-ink);border-radius:999px;padding:7px 14px;font-weight:600;font-size:15px;color:var(--k-ink);text-decoration:none}
+.platforms a:hover{background:var(--k-butter)}
+.trade-links a{border-color:var(--k-violet);color:var(--k-violet-deep)}
 .platforms span{background:#fff;border:2px solid var(--k-ink);border-radius:999px;padding:7px 14px;font-weight:600;font-size:15px}
 
 /* pricing */
@@ -207,7 +218,7 @@ footer .brand{color:#fff}
       <a class="hide-sm" href="#how">How it works</a>
       <a class="hide-sm" href="#pricing">Pricing</a>
       <a href="https://app.kanosena.com/auth/login">Log in</a>
-      <a class="btn btn-butter btn-sm" href="mailto:support@kanosena.com?subject=Early%20access%20to%20Kanosena">Request early access</a>
+      <a class="btn btn-butter btn-sm" href="mailto:support@kanosena.com?subject=Early%20access%20to%20Kanosena"><span class="hide-xs">Request early access</span><span class="show-xs">Early access</span></a>
     </nav>
   </div>
 </header>
@@ -279,6 +290,24 @@ footer .brand{color:#fff}
       <div style="margin-top:40px">
         <p style="font-weight:700">Where your posts go</p>
         <div class="platforms"><span>Facebook Pages</span><span>Instagram business accounts</span><span>LinkedIn Pages</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="trades" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Guides for <span class="hl">your trade</span></h2>
+        <p>What to post, the UK dates worth planning around and the advertising rules that apply to you.</p>
+      </div>
+      <div class="platforms trade-links">
+        <a href="/social-media-for/restaurants-and-cafes/">Restaurants, cafés and pubs</a>
+        <a href="/social-media-for/hair-and-beauty-salons/">Hair and beauty salons</a>
+        <a href="/social-media-for/tradespeople/">Plumbers, electricians and builders</a>
+        <a href="/social-media-for/estate-agents/">Estate and letting agents</a>
+        <a href="/social-media-for/accountants/">Accountants and bookkeepers</a>
+        <a href="/social-media-for/dental-practices/">Dental practices</a>
+        <a href="/social-media-for/">All guides</a>
       </div>
     </div>
   </section>
@@ -360,6 +389,7 @@ footer .brand{color:#fff}
         Kanosena
       </a>
       <nav class="foot-links" aria-label="Footer">
+        <a href="/social-media-for/">Guides by trade</a>
         <a href="https://app.kanosena.com/about.html">About</a>
         <a href="https://app.kanosena.com/privacy.html">Privacy policy</a>
         <a href="https://app.kanosena.com/terms.html">Terms of service</a>

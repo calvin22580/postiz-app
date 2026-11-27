@@ -1,0 +1,5 @@
+# OURS: kanosena.com (ours/site/README.md)
+User-agent: *
+Allow: /
+
+Sitemap: https://kanosena.com/sitemap.xml
